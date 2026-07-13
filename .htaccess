@@ -1,0 +1,9 @@
+RewriteEngine On
+Options -MultiViews
+RewriteBase /Library/
+
+# If the request is for a real file or directory, serve it directly
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# Otherwise, forward everything to public/index.php
+RewriteRule ^(.*)$ public/index.php [QSA,L]

@@ -1,0 +1,15 @@
+.env
+
+/vendor/
+
+/storage/logs/
+/public/storage/logs/
+
+/public/uploads/
+/public/storage/payment_screenshots/
+
+.vscode/
+.idea
+.DB_Store
+Thumbs.db
+.log
