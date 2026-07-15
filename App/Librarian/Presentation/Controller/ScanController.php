@@ -3,10 +3,10 @@
 namespace App\Librarian\Presentation\Controller;
 
 use App\Shared\Base\BaseController;
-use App\Loan\Domain\Repository\LoanRepositoryInterface;
+use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Book\Domain\Repository\BookRepositoryInterface;
 use App\User\Domain\Repository\UserRepositoryInterface;
-use App\Loan\Domain\ValueObject\LoanStatus;
+use App\Circulation\Domain\ValueObject\LoanStatus;
 
 class ScanController extends BaseController
 {

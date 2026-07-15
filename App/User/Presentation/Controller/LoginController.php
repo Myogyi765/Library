@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\User\Presentation\Controller;
 
-use App\User\Infrastructure\Security\UserAuthenticator;
 use App\Shared\Base\BaseController;
 use App\Shared\Core\Authorization\Authorization;
+use App\User\Infrastructure\Security\UserAuthenticator;
 
 class LoginController extends BaseController
 {
@@ -22,14 +24,11 @@ class LoginController extends BaseController
     {
         if ($this->userAuth->isLoggedIn()) {
             $role = $_SESSION['user_role'] ?? 'user';
-            $redirect = match($role) {
-                'admin'     => BASE_URL . '/admin/dashboard',
-                'librarian' => BASE_URL . '/librarian/dashboard',
-                default     => BASE_URL . '/user-dashboard'
-            };
-            header('Location: ' . $redirect);
-            exit;
+            $redirect = $this->getRedirectUrlByRole($role);
+            $this->redirect($redirect);
+            return;
         }
+
         $this->view('auth/login');
     }
 
@@ -37,15 +36,16 @@ class LoginController extends BaseController
     {
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
-        $requestedRole = $_POST['role'] ?? 'user';
 
+        // Validation
         if (empty($email) || empty($password)) {
             $_SESSION['login_errors']['general'] = 'Email and password are required.';
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+            $this->redirect(BASE_URL . '/login');
+            return;
         }
 
-        $success = $this->userAuth->authenticate($email, $password, $requestedRole);
+        // ✅ No role parameter – authenticate only with credentials
+        $success = $this->userAuth->authenticate($email, $password);
 
         if ($success) {
             $userId = $_SESSION['user_id'] ?? null;
@@ -54,20 +54,16 @@ class LoginController extends BaseController
             }
 
             $role = $_SESSION['user_role'] ?? 'user';
-            $redirect = match($role) {
-                'admin'     => BASE_URL . '/admin/dashboard',
-                'librarian' => BASE_URL . '/librarian/dashboard',
-                default     => BASE_URL . '/user-dashboard'
-            };
+            $redirect = $this->getRedirectUrlByRole($role);
+
             $_SESSION['success'] = 'Login successful.';
-            header('Location: ' . $redirect);
+            $this->redirect($redirect);
         } else {
             if (!isset($_SESSION['login_errors']['general'])) {
                 $_SESSION['login_errors']['general'] = 'Login failed. Please check your credentials.';
             }
-            header('Location: ' . BASE_URL . '/login');
+            $this->redirect(BASE_URL . '/login');
         }
-        exit;
     }
 
     public function logout(): void
@@ -79,7 +75,21 @@ class LoginController extends BaseController
             session_destroy();
         }
 
-        header('Location: ' . BASE_URL . '/login');
-        exit;
+        $this->redirect(BASE_URL . '/login');
+    }
+
+    /**
+     * Get redirect URL based on user role (PHP 7.4 compatible)
+     */
+    private function getRedirectUrlByRole(string $role): string
+    {
+        switch ($role) {
+            case 'admin':
+                return BASE_URL . '/admin/dashboard';
+            case 'librarian':
+                return BASE_URL . '/librarian/dashboard';
+            default:
+                return BASE_URL . '/user-dashboard';
+        }
     }
 }

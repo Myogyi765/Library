@@ -30,16 +30,18 @@ $pageTitle = $pageTitle ?? 'Admin Dashboard';
 // ✅ Include header – this is the ONLY place header is included
 include BASE_PATH . '/view/layout/header.php';
 
-// Stats for dashboard (fallback – will be overridden by controller data if provided)
-$stats = [
-    'users' => 245,
-    'librarian' => 7,
-    'books' => 1840,
-    'available' => 1235,
-    'borrowed' => 605,
-    'activeLoans' => 62,
-    'overdue' => 11,
-];
+// Stats for dashboard (fallback if controller data is not provided)
+if (!isset($stats) || !is_array($stats)) {
+    $stats = [
+        'users' => 245,
+        'librarian' => 7,
+        'books' => 1840,
+        'available' => 1235,
+        'borrowed' => 605,
+        'activeLoans' => 62,
+        'overdue' => 11,
+    ];
+}
 ?>
 
 <div class="flex h-screen bg-gray-50 dark:bg-gray-900">

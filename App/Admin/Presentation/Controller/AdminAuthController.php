@@ -8,9 +8,9 @@ use App\Shared\Core\Authorization\Authorization;
 class AdminAuthController extends BaseController
 {
     private UserAuthenticator $authenticator;
-    private Authorization $authorization; 
+    private Authorization $authorization; // ✅ Dependency ကို mandatory ဖြစ်အောင်ထား
 
-    public function __construct(UserAuthenticator $authenticator, Authorization $authorization = null)
+    public function __construct(UserAuthenticator $authenticator, Authorization $authorization)
     {
         $this->authenticator = $authenticator;
         $this->authorization = $authorization;
@@ -19,18 +19,11 @@ class AdminAuthController extends BaseController
     public function logout(): void
     {
         $this->authenticator->logout();
-
-        if (session_status() === PHP_SESSION_ACTIVE) {
-            session_unset();
-            session_destroy();
-        }
-
-       
-        header('Location: ' . BASE_URL . '/login');
-        exit;
+        session_unset();
+        session_destroy();
+        $this->redirect('/login'); 
     }
 
-   
     public function isAdminLoggedIn(): bool
     {
         return $this->authenticator->isLoggedIn() 

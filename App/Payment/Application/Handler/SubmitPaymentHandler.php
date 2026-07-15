@@ -5,7 +5,7 @@ namespace App\Payment\Application\Handler;
 use App\Payment\Domain\Entity\Payment;
 use App\Payment\Domain\ValueObject\Money;
 use App\Payment\Domain\Repository\PaymentRepositoryInterface;
-use App\Loan\Domain\Repository\LoanRepositoryInterface;
+use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Book\Domain\Repository\BookRepositoryInterface;
 use App\Payment\Application\Command\SubmitPaymentCommand;
 

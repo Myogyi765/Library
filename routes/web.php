@@ -9,12 +9,13 @@ use App\User\Presentation\Controller\InvoiceController as UserInvoiceController;
 use App\Payment\Presentation\Controller\PaymentController;
 use App\Payment\Presentation\Controller\LibrarianPaymentController;
 
-use App\Admin\Presentation\Controller\DashboardController as AdminDashboardController;
+// ✅ Fixed: use exact class names
+use App\Admin\Presentation\Controller\AdminDashboardController;
 use App\Admin\Presentation\Controller\AdminLibrarianController;
 use App\Admin\Presentation\Controller\AdminUserController;
 use App\Admin\Presentation\Controller\AdminSettingsController;
 use App\Admin\Presentation\Controller\AdminRoleController;
-use App\Admin\Presentation\Controller\ReportController;
+use App\Admin\Presentation\Controller\AdminReportController as ReportController;
 use App\Admin\Presentation\Controller\AdminFineController;
 use App\Admin\Presentation\Controller\AdminBookController;
 
@@ -58,7 +59,7 @@ $userOnly = function () {
     return true;
 };
 
-// ---------- Permission check (unchanged) ----------
+// ---------- Permission check ----------
 $authorizationCheck = function ($permission) use ($container) {
     return function () use ($container, $permission) {
         $authorization = $container->get(Authorization::class);
@@ -126,6 +127,10 @@ $router->get('/admin/fines', [AdminFineController::class, 'index'], $adminMiddle
 $router->get('/admin/books', [AdminBookController::class, 'index'], $adminMiddleware);
 $router->get('/admin/books/show', [AdminBookController::class, 'show'], $adminMiddleware);
 
+// ✅ ADDED: Enable/Disable toggle routes for users and librarians (POST)
+$router->post('/admin/users/toggle/{id}', [AdminUserController::class, 'toggleStatus'], $adminMiddleware);
+$router->post('/admin/librarians/toggle/{id}', [AdminLibrarianController::class, 'toggleStatus'], $adminMiddleware);
+
 $router->post('/admin/librarian/create', [AdminLibrarianController::class, 'store'], $adminMiddleware);
 $router->post('/admin/librarian/edit/{id}', [AdminLibrarianController::class, 'update'], $adminMiddleware);
 $router->post('/admin/users/create', [AdminUserController::class, 'store'], $adminMiddleware);
@@ -152,22 +157,37 @@ $router->get('/librarian/users/create', [UserController::class, 'create'], array
 $router->get('/librarian/users/edit/{id}', [UserController::class, 'edit'], array_merge($librarianMiddleware, [$authorizationCheck('edit_users')]));
 $router->get('/librarian/users/delete/{id}', [UserController::class, 'delete'], array_merge($librarianMiddleware, [$authorizationCheck('delete_users')]));
 
-// ----- Payment routes – specific actions BEFORE the generic show route -----
-$router->get('/librarian/payments', [LibrarianPaymentController::class, 'index'], array_merge($librarianMiddleware, [$authorizationCheck('view_payments')]));
+// ----- Payment routes (FIXED: index route placed FIRST) -----
+// ✅ Index route MUST be before any {id} routes
+$router->get('/librarian/payments', [LibrarianPaymentController::class, 'index'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
+);
 
 // Refund (GET form + POST process)
-$router->get('/librarian/payments/{id}/refund', [LibrarianPaymentController::class, 'showRefundForm'], array_merge($librarianMiddleware, [$authorizationCheck('refund_payments')]));
-$router->post('/librarian/payments/{id}/refund', [LibrarianPaymentController::class, 'processRefund'], array_merge($librarianMiddleware, [$authorizationCheck('refund_payments')]));
+$router->get('/librarian/payments/{id}/refund', [LibrarianPaymentController::class, 'showRefundForm'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('refund_payments')])
+);
+$router->post('/librarian/payments/{id}/refund', [LibrarianPaymentController::class, 'processRefund'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('refund_payments')])
+);
 
 // Approve / Reject
-$router->post('/librarian/payments/{id}/approve', [LibrarianPaymentController::class, 'approve'], array_merge($librarianMiddleware, [$authorizationCheck('edit_payments')]));
-$router->post('/librarian/payments/{id}/reject', [LibrarianPaymentController::class, 'reject'], array_merge($librarianMiddleware, [$authorizationCheck('edit_payments')]));
+$router->post('/librarian/payments/{id}/approve', [LibrarianPaymentController::class, 'approve'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('edit_payments')])
+);
+$router->post('/librarian/payments/{id}/reject', [LibrarianPaymentController::class, 'reject'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('edit_payments')])
+);
 
-// Generic show (must come after all specific {id}/... routes)
-$router->get('/librarian/payments/{id}', [LibrarianPaymentController::class, 'show'], array_merge($librarianMiddleware, [$authorizationCheck('view_payments')]));
+// Generic show (payment details) – this must come AFTER the exact '/payments' route
+$router->get('/librarian/payments/{id}', [LibrarianPaymentController::class, 'show'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
+);
 
-// Invoice (does not conflict with {id} because it's a literal string)
-$router->get('/librarian/payments/invoice/{id}', [LibrarianPaymentController::class, 'viewInvoice'], array_merge($librarianMiddleware, [$authorizationCheck('view_payments')]));
+// Invoice (view invoice)
+$router->get('/librarian/payments/invoice/{id}', [LibrarianPaymentController::class, 'viewInvoice'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
+);
 
 // Categories
 $router->get('/librarian/categories', [LibrarianCategoryController::class, 'index'], array_merge($librarianMiddleware, [$authorizationCheck('view_categories')]));

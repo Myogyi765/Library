@@ -1,72 +1,88 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\User\Presentation\Controller;
 
 use App\Shared\Base\BaseController;
+use App\User\Domain\Repository\UserRepositoryInterface;
+use App\User\Domain\Service\VerificationServiceInterface;
 use App\User\Infrastructure\Security\UserAuthenticator;
 
 class DashboardController extends BaseController
 {
     private UserAuthenticator $authenticator;
-    
-    public function __construct($container = null)
-    {
-        parent::__construct($container);
-        $this->authenticator = $this->container->get('user.authenticator');
+    private VerificationServiceInterface $verificationService;
+    private UserRepositoryInterface $userRepository;
+
+    public function __construct(
+        UserAuthenticator $authenticator,
+        VerificationServiceInterface $verificationService,
+        UserRepositoryInterface $userRepository
+    ) {
+        parent::__construct();
+        $this->authenticator = $authenticator;
+        $this->verificationService = $verificationService;
+        $this->userRepository = $userRepository;
     }
-    
+
     public function userDashboard(): void
     {
         if (!$this->authenticator->isAuthenticated()) {
-            $_SESSION['login_errors'][] = 'Please login to access the dashboard';
-            $this->redirect('/home');
+            $_SESSION['login_errors'] = ['Please login to access the dashboard'];
+            $this->redirect(BASE_URL . '/home');
             return;
         }
-        
+
         $user = $this->authenticator->getCurrentUser();
-        
+
         if ($user) {
             $method = $user->getLoginMethod();
+
             if ($method === 'email' && !$user->isEmailVerified()) {
-                $verificationService = $this->container->get('verification.service');
-                $token = $verificationService->generateVerificationToken($user);
-                $code = $verificationService->generateVerificationCode();
+                $token = $this->verificationService->generateVerificationToken($user);
+                $code = $this->verificationService->generateVerificationCode();
+
                 $user->setVerificationToken($token);
                 $user->setVerificationCode($code);
-                $this->container->get('user.repository')->save($user);
-                $verificationService->sendVerificationEmail($user, $token, $code);
-                
+                $this->userRepository->save($user);
+
+                $this->verificationService->sendVerificationEmail($user, $token, $code);
+
                 $_SESSION['warning_message'] = 'Please verify your email address. A new verification email has been sent.';
-                $this->redirect('/home');
+                $this->redirect(BASE_URL . '/verify');
                 return;
             }
-            
+
             if ($method === 'phone' && !$user->isPhoneVerified()) {
-                // You need to implement a phone verification page
-                $this->redirect('/verify-phone');
+                $_SESSION['warning_message'] = 'Please verify your phone number before accessing the dashboard.';
+                $this->redirect(BASE_URL . '/verify-phone');
                 return;
             }
         }
-        
-        require_once $this->basePath . '/view/user-dashboard.php';
+
+        $this->view('user-dashboard', [
+            'user' => $user,
+            'pageTitle' => 'My Dashboard'
+        ]);
     }
-    
+
     public function adminDashboard(): void
     {
         if (!$this->authenticator->isAuthenticated()) {
-            $_SESSION['login_errors'][] = 'Please login to access the dashboard';
-            $this->redirect('/home');
+            $_SESSION['login_errors'] = ['Please login to access the dashboard'];
+            $this->redirect(BASE_URL . '/home');
             return;
         }
-        
+
         $user = $this->authenticator->getCurrentUser();
-        
-        if ($user->getRole() !== 'admin') {
+
+        if ($user && $user->getRole() !== 'admin') {
             $_SESSION['error_message'] = 'You do not have permission to access the admin dashboard.';
-            $this->redirect('/user-dashboard');
+            $this->redirect(BASE_URL . '/user-dashboard');
             return;
         }
-        
-        require_once $this->basePath . '/view/admin-dashboard.php';
+
+        $this->view('admin-dashboard');
     }
 }

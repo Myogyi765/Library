@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\User\Presentation\Controller;
 
-use App\Loan\Application\Command\BorrowBookCommand;
-use App\Loan\Application\Handler\BorrowBookHandler;
+use App\Circulation\Application\Command\BorrowBookCommand;
+use App\Circulation\Application\Handler\BorrowBookHandler;
 use App\Shared\Base\BaseController;
 use App\Shared\Core\Authorization\Authorization;
 
@@ -19,37 +21,34 @@ class BorrowController extends BaseController
         $this->authorization = $authorization;
     }
 
-    public function borrow($id): void
+    public function borrow(int $id): void
     {
-        $bookId = (int) $id;
-
         $userId = $_SESSION['user_id'] ?? 0;
-        if (!$userId) {
-            $this->redirect('/login');
+        if ($userId === 0) {
+            $this->redirect(BASE_URL . '/login');
             return;
-        }
-
-        if (isset($_SESSION['user_id'])) {
-            $this->authorization->loadUserPermissions($_SESSION['user_id']);
         }
 
         if (!$this->authorization->hasPermission('borrow_books')) {
             $_SESSION['error_message'] = 'You do not have permission to borrow books.';
-            $this->redirect('/books/' . $bookId);
+            $this->redirect(BASE_URL . '/books/' . $id);
             return;
         }
 
         try {
-            $cmd = new BorrowBookCommand($userId, $bookId);
-            $this->handler->handle($cmd);
+            $command = new BorrowBookCommand($userId, $id);
+            $this->handler->handle($command);
 
             $_SESSION['success_message'] = 'Borrow request submitted successfully. Waiting for librarian approval.';
+            $this->redirect(BASE_URL . '/books/' . $id);
+
         } catch (\DomainException $e) {
             $_SESSION['error_message'] = $e->getMessage();
+            $this->redirect(BASE_URL . '/books/' . $id);
+
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Something went wrong. Please try again.';
+            $this->redirect(BASE_URL . '/books/' . $id);
         }
-
-        $this->redirect('/books/' . $bookId);
     }
 }

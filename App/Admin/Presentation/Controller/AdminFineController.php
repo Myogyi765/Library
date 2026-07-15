@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Admin\Presentation\Controller;
 
 use App\Shared\Base\BaseController;
@@ -11,46 +10,68 @@ class AdminFineController extends BaseController
     private SettingRepository $settingRepo;
     private UserAuthenticator $userAuth;
 
-    public function __construct(
-        SettingRepository $settingRepo,
-        UserAuthenticator $userAuth
-    ) {
+    public function __construct(SettingRepository $settingRepo, UserAuthenticator $userAuth)
+    {
         parent::__construct();
         $this->settingRepo = $settingRepo;
         $this->userAuth = $userAuth;
     }
 
+    private function isAdmin(): bool
+    {
+        return $this->userAuth->isLoggedIn() && ($_SESSION['user_role'] ?? '') === 'admin';
+    }
+
     public function index(): void
     {
-        if (!$this->userAuth->isLoggedIn() || ($_SESSION['user_role'] ?? '') !== 'admin') {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+        if (!$this->isAdmin()) {
+            $this->redirect('/login');
+            return;
         }
 
-        
         $settings = $this->settingRepo->findAll();
-        
-        $pageTitle = 'Fine & Fee Settings';
-        $content = BASE_PATH . '/view/admin/fines/index.php';
-        include BASE_PATH . '/view/admin-dashboard.php';
+
+        $this->view('admin-dashboard', [
+            'pageTitle' => 'Fine & Fee Settings',
+            'content'   => BASE_PATH . '/view/admin/Fines/index.php',
+            'settings'  => $settings, 
+        ]);
     }
 
     public function update(): void
     {
-        if (!$this->userAuth->isLoggedIn() || ($_SESSION['user_role'] ?? '') !== 'admin') {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+        if (!$this->isAdmin()) {
+            $this->redirect('/login');
+            return;
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $settings = $_POST['settings'] ?? [];
-            $this->settingRepo->update($settings);
-            $_SESSION['success_message'] = 'Settings updated successfully!';
-        } else {
-            $_SESSION['error_message'] = 'Invalid request.';
+            $allowedKeys = [
+                'fine_per_day',
+                'borrowing_fee',
+                'max_borrow_days',
+                'max_borrow_limit',
+                'grace_period_days',
+                'membership_fee',
+                'late_return_fee',
+            ];
+            
+            $settings = [];
+
+            foreach ($allowedKeys as $key) {
+                if (isset($_POST[$key])) {
+                    $settings[$key] = trim($_POST[$key]);
+                }
+            }
+
+            if (!empty($settings)) {
+                $this->settingRepo->update($settings);
+                $_SESSION['success_message'] = 'Fine & fee settings updated successfully!';
+            } else {
+                $_SESSION['error_message'] = 'No valid settings were submitted.';
+            }
         }
 
-        header('Location: ' . BASE_URL . '/admin/fines');
-        exit;
+        $this->redirect('/admin/fines');
     }
 }

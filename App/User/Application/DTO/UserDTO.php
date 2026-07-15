@@ -23,7 +23,7 @@ class UserDTO
             $user->getId(),
             $user->getName(),
             $user->getEmail()->getValue(),
-            $user->getPhone()->getValue(),
+          $user->getPhone()?->getValue() ?? '',
             (string) $user->getStatus(),  
             $user->getCreatedAt()->format('Y-m-d H:i:s'),
             $user->getUpdatedAt()?->format('Y-m-d H:i:s'),

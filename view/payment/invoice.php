@@ -15,9 +15,18 @@ $userName = $user ? $user->getName() : 'N/A';
 $userId = $user ? 'U' . str_pad($user->getId(), 5, '0', STR_PAD_LEFT) : 'N/A';
 $userEmail = $user ? $user->getEmail()->getValue() : 'N/A';
 $userPhone = $user && $user->getPhone() ? $user->getPhone()->getValue() : 'N/A';
-$userProfileImage = $user && $user->getProfileImage() 
-    ? BASE_URL . '/' . $user->getProfileImage() 
-    : BASE_URL . '/public/images/default-avatar.png';
+
+// ✅ Profile Image – check if file exists
+$hasProfileImage = false;
+$userProfileImage = BASE_URL . '/public/images/default-avatar.png';
+
+if ($user && $user->getProfileImage()) {
+    $imagePath = BASE_PATH . '/public/' . $user->getProfileImage();
+    if (file_exists($imagePath)) {
+        $hasProfileImage = true;
+        $userProfileImage = BASE_URL . '/' . $user->getProfileImage();
+    }
+}
 
 // Book details
 $bookTitle = $book ? $book->getTitle() : 'N/A';
@@ -45,13 +54,13 @@ if ($due_date) {
         $daysLeft = $now->diff($due_date)->days;
     }
 }
-$isLibrarian = isset($_SESSION['role']) && $_SESSION['role'] === 'librarian';
+$isLibrarian = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'librarian';
 if ($isLibrarian) {
-    // Librarian: back to payment list, done to the borrower's dashboard
-    $backUrl = BASE_URL . '/librarian/payments';
-    $doneUrl = BASE_URL . '/user-dashboard?user_id=' . ($user ? $user->getId() : 0);
+    // ✅ Redirect librarian to the dashboard payment page
+    $backUrl = BASE_URL . '/librarian/dashboard?page=payments';
+    $doneUrl = BASE_URL . '/librarian/dashboard?page=payments';
 } else {
-    // User: back and done both go to their own dashboard
+    // ✅ Redirect regular users to their dashboard
     $backUrl = BASE_URL . '/user-dashboard';
     $doneUrl = BASE_URL . '/user-dashboard';
 }
@@ -92,7 +101,6 @@ $logoPath = BASE_URL . '/images/logo.png';
             border: 1px solid #e2e8f0;
         }
 
-        /* ─── Compact Header ─────────────────────────────────────────── */
         .invoice-header {
             background: linear-gradient(135deg, #3165a9, #2d599e);
             padding: 12px 20px;
@@ -109,30 +117,26 @@ $logoPath = BASE_URL . '/images/logo.png';
             gap: 8px;
         }
 
-        /* ================================================================
-           🟢 FIX: ROUNDED LOGO (Made into a perfect circle)
-           ================================================================ */
         .invoice-header .brand img {
             height: 30px;
-            width: 30px;               /* Force square */
-            border-radius: 50%;        /* Make it a perfect circle */
+            width: 30px;
+            border-radius: 50%;
             background: white;
-            padding: 2px;              /* Inner spacing for the white border */
-            object-fit: contain;       /* Prevent the logo from distorting */
+            padding: 2px;
+            object-fit: contain;
             display: block;
             box-sizing: border-box;
         }
 
-        /* Fallback icon styling (kept circular too) */
         .invoice-header .brand #logo-fallback {
             background: white;
             padding: 6px;
-            border-radius: 50%;        /* Make fallback a perfect circle */
+            border-radius: 50%;
             width: 30px;
             height: 30px;
             color: #294d7c;
             font-size: 16px;
-            display: none; /* Hidden by default */
+            display: none;
             align-items: center;
             justify-content: center;
         }
@@ -162,12 +166,10 @@ $logoPath = BASE_URL . '/images/logo.png';
             opacity: 0.8;
         }
 
-        /* ─── Compact Body ───────────────────────────────────────────── */
         .invoice-body {
             padding: 14px 18px 18px;
         }
 
-        /* ─── Title ──────────────────────────────────────────────────── */
         .invoice-title {
             text-align: center;
             margin-bottom: 12px;
@@ -188,7 +190,7 @@ $logoPath = BASE_URL . '/images/logo.png';
             color: #94a3b8;
         }
 
-        /* ─── User Info ──────────────────────────────────────────────── */
+        /* ─── User Info Block ────────────────────────────────────────── */
         .user-info-block {
             display: flex;
             flex-wrap: wrap;
@@ -208,12 +210,28 @@ $logoPath = BASE_URL . '/images/logo.png';
             overflow: hidden;
             border: 2px solid #1e3a5f;
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e2e8f0;
         }
 
         .user-info-block .user-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        /* ✅ Profile Icon Fallback (when no image) */
+        .user-info-block .user-avatar .profile-icon {
+            color: #1e3a5f;
+            font-size: 16px;
+            background: #e2e8f0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .user-info-block .user-detail {
@@ -244,14 +262,12 @@ $logoPath = BASE_URL . '/images/logo.png';
             width: 14px;
         }
 
-        /* ─── Divider ────────────────────────────────────────────────── */
         .section-divider {
             border: none;
             border-top: 1px dashed #dce0e5;
             margin: 12px 0;
         }
 
-        /* ─── Details Grid ────────────────────────────────────────────── */
         .details-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -297,7 +313,6 @@ $logoPath = BASE_URL . '/images/logo.png';
             color: #1a1a2e;
         }
 
-        /* ─── Timeline ────────────────────────────────────────────────── */
         .timeline {
             display: flex;
             justify-content: space-around;
@@ -339,7 +354,6 @@ $logoPath = BASE_URL . '/images/logo.png';
             background: #e2e8f0;
         }
 
-        /* ─── QR Code ────────────────────────────────────────────────── */
         .qr-block {
             display: flex;
             align-items: center;
@@ -383,7 +397,6 @@ $logoPath = BASE_URL . '/images/logo.png';
             font-weight: 600;
         }
 
-        /* ─── Footer ────────────────────────────────────────────────── */
         .invoice-footer {
             text-align: center;
             padding-top: 10px;
@@ -402,7 +415,6 @@ $logoPath = BASE_URL . '/images/logo.png';
             font-size: 10px;
         }
 
-        /* ─── Actions ────────────────────────────────────────────────── */
         .invoice-actions {
             display: flex;
             justify-content: center;
@@ -481,7 +493,6 @@ $logoPath = BASE_URL . '/images/logo.png';
     <!-- ─── Header ──────────────────────────────────────────────────── -->
     <div class="invoice-header">
         <div class="brand">
-            <!-- Added fallback icon for missing logo -->
             <img src="<?php echo BASE_URL; ?>/images/logo.png" alt="Library Logo" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';">
             <i id="logo-fallback" class="fas fa-book-open"></i>
             <h1>Library</h1>
@@ -503,7 +514,11 @@ $logoPath = BASE_URL . '/images/logo.png';
         <!-- User Info -->
         <div class="user-info-block">
             <div class="user-avatar">
-                <img src="<?= $userProfileImage ?>" alt="Profile Image">
+                <?php if ($hasProfileImage): ?>
+                    <img src="<?= $userProfileImage ?>" alt="Profile Image">
+                <?php else: ?>
+                    <span class="profile-icon"><i class="fas fa-user"></i></span>
+                <?php endif; ?>
             </div>
             <div class="user-detail">
                 <div class="name"><?= htmlspecialchars($userName) ?></div>
@@ -586,7 +601,7 @@ $logoPath = BASE_URL . '/images/logo.png';
             <p class="footer-text">Late return may incur additional charges.</p>
         </div>
 
-        <!-- Actions – with dynamic URLs based on role -->
+        <!-- Actions -->
         <div class="invoice-actions">
             <a href="<?= $backUrl ?>" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Back

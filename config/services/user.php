@@ -1,49 +1,142 @@
 <?php
 
-use App\Shared\Core\ErrorHandler;
+// ── All necessary use statements ──
 use App\User\Infrastructure\Persistence\UserRepository;
+use App\User\Domain\Repository\UserRepositoryInterface;
+use App\User\Domain\Service\UserDomainService;
 use App\User\Infrastructure\Security\UserAuthenticator;
 use App\User\Infrastructure\Service\VerificationService;
-use App\User\Domain\Service\UserDomainService;
-use App\User\Domain\Repository\UserRepositoryInterface;
-use App\Shared\Core\Authorization\Authorization; 
+use App\User\Application\UseCase\RegisterUser;
+use App\User\Application\UseCase\LoginUser;
+use App\User\Application\UseCase\LogoutUser;
+use App\User\Application\UseCase\GetUser;
+use App\User\Presentation\Controller\AuthController;
+use App\User\Presentation\Controller\LoginController;
+use App\User\Presentation\Controller\VerificationController;
+use App\User\Presentation\Controller\ViewController;
+use App\User\Presentation\Controller\DashboardController;
+use App\User\Presentation\Controller\BorrowController as UserBorrowController;
+use App\User\Presentation\Controller\InvoiceController as UserInvoiceController;
 
-// User Repository
-$container->singleton('user.repository', function() use ($pdo) {
-    return new UserRepository($pdo);
-});
-$container->singleton(UserRepositoryInterface::class, function($c) {
-    return $c->get('user.repository');
-});
+// These will be resolved when the container is run, but we need them for type hints
+use App\Circulation\Application\Handler\BorrowBookHandler;
+use App\Invoice\Domain\Repository\InvoiceRepositoryInterface;
+use App\Shared\Core\Authorization\Authorization;
 
-// User Domain Service
-$container->singleton('user.domain.service', function() use ($container) {
-    return new UserDomainService($container->get('user.repository'));
-});
+return function ($container) {
 
-// ✅ Authorization (Session-based)
-$container->singleton(Authorization::class, function($c) {
-    return new Authorization($c->get('db'));
-});
-$container->set('authorization', function($c) { 
-    return $c->get(Authorization::class);
-});
-ErrorHandler::log('✅ Authorization registered', 'DEBUG');
+    // ── Repository ──
+    $container->singleton(UserRepository::class, function ($c) {
+        return new UserRepository($c->get('db'));
+    });
+    $container->singleton(UserRepositoryInterface::class, fn($c) => $c->get(UserRepository::class));
+    $container->set('user.repository', fn($c) => $c->get(UserRepositoryInterface::class));
 
-// User Authenticator
-$container->singleton('user.authenticator', function() use ($container) {
-    return new UserAuthenticator(
-        $container->get('user.repository'),
-        $container->get(Authorization::class) 
-    );
-});
-$container->set(UserAuthenticator::class, function() use ($container) {
-    return $container->get('user.authenticator');
-});
+    // ── Domain Services ──
+    $container->singleton(UserDomainService::class, function ($c) {
+        return new UserDomainService($c->get(UserRepositoryInterface::class));
+    });
+    $container->set('user.domain.service', fn($c) => $c->get(UserDomainService::class));
 
-// Verification Service
-$container->singleton('verification.service', function() use ($container) {
-    return new VerificationService($container->get('user.repository'));
-});
+    // ── Authenticator ──
+    $container->singleton(UserAuthenticator::class, function ($c) {
+        return new UserAuthenticator(
+            $c->get(UserRepositoryInterface::class),
+            $c->get(Authorization::class)
+        );
+    });
+    $container->set('user.authenticator', fn($c) => $c->get(UserAuthenticator::class));
 
-ErrorHandler::log('✅ User services registered', 'DEBUG');
+    // ── Verification Service ──
+    $container->singleton(VerificationService::class, function ($c) {
+        return new VerificationService($c->get(UserRepositoryInterface::class));
+    });
+    $container->set('verification.service', fn($c) => $c->get(VerificationService::class));
+
+    // ── UseCases ──
+    $container->singleton(RegisterUser::class, function ($c) {
+        return new RegisterUser(
+            $c->get(UserRepositoryInterface::class),
+            $c->get(UserDomainService::class),
+            $c->get(VerificationService::class)
+        );
+    });
+
+    $container->singleton(LoginUser::class, function ($c) {
+        return new LoginUser(
+            $c->get(UserRepositoryInterface::class),
+            $c->get(UserAuthenticator::class)
+        );
+    });
+
+    $container->singleton(LogoutUser::class, function ($c) {
+        return new LogoutUser($c->get(UserAuthenticator::class));
+    });
+
+    $container->singleton(GetUser::class, function ($c) {
+        return new GetUser(
+            $c->get(UserRepositoryInterface::class),
+            $c->get(UserAuthenticator::class)
+        );
+    });
+
+    // ── User Controllers ──
+    $container->singleton(AuthController::class, function ($c) {
+        return new AuthController(
+            $c->get(RegisterUser::class),
+            $c->get(LoginUser::class),
+            $c->get(LogoutUser::class),
+            $c->get(UserAuthenticator::class),
+            $c->get('loan.repository'),
+            $c->get('book.repository')
+        );
+    });
+
+    $container->singleton(LoginController::class, function ($c) {
+        return new LoginController(
+            $c->get(UserAuthenticator::class),
+            $c->get(Authorization::class)
+        );
+    });
+
+    $container->singleton(VerificationController::class, function ($c) {
+        return new VerificationController(
+            $c->get(VerificationService::class),
+            $c->get(UserAuthenticator::class),
+            $c->get(UserRepositoryInterface::class)
+        );
+    });
+
+    $container->singleton(ViewController::class, function ($c) {
+        return new ViewController(
+            $c->get(Authorization::class),
+            $c->get(UserRepositoryInterface::class),
+            $c->get('payment.repository')
+        );
+    });
+
+    $container->singleton(DashboardController::class, function ($c) {
+        return new DashboardController(
+            $c->get(UserAuthenticator::class),
+            $c->get(VerificationService::class),
+            $c->get(UserRepositoryInterface::class)
+        );
+    });
+
+    $container->singleton(UserBorrowController::class, function ($c) {
+        return new UserBorrowController(
+            $c->get(BorrowBookHandler::class),
+            $c->get(Authorization::class)
+        );
+    });
+
+    $container->singleton(UserInvoiceController::class, function ($c) {
+        return new UserInvoiceController(
+            $c->get(InvoiceRepositoryInterface::class),
+            $c->get('payment.repository'),
+            $c->get('loan.repository'),
+            $c->get(UserRepositoryInterface::class),
+            $c->get('book.repository')
+        );
+    });
+};

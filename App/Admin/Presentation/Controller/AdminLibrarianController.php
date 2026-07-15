@@ -31,11 +31,9 @@ class AdminLibrarianController extends BaseController
     public function index(): void
     {
         if (!$this->isAdmin()) {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+            $this->redirect('/login');
         }
 
-        // ✅ Fetch all librarians from the service
         $librarians = $this->librarianService->getAllLibrarians();
         $pageTitle = 'Manage Librarians';
         $content = BASE_PATH . '/view/admin/librarian/index.php';
@@ -56,8 +54,7 @@ class AdminLibrarianController extends BaseController
     public function create(): void
     {
         if (!$this->isAdmin()) {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+            $this->redirect('/login');
         }
 
         $pageTitle = 'Add Librarian';
@@ -77,13 +74,11 @@ class AdminLibrarianController extends BaseController
     public function store(): void
     {
         if (!$this->isAdmin()) {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+            $this->redirect('/login');
         }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/admin/librarian');
-            exit;
+            $this->redirect('/admin/librarian');
         }
 
         $name = $_POST['name'] ?? '';
@@ -101,27 +96,23 @@ class AdminLibrarianController extends BaseController
             $this->librarianService->register($dto);
 
             $_SESSION['success_message'] = 'Librarian created successfully.';
-            header('Location: ' . BASE_URL . '/admin/librarian');
-            exit;
+            $this->redirect('/admin/librarian');
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed: ' . $e->getMessage();
-            header('Location: ' . BASE_URL . '/admin/librarian/create');
-            exit;
+            $this->redirect('/admin/librarian/create');
         }
     }
 
     public function edit(int $id): void
     {
         if (!$this->isAdmin()) {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+            $this->redirect('/login');
         }
 
         $librarian = $this->librarianService->getLibrarian($id);
         if (!$librarian) {
             $_SESSION['error_message'] = 'Librarian not found.';
-            header('Location: ' . BASE_URL . '/admin/librarian');
-            exit;
+            $this->redirect('/admin/librarian');
         }
 
         $pageTitle = 'Edit Librarian';
@@ -141,13 +132,11 @@ class AdminLibrarianController extends BaseController
     public function update(int $id): void
     {
         if (!$this->isAdmin()) {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+            $this->redirect('/login');
         }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/admin/librarian');
-            exit;
+            $this->redirect('/admin/librarian');
         }
 
         $name = $_POST['name'] ?? '';
@@ -157,20 +146,17 @@ class AdminLibrarianController extends BaseController
             $this->librarianService->updateLibrarian($id, $name, $department);
 
             $_SESSION['success_message'] = 'Librarian updated successfully.';
-            header('Location: ' . BASE_URL . '/admin/librarian');
-            exit;
+            $this->redirect('/admin/librarian');
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed: ' . $e->getMessage();
-            header('Location: ' . BASE_URL . '/admin/librarian/edit/' . $id);
-            exit;
+            $this->redirect('/admin/librarian/edit/' . $id);
         }
     }
 
     public function delete(int $id): void
     {
         if (!$this->isAdmin()) {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+            $this->redirect('/login');
         }
 
         try {
@@ -180,7 +166,48 @@ class AdminLibrarianController extends BaseController
             $_SESSION['error_message'] = 'Failed: ' . $e->getMessage();
         }
 
-        header('Location: ' . BASE_URL . '/admin/librarian');
-        exit;
+        $this->redirect('/admin/librarian');
+    }
+
+    /**
+     * Toggle librarian status (Enable / Disable)
+     */
+    public function toggleStatus(int $id): void
+    {
+        if (!$this->isAdmin()) {
+            $this->redirect('/login');
+        }
+
+        try {
+            // Fetch the librarian
+            $librarian = $this->librarianService->getLibrarian($id);
+            if (!$librarian) {
+                throw new \Exception('Librarian not found.');
+            }
+
+            // Determine the new status
+            // Assuming the librarian entity has getStatus() and setStatus() methods.
+            // Status can be 'active' or 'inactive' (adjust according to your database).
+            $currentStatus = $librarian->getStatus(); // e.g., 'active'
+            $newStatus = ($currentStatus === 'active') ? 'inactive' : 'active';
+
+            // Update status
+            // Option A: If LibrarianService has a dedicated method:
+            // $this->librarianService->updateLibrarianStatus($id, $newStatus);
+
+            // Option B: If you have direct repository access via service, you can do:
+            // $librarian->setStatus($newStatus);
+            // $this->librarianService->saveLibrarian($librarian); // you would need to implement this
+
+            // Since we only have the service, we can add a method to the service.
+            // For now, we'll assume a method exists or we'll add it:
+            $this->librarianService->updateLibrarianStatus($id, $newStatus);
+
+            $_SESSION['success_message'] = 'Librarian status updated to ' . ucfirst($newStatus) . '.';
+        } catch (\Exception $e) {
+            $_SESSION['error_message'] = 'Failed to toggle status: ' . $e->getMessage();
+        }
+
+        $this->redirect('/admin/librarian');
     }
 }

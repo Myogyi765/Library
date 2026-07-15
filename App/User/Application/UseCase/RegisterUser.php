@@ -127,7 +127,7 @@ class RegisterUser
             null,
             $name,
             $emailObj ?? new Email('placeholder@example.com'),
-            $phoneObj ?? new Phone('+95000000000'),
+            $phoneObj ,
             $passwordObj,
             UserStatus::pending(),
             $roleId,                // ✅ roleId (int)

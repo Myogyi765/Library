@@ -274,23 +274,30 @@
                                     $statusIcon = 'fa-times-circle';
                                 }
 
-                                // ---- 🔥 Image Path Fix ----
+                                // ---- ✅ CORRECTED: Image Path using basename() ----
                                 $cover = $book->getCoverImage();
                                 $hasImage = false;
                                 $imageUrl = '';
 
                                 if ($cover) {
-                                    // 🔹 ဖိုင်တွေ ရှိမရှိ စစ်ဆေးပါ
-                                    $imagePath1 = BASE_PATH . '/public/uploads/books/' . $cover;
-                                    $imagePath2 = BASE_PATH . '/uploads/books/' . $cover;
+                                    // Extract only the filename (remove any directory prefix)
+                                    $filename = basename($cover); // e.g., '6a57034c1dd7b.jpg'
                                     
-                                    if (file_exists($imagePath1)) {
-                                        $hasImage = true;
-                                        // BASE_URL က public ကိုညွှန်တယ်ဆိုရင်
-                                        $imageUrl = BASE_URL . '/uploads/books/' . $cover;
-                                    } elseif (file_exists($imagePath2)) {
-                                        $hasImage = true;
-                                        $imageUrl = BASE_URL . '/public/uploads/books/' . $cover;
+                                    // Check possible physical locations
+                                    $possiblePaths = [
+                                        BASE_PATH . '/public/uploads/books/' . $filename,
+                                        BASE_PATH . '/uploads/books/' . $filename,
+                                        BASE_PATH . '/public/storage/upload/books/' . $filename,
+                                        BASE_PATH . '/storage/app/public/upload/books/' . $filename,
+                                    ];
+                                    
+                                    foreach ($possiblePaths as $path) {
+                                        if (file_exists($path)) {
+                                            $hasImage = true;
+                                            // Build the web URL (assuming images are served from public/uploads/books/)
+                                            $imageUrl = BASE_URL . '/uploads/books/' . $filename;
+                                            break;
+                                        }
                                     }
                                 }
                             ?>
@@ -325,7 +332,7 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="flex items-center justify-center gap-1">
-                                        <a href="<?= BASE_URL ?>/admin/books/view?id=<?= $book->getId() ?>"
+                                        <a href="<?= BASE_URL ?>/admin/books/show?id=<?= $book->getId() ?>"
                                            class="action-btn view" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>

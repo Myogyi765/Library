@@ -1,9 +1,14 @@
 <?php
+
 $settings = $settings ?? [];
-$settingValues = [];
-foreach ($settings as $setting) {
-    $settingValues[$setting['setting_key']] = $setting['setting_value'];
-}
+
+$finePerDay       = $settings['fine_per_day'] ?? 500;
+$borrowingFee     = $settings['borrowing_fee'] ?? 0;
+$maxBorrowDays    = $settings['max_borrow_days'] ?? 14;
+$maxBorrowLimit   = $settings['max_borrow_limit'] ?? 5;
+$gracePeriodDays  = $settings['grace_period_days'] ?? 3;
+$membershipFee    = $settings['membership_fee'] ?? 0;
+$lateReturnFee    = $settings['late_return_fee'] ?? 0;
 ?>
 
 <div class="container mx-auto px-4 py-8">
@@ -40,8 +45,8 @@ foreach ($settings as $setting) {
                         Fine per Day (MMK)
                     </label>
                     <p class="text-xs text-gray-400 mb-1">Amount charged per day for overdue books</p>
-                    <input type="number" name="settings[fine_per_day]" 
-                           value="<?= $settingValues['fine_per_day'] ?? 500 ?>"
+                    <input type="number" name="fine_per_day" 
+                           value="<?= htmlspecialchars($finePerDay) ?>"
                            min="0" step="100"
                            class="w-full border rounded-lg px-4 py-2 dark:bg-gray-700 dark:border-gray-600">
                 </div>
@@ -52,8 +57,8 @@ foreach ($settings as $setting) {
                         Borrowing Fee (MMK)
                     </label>
                     <p class="text-xs text-gray-400 mb-1">Fee per book borrowed</p>
-                    <input type="number" name="settings[borrowing_fee]" 
-                           value="<?= $settingValues['borrowing_fee'] ?? 0 ?>"
+                    <input type="number" name="borrowing_fee" 
+                           value="<?= htmlspecialchars($borrowingFee) ?>"
                            min="0" step="100"
                            class="w-full border rounded-lg px-4 py-2 dark:bg-gray-700 dark:border-gray-600">
                 </div>
@@ -64,8 +69,8 @@ foreach ($settings as $setting) {
                         Max Borrow Days
                     </label>
                     <p class="text-xs text-gray-400 mb-1">Maximum days a book can be borrowed</p>
-                    <input type="number" name="settings[max_borrow_days]" 
-                           value="<?= $settingValues['max_borrow_days'] ?? 14 ?>"
+                    <input type="number" name="max_borrow_days" 
+                           value="<?= htmlspecialchars($maxBorrowDays) ?>"
                            min="1" max="365"
                            class="w-full border rounded-lg px-4 py-2 dark:bg-gray-700 dark:border-gray-600">
                 </div>
@@ -76,8 +81,8 @@ foreach ($settings as $setting) {
                         Max Books per User
                     </label>
                     <p class="text-xs text-gray-400 mb-1">Maximum number of books a user can borrow at once</p>
-                    <input type="number" name="settings[max_borrow_limit]" 
-                           value="<?= $settingValues['max_borrow_limit'] ?? 5 ?>"
+                    <input type="number" name="max_borrow_limit" 
+                           value="<?= htmlspecialchars($maxBorrowLimit) ?>"
                            min="1" max="50"
                            class="w-full border rounded-lg px-4 py-2 dark:bg-gray-700 dark:border-gray-600">
                 </div>
@@ -88,8 +93,8 @@ foreach ($settings as $setting) {
                         Grace Period (Days)
                     </label>
                     <p class="text-xs text-gray-400 mb-1">Days allowed before fine applies</p>
-                    <input type="number" name="settings[grace_period_days]" 
-                           value="<?= $settingValues['grace_period_days'] ?? 3 ?>"
+                    <input type="number" name="grace_period_days" 
+                           value="<?= htmlspecialchars($gracePeriodDays) ?>"
                            min="0" max="30"
                            class="w-full border rounded-lg px-4 py-2 dark:bg-gray-700 dark:border-gray-600">
                 </div>
@@ -100,8 +105,8 @@ foreach ($settings as $setting) {
                         Annual Membership Fee (MMK)
                     </label>
                     <p class="text-xs text-gray-400 mb-1">Annual fee for library membership</p>
-                    <input type="number" name="settings[membership_fee]" 
-                           value="<?= $settingValues['membership_fee'] ?? 0 ?>"
+                    <input type="number" name="membership_fee" 
+                           value="<?= htmlspecialchars($membershipFee) ?>"
                            min="0" step="1000"
                            class="w-full border rounded-lg px-4 py-2 dark:bg-gray-700 dark:border-gray-600">
                 </div>
@@ -112,8 +117,8 @@ foreach ($settings as $setting) {
                         Late Return Fee (MMK)
                     </label>
                     <p class="text-xs text-gray-400 mb-1">Fixed fee for late returns</p>
-                    <input type="number" name="settings[late_return_fee]" 
-                           value="<?= $settingValues['late_return_fee'] ?? 0 ?>"
+                    <input type="number" name="late_return_fee" 
+                           value="<?= htmlspecialchars($lateReturnFee) ?>"
                            min="0" step="100"
                            class="w-full border rounded-lg px-4 py-2 dark:bg-gray-700 dark:border-gray-600">
                 </div>
@@ -137,37 +142,37 @@ foreach ($settings as $setting) {
             <div>
                 <span class="text-gray-500 dark:text-gray-400">Fine per Day:</span>
                 <span class="font-medium text-gray-900 dark:text-white ml-2">
-                    <?= number_format($settingValues['fine_per_day'] ?? 500) ?> MMK
+                    <?= number_format($finePerDay) ?> MMK
                 </span>
             </div>
             <div>
                 <span class="text-gray-500 dark:text-gray-400">Max Borrow Days:</span>
                 <span class="font-medium text-gray-900 dark:text-white ml-2">
-                    <?= $settingValues['max_borrow_days'] ?? 14 ?> days
+                    <?= $maxBorrowDays ?> days
                 </span>
             </div>
             <div>
                 <span class="text-gray-500 dark:text-gray-400">Max Books per User:</span>
                 <span class="font-medium text-gray-900 dark:text-white ml-2">
-                    <?= $settingValues['max_borrow_limit'] ?? 5 ?>
+                    <?= $maxBorrowLimit ?>
                 </span>
             </div>
             <div>
                 <span class="text-gray-500 dark:text-gray-400">Grace Period:</span>
                 <span class="font-medium text-gray-900 dark:text-white ml-2">
-                    <?= $settingValues['grace_period_days'] ?? 3 ?> days
+                    <?= $gracePeriodDays ?> days
                 </span>
             </div>
             <div>
                 <span class="text-gray-500 dark:text-gray-400">Borrowing Fee:</span>
                 <span class="font-medium text-gray-900 dark:text-white ml-2">
-                    <?= number_format($settingValues['borrowing_fee'] ?? 0) ?> MMK
+                    <?= number_format($borrowingFee) ?> MMK
                 </span>
             </div>
             <div>
                 <span class="text-gray-500 dark:text-gray-400">Membership Fee:</span>
                 <span class="font-medium text-gray-900 dark:text-white ml-2">
-                    <?= number_format($settingValues['membership_fee'] ?? 0) ?> MMK
+                    <?= number_format($membershipFee) ?> MMK
                 </span>
             </div>
         </div>

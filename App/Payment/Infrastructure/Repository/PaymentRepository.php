@@ -155,4 +155,69 @@ class PaymentRepository implements PaymentRepositoryInterface
         }
         return $payments;
     }
+
+    // App/Payment/Infrastructure/Repository/PaymentRepository.php
+public function findPendingApprovalsWithDetails(): array
+{
+    $sql = "
+        SELECT 
+            p.*,
+            u.name AS user_name,
+            u.email AS user_email,
+            b.title AS book_title,
+            b.id AS book_id
+        FROM payments p
+        JOIN users u ON p.user_id = u.id
+        JOIN loans l ON p.loan_id = l.id
+        JOIN books b ON l.book_id = b.id
+        WHERE p.status = :status
+        ORDER BY p.submitted_at ASC
+    ";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':status' => 'pending_approval']);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Convert each row to a Payment entity (the mapper will ignore extra fields)
+    return array_map([$this->mapper, 'toDomain'], $rows);
+}
+
+
+public function findAllWithDetails(): array
+{
+    $sql = "
+        SELECT p.*,
+               u.name AS user_name,
+               u.email AS user_email,
+               b.title AS book_title,
+               b.id AS book_id
+        FROM payments p
+        JOIN users u ON p.user_id = u.id
+        JOIN loans l ON p.loan_id = l.id
+        JOIN books b ON l.book_id = b.id
+        ORDER BY p.submitted_at DESC
+    ";
+    $stmt = $this->db->query($sql);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+public function findByStatusWithDetails(string $status): array
+{
+    $sql = "
+        SELECT p.*,
+               u.name AS user_name,
+               u.email AS user_email,
+               b.title AS book_title,
+               b.id AS book_id
+        FROM payments p
+        JOIN users u ON p.user_id = u.id
+        JOIN loans l ON p.loan_id = l.id
+        JOIN books b ON l.book_id = b.id
+        WHERE p.status = :status
+        ORDER BY p.submitted_at DESC
+    ";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['status' => $status]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 }

@@ -122,14 +122,14 @@ if (!$loan) {
 
     .info-box {
         background: var(--active-bg);
-        border: 1px solid rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(59, 130, 246, 0.15); /* 🟦 changed from emerald to blue */
         border-radius: 1.25rem;
         padding: 1.5rem;
         transition: all 0.3s ease;
     }
 
     html.dark .info-box {
-        border-color: rgba(52, 142, 211, 0.25);
+        border-color: rgba(59, 130, 246, 0.25);
     }
 
     .tab-btn {
@@ -223,8 +223,9 @@ if (!$loan) {
 
 <div class="container max-w-3xl mx-auto py-12 px-4">
     <div class="payment-card">
+        <!-- 🟦 Changed icon gradient and shadow from emerald/teal to blue/indigo -->
         <div class="flex items-center gap-3 mb-6">
-            <div class="p-3 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl text-white shadow-lg shadow-emerald-500/20">
+            <div class="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl text-white shadow-lg shadow-blue-500/20">
                 <i class="fas fa-credit-card text-xl"></i>
             </div>
             <div>
@@ -242,8 +243,9 @@ if (!$loan) {
         <?php endif; ?>
 
         <div class="info-box mb-6">
+            <!-- 🟦 Changed icon color from emerald to blue -->
             <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-                <i class="fas fa-info-circle text-emerald-600 dark:text-emerald-400"></i>
+                <i class="fas fa-info-circle text-blue-600 dark:text-blue-400"></i>
                 Payment Account Information
             </h3>
 
@@ -254,7 +256,8 @@ if (!$loan) {
 
             <div class="tab-content active" id="tab-kpay">
                 <div class="text-center">
-                    <p class="font-bold text-teal-600 dark:text-teal-400 text-lg">KPay</p>
+                    <!-- 🟦 Changed text color from teal to blue -->
+                    <p class="font-bold text-blue-600 dark:text-blue-400 text-lg">KPay</p>
                     <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Account: 09-123456789</p>
                     <p class="text-sm text-gray-600 dark:text-gray-300">Name: Library Fund</p>
                     <img src="<?= BASE_URL ?>/images/kpay-qr.png" alt="KPay QR" class="mx-auto mt-3">
@@ -274,15 +277,12 @@ if (!$loan) {
         <form action="<?= BASE_URL ?>/payment/submit" method="POST" enctype="multipart/form-data" class="space-y-5">
             <input type="hidden" name="loan_id" value="<?= $loan->getId() ?>">
             <input type="hidden" name="payment_method" id="paymentMethodInput" value="kpay">
-            
-            <!-- 🔐 Idempotency Key - prevents duplicate submissions -->
             <input type="hidden" name="idempotency_key" value="<?= htmlspecialchars($idempotencyKey ?? '') ?>">
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Payment Amount (MMK)
                 </label>
-                
                 <input
                     type="number"
                     name="amount"
@@ -310,12 +310,13 @@ if (!$loan) {
                     Payment Screenshot <span class="text-red-500">*</span>
                 </label>
                 <div class="relative">
+                    <!-- 🟦 Changed file button colors from emerald to blue -->
                     <input
                         type="file"
                         name="screenshot"
                         accept="image/*"
                         required
-                        class="input-field file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-emerald-900/30 dark:file:text-emerald-300"
+                        class="input-field file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300"
                     >
                 </div>
                 <p class="text-xs text-gray-400 mt-1">

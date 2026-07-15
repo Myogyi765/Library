@@ -2,257 +2,177 @@
 
 namespace App\Admin\Presentation\Controller;
 
+use App\User\Domain\Repository\UserRepositoryInterface;
 use App\User\Infrastructure\Security\UserAuthenticator;
-use App\User\Infrastructure\Persistence\UserRepository;
-use App\User\Domain\ValueObject\Email;
-use App\User\Domain\ValueObject\Phone;
-use App\User\Domain\ValueObject\Password;
-use App\User\Domain\Entity\User;
-use App\User\Domain\ValueObject\UserStatus;
-use DateTime;
+use App\Shared\Base\BaseController;
+use App\Admin\Application\Service\UserManagementService;
+use App\User\Domain\ValueObject\UserStatus; // ✅ Import the value object
 
-class AdminUserController
+class AdminUserController extends BaseController
 {
-    private UserRepository $userRepository;
+    private UserRepositoryInterface $userRepository;
     private UserAuthenticator $userAuth;
+    private UserManagementService $userService;
 
-    public function __construct(UserRepository $userRepository, UserAuthenticator $userAuth)
-    {
+    public function __construct(
+        UserRepositoryInterface $userRepository,
+        UserAuthenticator $userAuth,
+        UserManagementService $userService
+    ) {
         $this->userRepository = $userRepository;
         $this->userAuth = $userAuth;
+        $this->userService = $userService;
     }
 
-    /**
-     * ✅ Check if current user is admin
-     */
     private function isAdmin(): bool
     {
         return $this->userAuth->isLoggedIn() && ($_SESSION['user_role'] ?? '') === 'admin';
     }
 
-    /**
-     * ✅ Display list of users (only role = 'user')
-     */
     public function index(): void
     {
         if (!$this->isAdmin()) {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+            $this->redirect('/login');
         }
 
-        // ✅ Only fetch users with role = 'user'
         $users = $this->userRepository->findByRole('user');
-        $pageTitle = 'Manage Users';
-        $content = BASE_PATH . '/view/admin/users/index.php';
 
-        // AJAX request – return partial view only
-        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-            include $content;
-            return;
-        }
-
-        // Full page load – use single layout
-        include BASE_PATH . '/view/admin-dashboard.php';
+        $this->view('admin-dashboard', [
+            'pageTitle' => 'Manage Users',
+            'content' => BASE_PATH . '/view/admin/users/index.php',
+            'users' => $users
+        ]);
     }
 
     public function create(): void
     {
         if (!$this->isAdmin()) {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+            $this->redirect('/login');
         }
 
-        $pageTitle = 'Create User';
-        $content = BASE_PATH . '/view/admin/users/create.php';
-
-        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-            include $content;
-            return;
-        }
-
-        include BASE_PATH . '/view/admin-dashboard.php';
+        $this->view('admin-dashboard', [
+            'pageTitle' => 'Create User',
+            'content' => BASE_PATH . '/view/admin/users/create.php'
+        ]);
     }
 
     public function store(): void
     {
         if (!$this->isAdmin()) {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+            $this->redirect('/login');
         }
 
-        $name = $_POST['name'] ?? '';
-        $email = $_POST['email'] ?? '';
-        $phone = $_POST['phone'] ?? null;
-        $password = $_POST['password'] ?? '';
-        $status = $_POST['status'] ?? 'active';
-
-        if (empty($name) || empty($email) || empty($password)) {
-            $_SESSION['error_message'] = 'Name, email, and password are required.';
-            header('Location: ' . BASE_URL . '/admin/users/create');
-            exit;
-        }
+        $data = $_POST;
 
         try {
-            // Check if email already exists
-            if ($this->userRepository->findByEmailString($email)) {
-                $_SESSION['error_message'] = 'Email already registered.';
-                header('Location: ' . BASE_URL . '/admin/users/create');
-                exit;
-            }
-
-            // Check if phone already exists (if provided)
-            if ($phone && $this->userRepository->findByPhoneString($phone)) {
-                $_SESSION['error_message'] = 'Phone number already registered.';
-                header('Location: ' . BASE_URL . '/admin/users/create');
-                exit;
-            }
-
-            // ✅ Get role ID for 'user'
-            $roleId = $this->userRepository->getRoleIdByName('user');
-            if (!$roleId) {
-                throw new \RuntimeException('Default role "user" not found in database.');
-            }
-
-            $emailVO = new Email($email);
-            $passwordVO = new Password($password);
-            $phoneVO = $phone ? new Phone($phone) : null;
-            $statusVO = UserStatus::fromString($status);
-
-            // ✅ Correct constructor with all 20 arguments
-            $user = new User(
-                null,               // id
-                $name,              // name
-                $emailVO,           // email
-                $phoneVO,           // phone
-                $passwordVO,        // password
-                $statusVO,          // status
-                $roleId,            // roleId (int)
-                'user',             // roleName (string)
-                false,              // emailVerified
-                false,              // phoneVerified
-                'email',            // loginMethod
-                null,               // rememberToken
-                new DateTime(),     // createdAt
-                new DateTime(),     // updatedAt
-                null,               // lastLoginAt
-                null,               // verificationToken
-                null,               // verificationCode
-                null,               // verificationExpiresAt
-                null,               // emailVerifiedAt
-                null                // phoneVerifiedAt
-            );
-
-            $this->userRepository->save($user);
-
+            $this->userService->createUser($data);
             $_SESSION['success_message'] = 'User created successfully.';
-            header('Location: ' . BASE_URL . '/admin/users');
         } catch (\Exception $e) {
-            $_SESSION['error_message'] = 'Failed to create user: ' . $e->getMessage();
-            header('Location: ' . BASE_URL . '/admin/users/create');
+            $_SESSION['error_message'] = 'Failed: ' . $e->getMessage();
+            $this->redirect('/admin/users/create');
         }
+
+        $this->redirect('/admin/users');
     }
 
     public function edit(int $id): void
     {
         if (!$this->isAdmin()) {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+            $this->redirect('/login');
         }
 
         $user = $this->userRepository->findById($id);
         if (!$user) {
             $_SESSION['error_message'] = 'User not found.';
-            header('Location: ' . BASE_URL . '/admin/users');
-            exit;
+            $this->redirect('/admin/users');
         }
 
-        $pageTitle = 'Edit User';
-        $content = BASE_PATH . '/view/admin/users/edit.php';
-
-        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-            include $content;
-            return;
-        }
-
-        include BASE_PATH . '/view/admin-dashboard.php';
+        $this->view('admin-dashboard', [
+            'pageTitle' => 'Edit User',
+            'content' => BASE_PATH . '/view/admin/users/edit.php',
+            'user' => $user
+        ]);
     }
 
     public function update(int $id): void
     {
         if (!$this->isAdmin()) {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+            $this->redirect('/login');
         }
 
-        $user = $this->userRepository->findById($id);
-        if (!$user) {
-            $_SESSION['error_message'] = 'User not found.';
-            header('Location: ' . BASE_URL . '/admin/users');
-            exit;
-        }
-
-        $name = $_POST['name'] ?? $user->getName();
-        $email = $_POST['email'] ?? $user->getEmail()->getValue();
-        $phone = $_POST['phone'] ?? ($user->getPhone() ? $user->getPhone()->getValue() : null);
-        $status = $_POST['status'] ?? $user->getStatus()->getValue();
-        $password = $_POST['password'] ?? null;
+        $data = $_POST;
 
         try {
-            // If email changed, check uniqueness
-            if ($email !== $user->getEmail()->getValue()) {
-                if ($this->userRepository->findByEmailString($email)) {
-                    $_SESSION['error_message'] = 'Email already taken.';
-                    header('Location: ' . BASE_URL . '/admin/users/edit/' . $id);
-                    exit;
-                }
-                $user->setEmail(new Email($email));
-            }
-
-            // If phone changed, check uniqueness
-            $currentPhone = $user->getPhone() ? $user->getPhone()->getValue() : null;
-            if ($phone !== $currentPhone) {
-                if ($phone && $this->userRepository->findByPhoneString($phone)) {
-                    $_SESSION['error_message'] = 'Phone already taken.';
-                    header('Location: ' . BASE_URL . '/admin/users/edit/' . $id);
-                    exit;
-                }
-                $user->setPhone($phone ? new Phone($phone) : null);
-            }
-
-            $user->setName($name);
-            $user->setStatus(UserStatus::fromString($status));
-
-            if (!empty($password)) {
-                $user->setPassword(new Password($password));
-            }
-
-            $this->userRepository->save($user);
-
+            $this->userService->updateUser($id, $data);
             $_SESSION['success_message'] = 'User updated successfully.';
-            header('Location: ' . BASE_URL . '/admin/users');
         } catch (\Exception $e) {
-            $_SESSION['error_message'] = 'Failed to update user: ' . $e->getMessage();
-            header('Location: ' . BASE_URL . '/admin/users/edit/' . $id);
+            $_SESSION['error_message'] = 'Failed: ' . $e->getMessage();
+            $this->redirect('/admin/users/edit/' . $id);
         }
+
+        $this->redirect('/admin/users');
     }
 
     public function delete(int $id): void
     {
         if (!$this->isAdmin()) {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+            $this->redirect('/login');
         }
 
         try {
             $this->userRepository->delete($id);
             $_SESSION['success_message'] = 'User deleted successfully.';
         } catch (\Exception $e) {
-            $_SESSION['error_message'] = 'Failed to delete user: ' . $e->getMessage();
+            $_SESSION['error_message'] = 'Failed: ' . $e->getMessage();
         }
 
-        header('Location: ' . BASE_URL . '/admin/users');
+        $this->redirect('/admin/users');
+    }
+
+    /**
+     * Toggle user status (Enable / Disable)
+     */
+    public function toggleStatus(int $id): void
+    {
+        if (!$this->isAdmin()) {
+            $this->redirect('/login');
+        }
+
+        try {
+            // 1. Fetch the user
+            $user = $this->userRepository->findById($id);
+            if (!$user) {
+                throw new \Exception('User not found.');
+            }
+
+            // 2. Get the current status (a UserStatus value object)
+            $currentStatus = $user->getStatus(); // e.g., UserStatus::ACTIVE
+
+            // 3. Determine the new status string based on the current one
+            // Assuming UserStatus has a method getValue() or you can compare directly
+            // If you have constants: UserStatus::ACTIVE and UserStatus::INACTIVE
+            if ($currentStatus->getValue() === 'active') {
+                $newStatusString = 'inactive';
+            } else {
+                $newStatusString = 'active';
+            }
+
+            // 4. Create a new UserStatus value object with the new status
+            $newStatus = new UserStatus($newStatusString);
+
+            // 5. Set the new status on the user entity
+            $user->setStatus($newStatus);
+
+            // 6. Save via repository (make sure your repository has a save() method)
+            $this->userRepository->save($user);
+
+            // 7. Set success message
+            $_SESSION['success_message'] = 'User status updated to ' . ucfirst($newStatusString) . '.';
+        } catch (\Exception $e) {
+            $_SESSION['error_message'] = 'Failed to toggle status: ' . $e->getMessage();
+        }
+
+        // 8. Redirect back to the user list
+        $this->redirect('/admin/users');
     }
 }

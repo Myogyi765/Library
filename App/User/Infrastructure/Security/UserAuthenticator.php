@@ -21,8 +21,11 @@ class UserAuthenticator
         $this->authorization = $authorization;
     }
 
-    
-    public function authenticate(string $identifier, string $password, string $requestedRole = 'user'): bool
+    /**
+     * Authenticate user by identifier (email or phone) and password.
+     * No role parameter needed – role is determined from user data.
+     */
+    public function authenticate(string $identifier, string $password): bool
     {
         $user = $this->userRepository->findByEmail(new Email($identifier));
 
@@ -34,30 +37,13 @@ class UserAuthenticator
             }
         }
 
-        // 1. Check if user exists and password is valid
+        // Check if user exists and password is valid
         if (!$user || !$user->getPassword()->verify($password)) {
             $_SESSION['login_errors']['general'] = 'Invalid email/phone or password.';
             return false;
         }
 
-        // 2. Role validation: compare actual role with requested role
-        $actualRole = $user->getRole() ?? 'user';
-        if ($actualRole !== $requestedRole) {
-            // Build user-friendly role names
-            $roleNames = [
-                'admin'     => 'Admin',
-                'librarian' => 'Librarian',
-                'user'      => 'User',
-            ];
-            $displayRequested = $roleNames[$requestedRole] ?? ucfirst($requestedRole);
-            $displayActual = $roleNames[$actualRole] ?? ucfirst($actualRole);
-
-            $_SESSION['login_errors']['general'] = 
-                "You selected '{$displayRequested}' but your account is '{$displayActual}'. Please select '{$displayActual}' to login.";
-            return false;
-        }
-
-        // 3. All good – perform login
+        // All good – perform login
         $this->login($user);
         return true;
     }
@@ -92,7 +78,7 @@ class UserAuthenticator
         $_SESSION['user_name'] = $user->getName();
         $_SESSION['user_email'] = $user->getEmail()->getValue();
         $_SESSION['user_phone'] = $user->getPhone()?->getValue();
-        $_SESSION['user_role'] = $user->getRole() ?? 'user';
+        $_SESSION['user_role'] = $user->getRole() ?? 'user';  // ← role comes from user
         $_SESSION['user_status'] = $user->getStatus()?->getValue() ?? 'active';
         $_SESSION['user_login_method'] = $user->getLoginMethod() ?? 'email';
         $_SESSION['user_identifier'] = $user->getIdentifier() ?? $user->getEmail()->getValue();

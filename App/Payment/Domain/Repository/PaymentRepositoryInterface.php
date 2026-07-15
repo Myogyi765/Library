@@ -13,4 +13,10 @@ interface PaymentRepositoryInterface
 
          public function findByIdempotencyKey(string $key): ?Payment;
            public function findByUserId(int $userId): array; 
+
+           public function findPendingApprovalsWithDetails(): array;
+
+           
+public function findAllWithDetails(): array;
+public function findByStatusWithDetails(string $status): array;
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Librarian\Presentation\Controller;
 
 use App\User\Infrastructure\Security\UserAuthenticator;
@@ -6,7 +7,7 @@ use App\Shared\Base\BaseController;
 use App\Book\Domain\Repository\BookRepositoryInterface;
 use App\Book\Domain\Repository\CategoryRepositoryInterface;
 use App\User\Domain\Repository\UserRepositoryInterface;
-use App\Loan\Domain\Repository\LoanRepositoryInterface;
+use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Shared\Core\Authorization\Authorization;
 use App\Payment\Domain\Repository\PaymentRepositoryInterface;
 
@@ -46,6 +47,7 @@ class DashboardController extends BaseController
         }
 
         $page = $_GET['page'] ?? 'dashboard';
+        $statusFilter = $_GET['status'] ?? 'all';  // ✅ for payment filter
 
         $permissionMap = [
             'books'        => 'view_books',
@@ -74,7 +76,7 @@ class DashboardController extends BaseController
         $allLoans = $this->loanRepository->findAll();
         $allCategories = $this->categoryRepository->findAll();
 
-        // ✅ Map users by ID for fast lookup
+        // Map users by ID for fast lookup
         $users = [];
         foreach ($allUsers as $user) {
             $users[$user->getId()] = $user;
@@ -143,17 +145,31 @@ class DashboardController extends BaseController
             'page'        => $page,
             'stats'       => $stats,
             'loans'       => $allLoans,
-            // ✅ FIX: use mapped $users array (indexed by user ID) instead of raw $allUsers
-            'users'       => $users,
-            'books'       => $books,          // lookup array
+            'users'       => $users,        // ✅ indexed by user ID
+            'books'       => $books,        // lookup array
             'allBooks'    => $allBooks,
             'categories'  => $allCategories,
             'categoryMap' => $categoryMap,
         ];
 
-        // Payments page – fetch payments data
+        // ---- Payments: fetch with details and filters ----
         if ($page === 'payments') {
-            $viewData['payments'] = $this->paymentRepo->findAll();
+            switch ($statusFilter) {
+                case 'pending':
+                    $payments = $this->paymentRepo->findPendingApprovalsWithDetails();
+                    break;
+                case 'approved':
+                    $payments = $this->paymentRepo->findByStatusWithDetails('completed');
+                    break;
+                case 'rejected':
+                    $payments = $this->paymentRepo->findByStatusWithDetails('rejected');
+                    break;
+                default:
+                    $payments = $this->paymentRepo->findAllWithDetails();
+                    break;
+            }
+            $viewData['payments'] = $payments;
+            $viewData['currentFilter'] = $statusFilter;
         }
 
         // ---- Render ----

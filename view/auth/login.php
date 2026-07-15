@@ -61,19 +61,9 @@ include __DIR__ . '/../layout/header.php';
 
             <form action="<?= BASE_URL ?>/login" method="POST" class="auth-form" autocomplete="on">
 
-                <!-- ===== ROLE SELECT (Active) ===== -->
-                <div class="form-group">
-                    <label for="role-select" class="form-label"><i class="fas fa-user-tag"></i> Account Type</label>
-                    <div class="select-wrapper">
-                        <select name="role" id="role-select" class="field-input select-custom">
-                            <option value="user">User</option>
-                            <option value="admin" selected>Admin</option>
-                            <option value="librarian">Librarian</option>
-                        </select>
-                        <i class="fas fa-chevron-down select-arrow"></i>
-                    </div>
-                  
-                </div>
+                <!-- ========================================================= -->
+                <!--  🚀 ACCOUNT TYPE DROPDOWN ကို ဖယ်ရှားလိုက်ပြီ                -->
+                <!-- ========================================================= -->
 
                 <!-- Email -->
                 <div class="form-group <?= isset($_SESSION['login_errors']['email']) ? 'has-error' : '' ?>">
@@ -128,10 +118,7 @@ include __DIR__ . '/../layout/header.php';
 </div>
 
 <style>
-    /* ================================================================
-       LOGIN PAGE STYLES – LIGHT & DARK MODE SUPPORT
-       ================================================================ */
-
+    /* ဒီနေရာမှာ သင့်ရဲ့ CSS တွေ အကုန်လုံးကို ထားပါ (ကျွန်တော် အတိုချုံးပြထားတာပါ) */
     :root {
         --bg-body: #eef4ff;
         --bg-card: rgba(255,255,255,0.95);
@@ -152,12 +139,7 @@ include __DIR__ . '/../layout/header.php';
         --error-text: #dc2626;
         --btn-shadow: rgba(59, 130, 246, 0.28);
         --btn-hover-shadow: rgba(59, 130, 246, 0.4);
-        --strength-weak: #ef4444;
-        --strength-medium: #f59e0b;
-        --strength-strong: #3b82f6;
     }
-
-    /* Dark mode overrides */
     .dark {
         --bg-body: #0f172a;
         --bg-card: rgba(30, 41, 59, 0.95);
@@ -178,12 +160,7 @@ include __DIR__ . '/../layout/header.php';
         --error-text: #fca5a5;
         --btn-shadow: rgba(59, 130, 246, 0.2);
         --btn-hover-shadow: rgba(59, 130, 246, 0.4);
-        --strength-weak: #f87171;
-        --strength-medium: #fbbf24;
-        --strength-strong: #60a5fa;
     }
-
-    /* Base body */
     body {
         margin: 0;
         font-family: Arial, Helvetica, sans-serif;
@@ -192,8 +169,6 @@ include __DIR__ . '/../layout/header.php';
         min-height: 100vh;
         transition: background-color 0.3s, color 0.3s;
     }
-
-    /* Layout */
     .auth-shell {
         max-width: 1180px;
         margin: 0 auto;
@@ -245,8 +220,6 @@ include __DIR__ . '/../layout/header.php';
     .dark .benefit-icon {
         color: #4ade80;
     }
-
-    /* Card */
     .glass-card {
         background: var(--bg-card);
         backdrop-filter: blur(12px);
@@ -267,7 +240,6 @@ include __DIR__ . '/../layout/header.php';
         color: var(--text-secondary);
         margin: 0 0 1.25rem;
     }
-
     .icon-wrap {
         width: 58px;
         height: 58px;
@@ -281,8 +253,6 @@ include __DIR__ . '/../layout/header.php';
         box-shadow: 0 10px 24px rgba(59, 130, 246, 0.3);
         transition: background 0.3s;
     }
-
-    /* Form */
     .auth-form {
         display: flex;
         flex-direction: column;
@@ -377,7 +347,6 @@ include __DIR__ . '/../layout/header.php';
     .helper-text i {
         margin-right: 0.2rem;
     }
-
     .toggle-pwd {
         position: absolute;
         right: 0.35rem;
@@ -394,14 +363,12 @@ include __DIR__ . '/../layout/header.php';
     .toggle-pwd:hover {
         color: #3b82f6;
     }
-
     .checkbox {
         accent-color: #3b82f6;
         width: 16px;
         height: 16px;
         cursor: pointer;
     }
-
     .auth-row {
         display: flex;
         justify-content: space-between;
@@ -428,7 +395,6 @@ include __DIR__ . '/../layout/header.php';
     .auth-link-strong {
         font-weight: 700;
     }
-
     .submit-btn {
         width: 100%;
         border: none;
@@ -449,14 +415,11 @@ include __DIR__ . '/../layout/header.php';
         transform: translateY(-2px);
         box-shadow: 0 12px 28px var(--btn-hover-shadow);
     }
-
     .auth-footer {
         margin-top: 0.25rem;
         text-align: center;
         color: var(--text-secondary);
     }
-
-    /* Alerts & Errors */
     .alert-error {
         background: var(--error-bg);
         border: 1px solid var(--error-border);
@@ -482,8 +445,6 @@ include __DIR__ . '/../layout/header.php';
     .has-error .field-input:focus {
         box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15);
     }
-
-    /* Responsive */
     @media (max-width: 768px) {
         .auth-shell {
             padding-top: 1.2rem;
@@ -501,8 +462,6 @@ include __DIR__ . '/../layout/header.php';
 <script>
     (function() {
         'use strict';
-
-        // Password toggle
         document.querySelectorAll('.toggle-pwd').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();

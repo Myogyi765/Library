@@ -1,10 +1,10 @@
 <?php
 
 use App\Shared\Core\ErrorHandler;
-use App\Loan\Infrastructure\Persistence\LoanRepository;
-use App\Loan\Infrastructure\Mapper\LoanMapper;
-use App\Loan\Domain\Repository\LoanRepositoryInterface;
-use App\Loan\Application\Handler\BorrowBookHandler;
+use App\Circulation\Infrastructure\Persistence\LoanRepository;
+use App\Circulation\Infrastructure\Mapper\LoanMapper;
+use App\Circulation\Domain\Repository\LoanRepositoryInterface;
+use App\Circulation\Application\Handler\BorrowBookHandler;
 use App\Book\Domain\Repository\BookRepositoryInterface;
 use App\Admin\Application\Service\SettingsService;   // ✅ added
 

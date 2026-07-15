@@ -2,7 +2,7 @@
 namespace App\Payment\Application\Handler;
 
 use App\Payment\Domain\Repository\PaymentRepositoryInterface;
-use App\Loan\Domain\Repository\LoanRepositoryInterface; 
+use App\Circulation\Domain\Repository\LoanRepositoryInterface; 
 use App\Payment\Application\Command\RejectPaymentCommand;
 use App\Payment\Domain\Exception\PaymentDomainException;
 

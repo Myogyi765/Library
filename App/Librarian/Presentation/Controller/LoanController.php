@@ -2,12 +2,12 @@
 
 namespace App\Librarian\Presentation\Controller;
 
-use App\Loan\Domain\Repository\LoanRepositoryInterface;
+use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Book\Domain\Repository\BookRepositoryInterface;
 use App\User\Domain\Repository\UserRepositoryInterface;
 use App\Shared\Base\BaseController;
-use App\Loan\Domain\Entity\Loan;
-use App\Loan\Domain\ValueObject\LoanStatus;
+use App\Circulation\Domain\Entity\Loan;
+use App\Circulation\Domain\ValueObject\LoanStatus;
 use PDO;
 
 

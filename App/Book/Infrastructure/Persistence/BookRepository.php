@@ -126,19 +126,34 @@ class BookRepository implements BookRepositoryInterface
         );
     }
 
-    // ✅ New method: decrement available quantity with safety check
+    /**
+     * Decrement the available quantity of a book by the given amount.
+     * Uses positional placeholders (?) to avoid "Invalid parameter number" errors.
+     */
     public function decrementQuantity(int $bookId, int $amount = 1): void
     {
-        $sql = "UPDATE books 
-                SET available_quantity = available_quantity - :amount 
-                WHERE id = :book_id AND available_quantity >= :amount";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            ':amount' => $amount,
-            ':book_id' => $bookId
-        ]);
-        if ($stmt->rowCount() === 0) {
-            throw new \RuntimeException('Not enough copies available for this book.');
+        try {
+            // ✅ FIXED: Use positional placeholders instead of named placeholders
+            $sql = "UPDATE books 
+                    SET available_quantity = available_quantity - ? 
+                    WHERE id = ? AND available_quantity >= ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$amount, $bookId, $amount]);
+
+            if ($stmt->rowCount() === 0) {
+                $book = $this->findById($bookId);
+                if (!$book) {
+                    throw new \RuntimeException("Book with ID {$bookId} not found.");
+                }
+                throw new \RuntimeException(
+                    "Not enough copies available. Available: {$book->getAvailableQuantity()}, requested: {$amount}"
+                );
+            }
+
+            error_log("✅ Book quantity decreased for book ID: {$bookId}, amount: {$amount}");
+        } catch (\PDOException $e) {
+            error_log("❌ BookRepository::decrementQuantity() PDO error: " . $e->getMessage());
+            throw $e;
         }
     }
 }

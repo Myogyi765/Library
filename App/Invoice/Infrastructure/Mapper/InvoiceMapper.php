@@ -53,16 +53,23 @@ class InvoiceMapper
             'transaction_reference' => $invoice->getTransactionReference(),
             'borrowed_at' => $invoice->getBorrowedAt()->format('Y-m-d H:i:s'),
             'due_date' => $invoice->getDueDate()->format('Y-m-d H:i:s'),
+            'issued_at' => $invoice->getIssuedAt()->format('Y-m-d H:i:s'), // ✅ Included
             'status' => $invoice->getStatus()->getValue(),
         ];
     }
 
+    /**
+     * PHP 7.4 compatible – no match expression.
+     */
     private function getStatusFromString(string $status): InvoiceStatus
     {
-        return match (strtolower($status)) {
-            'issued' => InvoiceStatus::ISSUED(),
-            'cancelled' => InvoiceStatus::CANCELLED(),
-            default => InvoiceStatus::ISSUED(),
-        };
+        $status = strtolower($status);
+        if ($status === 'issued') {
+            return InvoiceStatus::ISSUED();
+        }
+        if ($status === 'cancelled') {
+            return InvoiceStatus::CANCELLED();
+        }
+        return InvoiceStatus::ISSUED();
     }
 }

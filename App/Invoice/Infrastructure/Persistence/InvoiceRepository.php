@@ -4,7 +4,6 @@ namespace App\Invoice\Infrastructure\Persistence;
 
 use App\Invoice\Domain\Entity\Invoice;
 use App\Invoice\Domain\Repository\InvoiceRepositoryInterface;
-use App\Invoice\Domain\ValueObject\InvoiceStatus;
 use App\Invoice\Infrastructure\Mapper\InvoiceMapper;
 use PDO;
 
@@ -23,7 +22,10 @@ class InvoiceRepository implements InvoiceRepositoryInterface
     {
         $data = $this->mapper->toPersistence($invoice);
 
+          error_log("🔍 Invoice data to save: " . print_r($data, true));
+
         if ($invoice->getId()) {
+            // UPDATE
             $sql = "UPDATE invoices SET 
                         invoice_number = :invoice_number,
                         payment_id = :payment_id,
@@ -36,6 +38,7 @@ class InvoiceRepository implements InvoiceRepositoryInterface
                         transaction_reference = :transaction_reference,
                         borrowed_at = :borrowed_at,
                         due_date = :due_date,
+                        issued_at = :issued_at,
                         status = :status
                     WHERE id = :id";
             $stmt = $this->db->prepare($sql);
@@ -52,17 +55,19 @@ class InvoiceRepository implements InvoiceRepositoryInterface
                 ':transaction_reference' => $data['transaction_reference'],
                 ':borrowed_at' => $data['borrowed_at'],
                 ':due_date' => $data['due_date'],
+                ':issued_at' => $data['issued_at'],
                 ':status' => $data['status'],
             ]);
         } else {
+            // INSERT
             $sql = "INSERT INTO invoices (
                         invoice_number, payment_id, loan_id, user_id, book_id,
                         amount, currency, payment_method, transaction_reference,
-                        borrowed_at, due_date, status
+                        borrowed_at, due_date, issued_at, status
                     ) VALUES (
                         :invoice_number, :payment_id, :loan_id, :user_id, :book_id,
                         :amount, :currency, :payment_method, :transaction_reference,
-                        :borrowed_at, :due_date, :status
+                        :borrowed_at, :due_date, :issued_at, :status
                     )";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
@@ -77,9 +82,10 @@ class InvoiceRepository implements InvoiceRepositoryInterface
                 ':transaction_reference' => $data['transaction_reference'],
                 ':borrowed_at' => $data['borrowed_at'],
                 ':due_date' => $data['due_date'],
+                ':issued_at' => $data['issued_at'],
                 ':status' => $data['status'],
             ]);
-            $invoice->setId((int)$this->db->lastInsertId());
+            $invoice->setId((int) $this->db->lastInsertId());
         }
     }
 
@@ -101,7 +107,7 @@ class InvoiceRepository implements InvoiceRepositoryInterface
 
     public function findByPaymentId(int $paymentId): ?Invoice
     {
-        $stmt = $this->db->prepare("SELECT * FROM invoices WHERE payment_id = :payment_id");
+        $stmt = $this->db->prepare("SELECT * FROM invoices WHERE payment_id = :payment_id ORDER BY id DESC LIMIT 1");
         $stmt->execute([':payment_id' => $paymentId]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ? $this->mapper->toDomain($row) : null;

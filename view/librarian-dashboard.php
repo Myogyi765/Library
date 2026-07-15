@@ -46,24 +46,28 @@ include BASE_PATH . '/view/layout/header.php';
                 <i class="fas fa-chart-pie w-5 text-center"></i>
                 <span>Dashboard</span>
             </a>
+              <!-- Users -->
+            <a href="<?= BASE_URL ?>/librarian/dashboard?page=users" 
+               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'users' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
+                <i class="fas fa-users w-5 text-center"></i>
+                <span>Users</span>
+            </a>
+
+             <!-- Books -->
+            <a href="<?= BASE_URL ?>/librarian/dashboard?page=books" 
+               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'books' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
+                <i class="fas fa-book w-5 text-center"></i>
+                <span>Books</span>
+            </a>
+
             <!-- Loans -->
             <a href="<?= BASE_URL ?>/librarian/dashboard?page=loans" 
                class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'loans' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
                 <i class="fas fa-hand-holding w-5 text-center"></i>
                 <span>Loans</span>
             </a>
-            <!-- Users -->
-            <a href="<?= BASE_URL ?>/librarian/dashboard?page=users" 
-               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'users' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-users w-5 text-center"></i>
-                <span>Users</span>
-            </a>
-            <!-- Books -->
-            <a href="<?= BASE_URL ?>/librarian/dashboard?page=books" 
-               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'books' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-book w-5 text-center"></i>
-                <span>Books</span>
-            </a>
+          
+           
             <a href="<?= BASE_URL ?>/librarian/dashboard?page=payments" 
        class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'payments' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
         <i class="fas fa-credit-card w-5 text-center"></i>

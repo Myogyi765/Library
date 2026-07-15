@@ -1,23 +1,39 @@
 <?php
 
-use App\Shared\Core\ErrorHandler;
 use App\Book\Infrastructure\Persistence\BookRepository;
 use App\Book\Infrastructure\Persistence\CategoryRepository;
 use App\Book\Domain\Repository\BookRepositoryInterface;
 use App\Book\Domain\Repository\CategoryRepositoryInterface;
+use App\Book\Application\UseCase\GetBook;
+use App\Book\Application\UseCase\GetBooks;
+use App\Book\Presentation\Controller\BookController;
 
-$container->singleton('book.repository', function() use ($pdo) {
-    return new BookRepository($pdo);
-});
-$container->singleton('category.repository', function() use ($pdo) {
-    return new CategoryRepository($pdo);
-});
+return function ($container) {
 
-$container->set(BookRepositoryInterface::class, function($c) {
-    return $c->get('book.repository');
-});
-$container->set(CategoryRepositoryInterface::class, function($c) {
-    return $c->get('category.repository');
-});
+    // ── Repositories ──
+    $container->singleton(BookRepository::class, function ($c) {
+        return new BookRepository($c->get('db'));
+    });
+    $container->singleton(BookRepositoryInterface::class, fn($c) => $c->get(BookRepository::class));
+    $container->set('book.repository', fn($c) => $c->get(BookRepositoryInterface::class));
 
-ErrorHandler::log('✅ Book services registered', 'DEBUG');
+    $container->singleton(CategoryRepository::class, function ($c) {
+        return new CategoryRepository($c->get('db'));
+    });
+    $container->singleton(CategoryRepositoryInterface::class, fn($c) => $c->get(CategoryRepository::class));
+    $container->set('category.repository', fn($c) => $c->get(CategoryRepositoryInterface::class));
+
+    // ── UseCases ──
+    $container->singleton(GetBook::class, function ($c) {
+        return new GetBook($c->get(BookRepositoryInterface::class));
+    });
+    $container->singleton(GetBooks::class, function ($c) {
+        return new GetBooks($c->get(BookRepositoryInterface::class));
+    });
+
+    // ── Controller ──
+    $container->singleton(BookController::class, function ($c) {
+        // ✅ Pass the container itself, not GetBook
+        return new BookController($c);
+    });
+};

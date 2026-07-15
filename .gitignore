@@ -1,15 +1,24 @@
-.env
-
 /vendor/
 
-/storage/logs/
-/public/storage/logs/
+.env
 
-/public/uploads/
-/public/storage/payment_screenshots/
+*.log
+/storage/logs/*
+
+/public/storage/logs/*
+
+/public/uploads/books/*
+!/public/uploads/books/.gitkeep
+
+/public/uploads/profiles/*
+!/public/uploads/profiles/.gitkeep
+
+/public/storage/payment_screenshots/*
+!/public/storage/payment_screenshots/.gitkeep
 
 .vscode/
-.idea
-.DB_Store
+.idea/
+
+
+.DS_Store
 Thumbs.db
-.log

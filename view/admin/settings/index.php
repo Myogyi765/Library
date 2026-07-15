@@ -22,6 +22,7 @@ $roles = $roles ?? ['admin', 'librarian', 'user'];
 $defaultRole = $defaultRole ?? 'user';
 $roleCounts = $roleCounts ?? ['admin' => 1, 'librarian' => 3, 'user' => 15];
 $permissions = $permissions ?? $defaultPermissions;
+$settings = $settings ?? ['enable_refunds' => true]; // fallback
 
 $rolePermissions = $rolePermissions ?? [];
 
@@ -50,6 +51,7 @@ $permissionGroups = [
         'create_payments',
         'edit_payments',
         'delete_payments',
+        'refund_payments',
     ],
     '🔔 Notifications' => [
         'view_notifications',
@@ -204,10 +206,36 @@ $defaultRoleIcon = 'fa-user-cog';
             <?php endforeach; ?>
         </div>
 
-        <!-- ─── PERMISSION SETTINGS (TABS) ──────────────────────────── -->
+
         <div class="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
             <form action="<?= BASE_URL ?>/admin/settings/update" method="POST">
                 <div class="p-6 lg:p-8">
+                    <!-- Refund Feature Toggle -->
+                    <?php 
+                    $refundEnabled = !empty($settings['enable_refunds']);
+                    ?>
+                    <div class="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-6 mb-6">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <i class="fas fa-undo-alt text-purple-600"></i> Refund Feature
+                                </h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Allow librarians to process refunds for approved payments</p>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-sm text-gray-700 dark:text-gray-300 <?= $refundEnabled ? 'text-green-600' : 'text-red-600' ?>">
+                                    <?= $refundEnabled ? 'Enabled' : 'Disabled' ?>
+                                </span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="enable_refunds" value="1" 
+                                           <?= $refundEnabled ? 'checked' : '' ?>
+                                           class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-300 dark:bg-gray-600 rounded-full peer peer-checked:bg-purple-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Default Role -->
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-6 border-b border-gray-200/70 dark:border-gray-700/70">
                         <div>
@@ -317,9 +345,10 @@ $defaultRoleIcon = 'fa-user-cog';
                         </div>
                         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
                             <select name="system_status" class="w-full sm:w-48 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm shadow-sm text-gray-900 dark:text-white">
-                                <option value="active">🟢 Active</option>
-                                <option value="maintenance">🟡 Maintenance</option>
-                                <option value="offline">🔴 Offline</option>
+                                <?php $systemStatus = $settings['system_status'] ?? 'active'; ?>
+                                <option value="active" <?= $systemStatus === 'active' ? 'selected' : '' ?>>🟢 Active</option>
+                                <option value="maintenance" <?= $systemStatus === 'maintenance' ? 'selected' : '' ?>>🟡 Maintenance</option>
+                                <option value="offline" <?= $systemStatus === 'offline' ? 'selected' : '' ?>>🔴 Offline</option>
                             </select>
                             <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white px-6 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-indigo-500/20 hover:shadow-lg text-sm font-medium">
                                 <i class="fas fa-save"></i> Save Settings

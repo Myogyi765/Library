@@ -13,12 +13,38 @@ class SettingsService
         $this->repository = $repository;
     }
 
+    
     private function get(string $key, $default = null)
     {
         $value = $this->repository->findByKey($key);
         return $value !== null ? $value : $default;
     }
 
+    
+    public function getSetting(string $key, $default = null)
+    {
+        return $this->get($key, $default);
+    }
+
+    
+    public function getSettings(): array
+    {
+        return $this->repository->findAll();
+    }
+
+    
+    public function updateSetting(string $key, $value): void
+    {
+        // Convert booleans to integers for storage
+        if (is_bool($value)) {
+            $value = $value ? '1' : '0';
+        }
+
+        // Delegate to repository (must implement insert/update logic)
+        $this->repository->set($key, $value);
+    }
+
+    // ─── Convenience Getters ──────────────────────────────────
     public function getFinePerDay(): int { return (int) $this->get('fine_per_day', 500); }
     public function getBorrowingFee(): int { return (int) $this->get('borrowing_fee', 0); }
     public function getMaxBorrowDays(): int { return (int) $this->get('max_borrow_days', 14); }

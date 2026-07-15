@@ -19,13 +19,14 @@ if (isset($categories)) {
 }
 
 // ---- Get user's loan status for this book ----
-$userLoanStatus = null;
-$userLoanId = null;
-if (isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] === true && isset($_SESSION['user_id'])) {
+$userLoanStatus = $userLoanStatus ?? null;
+$userLoanId = $userLoanId ?? null;
+
+if ($userLoanStatus === null && isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] === true && isset($_SESSION['user_id'])) {
     try {
         $container = $GLOBALS['container'] ?? null;
-        if ($container && $container->has(\App\Loan\Domain\Repository\LoanRepositoryInterface::class)) {
-            $loanRepo = $container->get(\App\Loan\Domain\Repository\LoanRepositoryInterface::class);
+        if ($container && $container->has(\App\Circulation\Domain\Repository\LoanRepositoryInterface::class)) {
+            $loanRepo = $container->get(\App\Circulation\Domain\Repository\LoanRepositoryInterface::class);
             $loan = $loanRepo->findActiveOrPendingByUserAndBook($_SESSION['user_id'], $book->getId());
             if ($loan) {
                 $userLoanStatus = $loan->getStatus()->getValue();
@@ -33,7 +34,7 @@ if (isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] ==
             }
         }
     } catch (\Exception $e) {
-        // Silently fail – just don't show loan status
+        // Silently fail
     }
 }
 ?>
@@ -99,11 +100,11 @@ if (isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] ==
                 <div class="mt-8 flex flex-wrap gap-3">
                     <?php if ($book->getAvailableQuantity() > 0 && isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] === true): ?>
                         <?php if ($userLoanStatus === 'pending'): ?>
-                            <span class="bg-yellow-100 text-yellow-800 px-6 py-2.5 rounded-lg inline-flex items-center gap-2">
-                                <i class="fas fa-clock"></i> Request Pending
+                            <!-- 🟠 Improved "Request Pending" color: Amber/Orange for better visibility -->
+                            <span class="bg-amber-100 text-amber-800 px-6 py-2.5 rounded-lg inline-flex items-center gap-2 border border-amber-300 shadow-sm">
+                                <i class="fas fa-clock animate-pulse"></i> Request Pending
                             </span>
                         <?php elseif ($userLoanStatus === 'awaiting_payment'): ?>
-                            <!-- ✅ Show Pay Now button for awaiting_payment -->
                             <a href="<?= BASE_URL ?>/payment/submit/<?= $userLoanId ?>" 
                                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg transition flex items-center gap-2 shadow-md hover:shadow-lg">
                                 <i class="fas fa-credit-card"></i> Pay Now

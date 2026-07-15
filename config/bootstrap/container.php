@@ -1,14 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Shared\Core\ErrorHandler;
 use App\Shared\Core\Authorization\Authorization;
-use App\Payment\Domain\Repository\PaymentRepositoryInterface;
-use App\Payment\Infrastructure\Repository\PaymentRepository;
-use App\Payment\Infrastructure\Mapper\PaymentMapper;
 
-use App\Admin\Infrastructure\Persistence\SettingRepository;
-use App\Admin\Application\Service\SettingsService;
-use App\Book\Application\UseCase\GetBook;
+// ================================================================
+// 🚀 CONTAINER DEFINITION
+// ================================================================
 
 $container = new class {
     private array $services = [];
@@ -54,6 +53,10 @@ $container = new class {
     }
 };
 
+// ================================================================
+// 1️⃣ CORE SERVICES
+// ================================================================
+
 $container->singleton('db', function () {
     $host = $_ENV['DB_HOST'] ?? 'localhost';
     $dbname = $_ENV['DB_NAME'] ?? 'library';
@@ -71,71 +74,41 @@ $container->singleton('db', function () {
     return new \PDO($dsn, $user, $pass, $options);
 });
 
-$container->singleton(Authorization::class, function($c) {
+// Register Authorization with multiple key aliases
+$container->singleton(Authorization::class, function ($c) {
     return new Authorization($c->get('db'));
 });
-$container->set('Authorization', fn($c) => $c->get(Authorization::class));
 $container->set('authorization', fn($c) => $c->get(Authorization::class));
+$container->set('Authorization', fn($c) => $c->get(Authorization::class)); // ✅ Add this line
 
-$container->singleton(SettingRepository::class, function($c) {
-    return new SettingRepository($c->get('db'));
-});
+// ================================================================
+// 2️⃣ LOAD MODULES IN CORRECT ORDER
+// ================================================================
 
-$container->singleton(SettingsService::class, function($c) {
-    return new SettingsService($c->get(SettingRepository::class));
-});
+$moduleFiles = [
+    __DIR__ . '/../../config/services/user.php',
+    __DIR__ . '/../../config/services/book.php',
+    __DIR__ . '/../../config/services/circulation.php',
+    __DIR__ . '/../../config/services/payment.php',
+    __DIR__ . '/../../config/services/invoice.php',     
+    __DIR__ . '/../../config/services/librarian.php',
+    __DIR__ . '/../../config/services/admin.php',
+    __DIR__ . '/../../config/services/notification.php',
+];
 
-$container->set('admin.settings.service', fn($c) => $c->get(SettingsService::class));
-
-$container->singleton(PaymentMapper::class, fn($c) => new PaymentMapper());
-$container->singleton(PaymentRepositoryInterface::class, function($c) {
-    return new PaymentRepository($c->get('db'), $c->get(PaymentMapper::class));
-});
-$container->set('payment.repository', fn($c) => $c->get(PaymentRepositoryInterface::class));
-
-use App\Book\Infrastructure\Persistence\BookRepository;
-use App\Book\Domain\Repository\BookRepositoryInterface;
-use App\Book\Application\UseCase\GetBooks;
-use App\Admin\Presentation\Controller\AdminBookController;
-
-$container->singleton(BookRepository::class, function($c) {
-    return new BookRepository($c->get('db'));
-});
-
-if (!$container->has(BookRepositoryInterface::class)) {
-    $container->set(BookRepositoryInterface::class, function($c) {
-        return $c->get(BookRepository::class);
-    });
+foreach ($moduleFiles as $path) {
+    if (file_exists($path)) {
+        $definitions = require $path;
+        if (is_callable($definitions)) {
+            $definitions($container);
+        }
+    }
 }
 
-$container->singleton(GetBooks::class, function($c) {
-    return new GetBooks(
-        $c->get(BookRepositoryInterface::class)
-    );
-});
+// ================================================================
+// ✅ DONE
+// ================================================================
 
-$container->singleton(AdminBookController::class, function($c) {
-    return new AdminBookController(
-        $c->get(GetBooks::class),
-        $c->get(GetBook::class)   
-    );
-});
+ErrorHandler::log('📦 Service Container created (explicit order, no prefixes)', 'INFO');
 
-$container->singleton(GetBook::class, function($c) {
-    return new GetBook($c->get(BookRepositoryInterface::class));
-});
-
-require __DIR__ . '/../services/user.php';
-require __DIR__ . '/../services/admin.php';
-require __DIR__ . '/../services/book.php';
-require __DIR__ . '/../services/loan.php';
-require __DIR__ . '/../services/payment.php';
-require __DIR__ . '/../services/notification.php';
-require __DIR__ . '/../services/librarian.php';
-require __DIR__ . '/../services/invoice.php'; 
-
-ErrorHandler::log('📦 Service container created', 'INFO');
-ErrorHandler::log('✅ Database service (db) registered', 'DEBUG');
-ErrorHandler::log('✅ Authorization service registered with aliases', 'DEBUG');
-ErrorHandler::log('✅ Payment Repository registered', 'DEBUG');
-ErrorHandler::log('✅ Admin Settings Service & Repository registered', 'DEBUG');
+return $container;

@@ -190,8 +190,9 @@ try {
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Due Date</th>
                                 <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Status</th>
                                 <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Days Left</th>
-                                <!-- ✅ New Invoice column -->
                                 <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Invoice</th>
+                                <!-- ✅ NEW: Refund Status Column -->
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Refund</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -202,17 +203,20 @@ try {
                                 $daysLeft = $now->diff($dueDate)->days;
                                 $statusString = $loan->getStatus()->getValue();
 
-                                // ---- Fetch Invoice Link ----
+                                // ---- Fetch Payment & Invoice ----
+                                $payment = null;
                                 $invoiceLink = null;
+                                $refundStatus = null;
                                 if ($paymentRepo && $invoiceRepo) {
                                     try {
-                                        // Get payment for this loan (assumes method findByLoanId exists)
                                         $payment = $paymentRepo->findByLoanId($loan->getId());
                                         if ($payment && $payment->getStatus()->isApproved()) {
                                             $invoice = $invoiceRepo->findByPaymentId($payment->getId());
                                             if ($invoice) {
                                                 $invoiceLink = BASE_URL . '/invoice/' . $invoice->getId();
                                             }
+                                            // Get refund status
+                                            $refundStatus = $payment->getRefundStatus(); // 'none', 'pending', 'completed', etc.
                                         }
                                     } catch (\Exception $e) {
                                         // ignore
@@ -260,12 +264,30 @@ try {
                                             <span class="text-gray-400">—</span>
                                         <?php endif; ?>
                                     </td>
-                                    <!-- ✅ Invoice cell -->
+                                    <!-- Invoice -->
                                     <td class="px-4 py-3 text-center">
                                         <?php if ($invoiceLink): ?>
                                             <a href="<?= $invoiceLink ?>" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" title="View Invoice">
                                                 <i class="fas fa-file-invoice"></i>
                                             </a>
+                                        <?php else: ?>
+                                            <span class="text-gray-400">—</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <!-- ✅ Refund Status -->
+                                    <td class="px-4 py-3 text-center">
+                                        <?php if ($payment && $payment->getStatus()->isApproved()): ?>
+                                            <?php if ($refundStatus === 'completed'): ?>
+                                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                                    <i class="fas fa-check-circle"></i> Refunded
+                                                </span>
+                                            <?php elseif ($refundStatus === 'pending'): ?>
+                                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+                                                    <i class="fas fa-clock"></i> Pending
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="text-gray-400">—</span>
+                                            <?php endif; ?>
                                         <?php else: ?>
                                             <span class="text-gray-400">—</span>
                                         <?php endif; ?>

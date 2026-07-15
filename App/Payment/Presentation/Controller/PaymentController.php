@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Payment\Presentation\Controller;
 
 use App\Payment\Application\Command\SubmitPaymentCommand;
@@ -7,8 +9,9 @@ use App\Payment\Application\Handler\SubmitPaymentHandler;
 use App\Payment\Presentation\Request\SubmitPaymentRequest;
 use App\Payment\Infrastructure\Storage\FileUploadService;
 use App\Shared\Base\BaseController;
-use App\Loan\Domain\Repository\LoanRepositoryInterface;
+use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Admin\Application\Service\SettingsService;
+use App\Payment\Domain\Entity\Payment;
 
 class PaymentController extends BaseController
 {
@@ -30,9 +33,12 @@ class PaymentController extends BaseController
         $this->settingsService = $settingsService;
     }
 
-    public function showSubmitForm($loanId): void
+    /**
+     * Show the payment submission form.
+     * Only allows access if the loan is in 'awaiting_payment' status.
+     */
+    public function showSubmitForm(int $loanId): void
     {
-        $loanId = (int) $loanId;
         $loan = $this->loanRepo->findById($loanId);
 
         if (!$loan) {
@@ -40,30 +46,44 @@ class PaymentController extends BaseController
             return;
         }
 
-        if (!isset($_SESSION['user_id']) || $loan->getUserId() !== $_SESSION['user_id']) {
+        $userId = (int) ($_SESSION['user_id'] ?? 0);
+        if ($userId === 0 || $loan->getUserId() !== $userId) {
             $_SESSION['error_message'] = 'Unauthorized access.';
-            $this->redirect('/user-dashboard');
+            $this->redirect(BASE_URL . '/user-dashboard');
             return;
         }
 
-        if ($loan->getStatus()->getValue() !== 'awaiting_payment') {
-            $_SESSION['error_message'] = 'This loan is not awaiting payment.';
-            $this->redirect('/user-dashboard');
+        // ✅ Critical: Only allow payment if loan status is 'awaiting_payment'
+        $status = $loan->getStatus()->getValue();
+        if ($status !== 'awaiting_payment') {
+            // Map status to a user-friendly message
+            $statusMessages = [
+                'pending'   => 'Your borrow request is still pending approval by the librarian.',
+                'active'    => 'You have already borrowed this book.',
+                'rejected'  => 'Your borrow request was rejected.',
+                'returned'  => 'This loan has already been returned.',
+            ];
+            $message = $statusMessages[$status] ?? 'This loan is not awaiting payment.';
+            
+            $_SESSION['error_message'] = $message;
+            // Redirect back to the book details page
+            $this->redirect(BASE_URL . '/books/' . $loan->getBookId());
             return;
         }
 
         $borrowingFee = $loan->getBorrowingFee() ?? $this->settingsService->getBorrowingFee();
-
-        // 🔐 Generate a UUID v4 idempotency key
         $idempotencyKey = $this->generateUuid();
 
         $this->view('payment/submit', [
             'loan'           => $loan,
             'borrowingFee'   => $borrowingFee,
-            'idempotencyKey' => $idempotencyKey   // pass to view
+            'idempotencyKey' => $idempotencyKey,
         ]);
     }
 
+    /**
+     * Handle payment submission.
+     */
     public function submit(): void
     {
         try {
@@ -71,49 +91,56 @@ class PaymentController extends BaseController
 
             $screenshotPath = null;
             if ($request->hasFile('screenshot')) {
-                $file = $request->getFile('screenshot');
-                $screenshotPath = $this->fileUpload->store($file);
+                $screenshotPath = $this->fileUpload->store($request->getFile('screenshot'));
             }
 
-            $cmd = new SubmitPaymentCommand(
-                loanId: $request->getLoanId(),
-                userId: $_SESSION['user_id'] ?? 0,
-                amount: $request->getAmount(),
-                paymentMethod: $request->getPaymentMethod(),
-                transactionReference: $request->getTransactionReference(),
-                screenshotPath: $screenshotPath,
-                idempotencyKey: $request->getIdempotencyKey()   // from hidden input
+            $command = new SubmitPaymentCommand(
+                $request->getLoanId(),
+                (int) ($_SESSION['user_id'] ?? 0),
+                $request->getAmount(),
+                $request->getPaymentMethod(),
+                $request->getTransactionReference(),
+                $screenshotPath,
+                $request->getIdempotencyKey()
             );
 
-            $payment = $this->handler->handle($cmd);   // now returns Payment (new or existing)
+            $payment = $this->handler->handle($command);
 
-            // ✅ Optionally store payment id for later use
-            $_SESSION['payment_id'] = $payment->getId();
+            if ($payment instanceof Payment) {
+                $_SESSION['payment_id'] = $payment->getId();
+            }
 
             $_SESSION['success_message'] = 'Payment submitted successfully! The librarian will review it shortly.';
-            $this->redirect('/payment/success');
+            $this->redirect(BASE_URL . '/payment/success');
+
+        } catch (\InvalidArgumentException $e) {
+            $_SESSION['error_message'] = $e->getMessage();
+            $this->redirect(BASE_URL . '/payment/submit/' . ($_POST['loan_id'] ?? 0));
+
+        } catch (\DomainException $e) {
+            $_SESSION['error_message'] = $e->getMessage();
+            $this->redirect(BASE_URL . '/payment/submit/' . ($_POST['loan_id'] ?? 0));
 
         } catch (\Exception $e) {
-            $_SESSION['error_message'] = 'Payment failed: ' . $e->getMessage();
-            $loanId = $_POST['loan_id'] ?? 0;
-            $this->redirect('/payment/submit/' . $loanId);
+            $_SESSION['error_message'] = 'Payment submission failed. Please try again later.';
+            $this->redirect(BASE_URL . '/payment/submit/' . ($_POST['loan_id'] ?? 0));
         }
     }
 
+    /**
+     * Payment success page.
+     */
     public function success(): void
     {
         $this->view('payment/success');
     }
 
     /**
-     * Generate a RFC 4122 compliant UUID v4.
-     * You can also use ramsey/uuid if you prefer.
+     * Generate a UUID v4 (simple version).
      */
     private function generateUuid(): string
     {
         $data = random_bytes(16);
-        $data[6] = chr(ord($data[6]) & 0x0f | 0x40); // set version to 0100
-        $data[8] = chr(ord($data[8]) & 0x3f | 0x80); // set bits 6-7 to 10
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 }

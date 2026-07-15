@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\User\Presentation\Controller;
 
 use App\Shared\Base\BaseController;
 use App\Invoice\Domain\Repository\InvoiceRepositoryInterface;
 use App\Payment\Domain\Repository\PaymentRepositoryInterface;
-use App\Loan\Domain\Repository\LoanRepositoryInterface;
+use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\User\Domain\Repository\UserRepositoryInterface;
 use App\Book\Domain\Repository\BookRepositoryInterface;
 
@@ -32,34 +34,34 @@ class InvoiceController extends BaseController
         $this->bookRepo = $bookRepo;
     }
 
-    public function show($id): void
+    public function show(int $id): void
     {
-        $invoice = $this->invoiceRepo->findById((int)$id);
-        if (!$invoice) {
-            http_response_code(404);
-            echo 'Invoice not found.';
+        $userId = (int) ($_SESSION['user_id'] ?? 0);
+        if ($userId === 0) {
+            $this->redirect(BASE_URL . '/login');
+            return;
+        }
+
+        $invoice = $this->invoiceRepo->findById($id);
+        if ($invoice === null) {
+            $this->renderNotFound('Invoice not found.');
             return;
         }
 
         $payment = $this->paymentRepo->findById($invoice->getPaymentId());
-        if (!$payment) {
-            http_response_code(404);
-            echo 'Payment not found.';
+        if ($payment === null) {
+            $this->renderNotFound('Payment not found.');
             return;
         }
 
-        // Check if this invoice belongs to the logged-in user
-        $userId = (int) ($_SESSION['user_id'] ?? 0);
         if ($payment->getUserId() !== $userId) {
-            http_response_code(403);
-            echo 'You do not have permission to view this invoice.';
+            $this->renderForbidden('You do not have permission to view this invoice.');
             return;
         }
 
         $loan = $this->loanRepo->findById($payment->getLoanId());
-        if (!$loan) {
-            http_response_code(404);
-            echo 'Loan not found.';
+        if ($loan === null) {
+            $this->renderNotFound('Loan not found.');
             return;
         }
 
@@ -78,7 +80,19 @@ class InvoiceController extends BaseController
             'invoice' => $invoice,
         ];
 
-        // Reuse the existing invoice view (payment/invoice.php)
         $this->view('payment/invoice', $invoiceData);
+    }
+
+
+    private function renderNotFound(string $message): void
+    {
+        http_response_code(404);
+        echo $message;
+    }
+
+    private function renderForbidden(string $message): void
+    {
+        http_response_code(403);
+        echo $message;
     }
 }
