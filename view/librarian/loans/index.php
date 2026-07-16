@@ -1,10 +1,15 @@
 <?php
-$pageTitle = $pageTitle ?? 'Manage Loans';
+// view/librarian/loans/index.php
+// This file is included by dashboard-content.php when $page === 'loans'
+// Variables available: $loans, $users, $books, BASE_URL
 ?>
 <div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-        <i class="fas fa-hand-holding text-blue-600 dark:text-blue-400 mr-2"></i>Loan Records
-    </h2>
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+            <i class="fas fa-hand-holding text-blue-600 mr-2"></i>Loan Records
+        </h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Manage all library loans</p>
+    </div>
     <a href="<?= BASE_URL ?>/librarian/loans/create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition">
         <i class="fas fa-plus"></i> Issue Book
     </a>
@@ -12,20 +17,21 @@ $pageTitle = $pageTitle ?? 'Manage Loans';
 
 <!-- Flash Messages -->
 <?php if (isset($_SESSION['success_message'])): ?>
-    <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg mb-4 flex items-center justify-between">
-        <span><i class="fas fa-check-circle mr-2"></i><?= htmlspecialchars($_SESSION['success_message']) ?></span>
+    <div class="bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-6 py-4 rounded-xl mb-6 flex items-center justify-between">
+        <div><i class="fas fa-check-circle mr-2"></i><?= htmlspecialchars($_SESSION['success_message']) ?></div>
         <button onclick="this.parentElement.style.display='none'" class="text-green-700 dark:text-green-300 hover:text-green-900"><i class="fas fa-times"></i></button>
     </div>
     <?php unset($_SESSION['success_message']); ?>
 <?php endif; ?>
 <?php if (isset($_SESSION['error_message'])): ?>
-    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4 flex items-center justify-between">
-        <span><i class="fas fa-exclamation-circle mr-2"></i><?= htmlspecialchars($_SESSION['error_message']) ?></span>
+    <div class="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-6 py-4 rounded-xl mb-6 flex items-center justify-between">
+        <div><i class="fas fa-exclamation-circle mr-2"></i><?= htmlspecialchars($_SESSION['error_message']) ?></div>
         <button onclick="this.parentElement.style.display='none'" class="text-red-700 dark:text-red-300 hover:text-red-900"><i class="fas fa-times"></i></button>
     </div>
     <?php unset($_SESSION['error_message']); ?>
 <?php endif; ?>
 
+<!-- Loans Table -->
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
@@ -43,21 +49,8 @@ $pageTitle = $pageTitle ?? 'Manage Loans';
             <tbody>
                 <?php if (!empty($loans)): ?>
                     <?php foreach ($loans as $loan): 
-                        // ✅ Get user and book from mapped arrays
-                        $userId = $loan->getUserId();
-                        $bookId = $loan->getBookId();
-                        
-                        $user = $users[$userId] ?? null;
-                        $book = $books[$bookId] ?? null;
-                        
-                        // ✅ Debug missing users/books
-                        if (!$user) {
-                            error_log("⚠️ User not found for ID: " . $userId . " (Loan ID: " . $loan->getId() . ")");
-                        }
-                        if (!$book) {
-                            error_log("⚠️ Book not found for ID: " . $bookId . " (Loan ID: " . $loan->getId() . ")");
-                        }
-                        
+                        $user = $users[$loan->getUserId()] ?? null;
+                        $book = $books[$loan->getBookId()] ?? null;
                         $status = $loan->getStatus()->getValue();
                         
                         $statusColor = match($status) {
@@ -75,20 +68,8 @@ $pageTitle = $pageTitle ?? 'Manage Loans';
                     ?>
                         <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition">
                             <td class="px-4 py-3"><?= $loan->getId() ?></td>
-                            <td class="px-4 py-3">
-                                <?php if ($user): ?>
-                                    <?= htmlspecialchars($user->getName()) ?>
-                                <?php else: ?>
-                                    <span class="text-red-500">User #<?= $userId ?></span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="px-4 py-3">
-                                <?php if ($book): ?>
-                                    <?= htmlspecialchars($book->getTitle()) ?>
-                                <?php else: ?>
-                                    <span class="text-red-500">Book #<?= $bookId ?></span>
-                                <?php endif; ?>
-                            </td>
+                            <td class="px-4 py-3"><?= htmlspecialchars($user ? $user->getName() : 'Unknown') ?></td>
+                            <td class="px-4 py-3"><?= htmlspecialchars($book ? $book->getTitle() : 'Unknown') ?></td>
                             <td class="px-4 py-3"><?= $borrowedAt ?></td>
                             <td class="px-4 py-3"><?= $dueDate ?></td>
                             <td class="px-4 py-3 text-center">
@@ -119,12 +100,15 @@ $pageTitle = $pageTitle ?? 'Manage Loans';
                                     <a href="<?= BASE_URL ?>/librarian/loans/edit/<?= $loan->getId() ?>" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-2" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                <?php elseif ($status === 'rejected'): ?>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">Rejected</span>
                                 <?php elseif ($status === 'returned'): ?>
                                     <span class="text-xs text-green-600 dark:text-green-400">Returned</span>
+                                <?php elseif ($status === 'rejected'): ?>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">Rejected</span>
                                 <?php endif; ?>
-                                <a href="<?= BASE_URL ?>/librarian/loans/delete/<?= $loan->getId() ?>" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete" onclick="return confirm('Delete this loan record?')">
+                                <a href="<?= BASE_URL ?>/librarian/loans/delete/<?= $loan->getId() ?>" 
+                                   class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" 
+                                   title="Delete" 
+                                   onclick="return confirm('Delete this loan record?')">
                                     <i class="fas fa-trash-alt"></i>
                                 </a>
                             </td>

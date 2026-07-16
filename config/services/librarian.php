@@ -45,7 +45,7 @@ return function ($container) {
 
     $container->singleton(LibrarianCategoryController::class, function ($c) {
         return new LibrarianCategoryController(
-            $c->get(CategoryRepositoryInterface::class)  // only 1 argument
+            $c->get(CategoryRepositoryInterface::class)
         );
     });
 
@@ -58,9 +58,11 @@ return function ($container) {
         );
     });
 
+    // ✅ FIXED: UserController with correct dependencies
     $container->singleton(UserController::class, function ($c) {
         return new UserController(
-            $c->get(UserRepositoryInterface::class)  // only 1 argument
+            $c->get(UserAuthenticator::class),
+            $c->get(UserRepositoryInterface::class)
         );
     });
 
@@ -74,7 +76,7 @@ return function ($container) {
 
     $container->singleton(LibrarianAuthController::class, function ($c) {
         return new LibrarianAuthController(
-            $c->get(UserAuthenticator::class)  // only 1 argument
+            $c->get(UserAuthenticator::class)
         );
     });
 };

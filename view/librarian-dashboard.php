@@ -73,6 +73,13 @@ include BASE_PATH . '/view/layout/header.php';
         <i class="fas fa-credit-card w-5 text-center"></i>
         <span>Payments</span>
     </a>
+
+    <!-- Refunds -->
+<a href="<?= BASE_URL ?>/librarian/dashboard?page=refunds" 
+   class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'refunds' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
+    <i class="fas fa-undo-alt w-5 text-center"></i>
+    <span>Refunds</span>
+</a>
             <!-- Settings -->
             <a href="<?= BASE_URL ?>/librarian/dashboard?page=settings" 
                class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'settings' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">

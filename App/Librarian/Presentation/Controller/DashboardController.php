@@ -47,8 +47,9 @@ class DashboardController extends BaseController
         }
 
         $page = $_GET['page'] ?? 'dashboard';
-        $statusFilter = $_GET['status'] ?? 'all';  // ✅ for payment filter
+        $statusFilter = $_GET['status'] ?? 'all';  // for payment/refund filter
 
+        // Permission mapping
         $permissionMap = [
             'books'        => 'view_books',
             'books_create' => 'view_books',
@@ -56,6 +57,7 @@ class DashboardController extends BaseController
             'users'        => 'view_users',
             'reports'      => 'view_reports',
             'payments'     => 'view_payments',
+            'refunds'      => 'view_payments', // refunds require payment view permission
         ];
 
         if (isset($permissionMap[$page])) {
@@ -140,12 +142,12 @@ class DashboardController extends BaseController
             ];
         }
 
-        // ---- Prepare view data ----
+        // ---- Prepare base view data ----
         $viewData = [
             'page'        => $page,
             'stats'       => $stats,
             'loans'       => $allLoans,
-            'users'       => $users,        // ✅ indexed by user ID
+            'users'       => $users,        // indexed by user ID
             'books'       => $books,        // lookup array
             'allBooks'    => $allBooks,
             'categories'  => $allCategories,
@@ -169,6 +171,30 @@ class DashboardController extends BaseController
                     break;
             }
             $viewData['payments'] = $payments;
+            $viewData['currentFilter'] = $statusFilter;
+        }
+
+        // ---- Refunds: fetch refund data ----
+        if ($page === 'refunds') {
+            // Get all payments with details
+            $allPayments = $this->paymentRepo->findAllWithDetails();
+
+            // Filter those with refund_status not 'none'
+            $refunds = array_filter($allPayments, function($payment) {
+                return isset($payment['refund_status']) && $payment['refund_status'] !== 'none';
+            });
+
+            // If status filter is applied (pending/completed)
+            if ($statusFilter !== 'all') {
+                $refunds = array_filter($refunds, function($payment) use ($statusFilter) {
+                    return ($payment['refund_status'] ?? '') === $statusFilter;
+                });
+            }
+
+            // Re-index array
+            $refunds = array_values($refunds);
+
+            $viewData['refunds'] = $refunds;
             $viewData['currentFilter'] = $statusFilter;
         }
 
