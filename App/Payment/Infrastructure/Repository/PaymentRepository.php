@@ -24,7 +24,6 @@ class PaymentRepository implements PaymentRepositoryInterface
         $data = $this->mapper->toPersistence($payment);
 
         if ($payment->getId()) {
-            // ✅ UPDATE with refund fields
             $sql = "UPDATE payments SET 
                 loan_id = :loan_id,
                 user_id = :user_id,
@@ -62,7 +61,6 @@ class PaymentRepository implements PaymentRepositoryInterface
                 ':refund_reason' => $data['refund_reason'],
             ]);
         } else {
-            // ✅ INSERT with refund fields
             $sql = "INSERT INTO payments 
                 (loan_id, user_id, amount, currency, status, payment_method, transaction_reference, 
                  screenshot_path, submitted_at, approved_at, rejected_at, idempotency_key,
@@ -136,9 +134,6 @@ class PaymentRepository implements PaymentRepositoryInterface
         return $row ? $this->mapper->toDomain($row) : null;
     }
 
-    /**
-     * Find payments by user ID
-     */
     public function findByUserId(int $userId): array
     {
         $stmt = $this->db->prepare("
@@ -156,68 +151,79 @@ class PaymentRepository implements PaymentRepositoryInterface
         return $payments;
     }
 
-    // App/Payment/Infrastructure/Repository/PaymentRepository.php
-public function findPendingApprovalsWithDetails(): array
-{
-    $sql = "
-        SELECT 
-            p.*,
-            u.name AS user_name,
-            u.email AS user_email,
-            b.title AS book_title,
-            b.id AS book_id
-        FROM payments p
-        JOIN users u ON p.user_id = u.id
-        JOIN loans l ON p.loan_id = l.id
-        JOIN books b ON l.book_id = b.id
-        WHERE p.status = :status
-        ORDER BY p.submitted_at ASC
-    ";
+    // ──────────────────────────────────────────────────────────────
+    // ✅ NEW METHODS WITH LIMIT/OFFSET (for memory optimization)
+    // ──────────────────────────────────────────────────────────────
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':status' => 'pending_approval']);
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    public function findAllWithDetails(int $offset = 0, int $limit = 100): array
+    {
+        $sql = "
+            SELECT p.*,
+                   u.name AS user_name,
+                   u.email AS user_email,
+                   b.title AS book_title,
+                   b.id AS book_id
+            FROM payments p
+            JOIN users u ON p.user_id = u.id
+            JOIN loans l ON p.loan_id = l.id
+            JOIN books b ON l.book_id = b.id
+            ORDER BY p.submitted_at DESC
+            LIMIT :limit OFFSET :offset
+        ";
+        $stmt = $this->db->prepare($sql);
+        // ✅ FIXED: Use PDO::PARAM_INT (no leading backslash)
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
-    // Convert each row to a Payment entity (the mapper will ignore extra fields)
-    return array_map([$this->mapper, 'toDomain'], $rows);
-}
+    public function findPendingApprovalsWithDetails(int $offset = 0, int $limit = 100): array
+    {
+        $sql = "
+            SELECT p.*,
+                   u.name AS user_name,
+                   u.email AS user_email,
+                   b.title AS book_title,
+                   b.id AS book_id
+            FROM payments p
+            JOIN users u ON p.user_id = u.id
+            JOIN loans l ON p.loan_id = l.id
+            JOIN books b ON l.book_id = b.id
+            WHERE p.status = 'pending_approval'
+            ORDER BY p.submitted_at ASC
+            LIMIT :limit OFFSET :offset
+        ";
+        $stmt = $this->db->prepare($sql);
+        // ✅ FIXED: Use PDO::PARAM_INT (no leading backslash)
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
-
-public function findAllWithDetails(): array
-{
-    $sql = "
-        SELECT p.*,
-               u.name AS user_name,
-               u.email AS user_email,
-               b.title AS book_title,
-               b.id AS book_id
-        FROM payments p
-        JOIN users u ON p.user_id = u.id
-        JOIN loans l ON p.loan_id = l.id
-        JOIN books b ON l.book_id = b.id
-        ORDER BY p.submitted_at DESC
-    ";
-    $stmt = $this->db->query($sql);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-public function findByStatusWithDetails(string $status): array
-{
-    $sql = "
-        SELECT p.*,
-               u.name AS user_name,
-               u.email AS user_email,
-               b.title AS book_title,
-               b.id AS book_id
-        FROM payments p
-        JOIN users u ON p.user_id = u.id
-        JOIN loans l ON p.loan_id = l.id
-        JOIN books b ON l.book_id = b.id
-        WHERE p.status = :status
-        ORDER BY p.submitted_at DESC
-    ";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute(['status' => $status]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
+    public function findByStatusWithDetails(string $status, int $offset = 0, int $limit = 100): array
+    {
+        $sql = "
+            SELECT p.*,
+                   u.name AS user_name,
+                   u.email AS user_email,
+                   b.title AS book_title,
+                   b.id AS book_id
+            FROM payments p
+            JOIN users u ON p.user_id = u.id
+            JOIN loans l ON p.loan_id = l.id
+            JOIN books b ON l.book_id = b.id
+            WHERE p.status = :status
+            ORDER BY p.submitted_at DESC
+            LIMIT :limit OFFSET :offset
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':status', $status);
+        // ✅ FIXED: Use PDO::PARAM_INT (no leading backslash)
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

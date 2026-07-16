@@ -29,5 +29,8 @@ interface UserRepositoryInterface
 
     public function findByRole(string $roleName): array;
 
+      public function count(): int;
+    public function countByRole(string $role): int;
+
 
 }

@@ -1,6 +1,5 @@
 <?php
 
-// ⚠️ All necessary use statements
 use App\Book\Application\UseCase\GetBook;
 use App\Book\Application\UseCase\GetBooks;
 use App\Admin\Infrastructure\Persistence\SettingRepository;
@@ -27,7 +26,6 @@ use App\Shared\Core\Authorization\Authorization;
 return function ($container) {
 
     // ── Repositories ──
-    // SettingRepository is needed for SettingsService
     $container->singleton(SettingRepository::class, function ($c) {
         return new SettingRepository($c->get('db'));
     });
@@ -46,7 +44,6 @@ return function ($container) {
         return new UserManagementService($c->get(UserRepositoryInterface::class));
     });
 
-    // ReportService and DashboardStatisticsService
     $container->singleton(ReportService::class, function ($c) {
         return new ReportService(
             $c->get(BookRepositoryInterface::class),

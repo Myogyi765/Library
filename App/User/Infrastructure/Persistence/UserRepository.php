@@ -421,4 +421,18 @@ class UserRepository implements UserRepositoryInterface
             $data['profile_image'] ?? null // ✅ Added profile_image
         );
     }
+
+
+    public function count(): int
+    {
+        $stmt = $this->db->query("SELECT COUNT(*) FROM users");
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function countByRole(string $role): int
+    {
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM users WHERE role = :role");
+        $stmt->execute([':role' => $role]);
+        return (int)$stmt->fetchColumn();
+    }
 }

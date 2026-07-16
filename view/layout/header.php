@@ -1,4 +1,12 @@
 <?php
+// ================================================================
+// ✅ HEADER INCLUDE PROTECTION – Prevent infinite recursion
+// ================================================================
+if (defined('HEADER_LOADED')) {
+    return; // Already loaded, stop here
+}
+define('HEADER_LOADED', true);
+
 ob_start(); // 👈 Prevents any accidental output before DOCTYPE
 
 // ================================================================
@@ -46,7 +54,7 @@ $pageTitle = $pageTitle ?? 'Library Management System';
 
 // ---- Permission check for notifications ----
 $showNotifications = false; // default
-$authClass = \App\Shared\Core\Authorization\Authorization::class; // ✅ FIXED class name
+$authClass = \App\Shared\Core\Authorization\Authorization::class;
 $container = $GLOBALS['container'] ?? null;
 
 if ($container && $container->has($authClass)) {
@@ -58,7 +66,6 @@ if ($container && $container->has($authClass)) {
         $showNotifications = false;
     }
 } else {
-    // Log if container or auth not found
     error_log('❌ Container or Authorization service not found in header.php');
 }
 ?>

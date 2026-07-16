@@ -79,7 +79,17 @@ $container->singleton(Authorization::class, function ($c) {
     return new Authorization($c->get('db'));
 });
 $container->set('authorization', fn($c) => $c->get(Authorization::class));
-$container->set('Authorization', fn($c) => $c->get(Authorization::class)); // ✅ Add this line
+$container->set('Authorization', fn($c) => $c->get(Authorization::class));
+
+// ✅ ADD DUMMY admin.service TO AVOID MISSING SERVICE ERRORS
+$container->singleton('admin.service', function ($c) {
+    // This is a dummy service – admin functionality is now handled by User module
+    return new class {
+        public function __call($name, $args) {
+            return null;
+        }
+    };
+});
 
 // ================================================================
 // 2️⃣ LOAD MODULES IN CORRECT ORDER

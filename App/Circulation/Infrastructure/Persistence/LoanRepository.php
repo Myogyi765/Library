@@ -18,9 +18,6 @@ class LoanRepository implements LoanRepositoryInterface
         $this->mapper = $mapper;
     }
 
-    /**
-     * Save Loan (Insert or Update)
-     */
     public function save(Loan $loan): void
     {
         $data = $this->mapper->toPersistence($loan);
@@ -60,9 +57,6 @@ class LoanRepository implements LoanRepositoryInterface
         }
     }
 
-    /**
-     * Find Loan by ID
-     */
     public function findById(int $id): ?Loan
     {
         $stmt = $this->db->prepare("SELECT * FROM loans WHERE id = :id");
@@ -71,9 +65,6 @@ class LoanRepository implements LoanRepositoryInterface
         return $row ? $this->mapper->toDomain($row) : null;
     }
 
-    /**
-     * Find Loan by User and Book (latest)
-     */
     public function findByUserAndBook(int $userId, int $bookId): ?Loan
     {
         $stmt = $this->db->prepare("SELECT * FROM loans WHERE user_id = :user_id AND book_id = :book_id ORDER BY id DESC LIMIT 1");
@@ -82,9 +73,6 @@ class LoanRepository implements LoanRepositoryInterface
         return $row ? $this->mapper->toDomain($row) : null;
     }
 
-    /**
-     * Find Active or Pending Loan by User and Book
-     */
     public function findActiveOrPendingByUserAndBook(int $userId, int $bookId): ?Loan
     {
         $stmt = $this->db->prepare("SELECT * FROM loans WHERE user_id = :user_id AND book_id = :book_id AND status IN ('pending', 'active', 'awaiting_payment') ORDER BY id DESC LIMIT 1");
@@ -93,9 +81,6 @@ class LoanRepository implements LoanRepositoryInterface
         return $row ? $this->mapper->toDomain($row) : null;
     }
 
-    /**
-     * Find All Pending Loans
-     */
     public function findPendingLoans(): array
     {
         $stmt = $this->db->query("SELECT * FROM loans WHERE status = 'pending' ORDER BY id DESC");
@@ -103,9 +88,6 @@ class LoanRepository implements LoanRepositoryInterface
         return array_map([$this->mapper, 'toDomain'], $rows);
     }
 
-    /**
-     * Find Loans by User ID
-     */
     public function findLoansByUser(int $userId): array
     {
         $stmt = $this->db->prepare("SELECT * FROM loans WHERE user_id = :user_id ORDER BY id DESC");
@@ -114,22 +96,14 @@ class LoanRepository implements LoanRepositoryInterface
         return array_map([$this->mapper, 'toDomain'], $rows);
     }
 
-    /**
-     * Find All Loans
-     */
     public function findAll(): array
     {
         $stmt = $this->db->query("SELECT * FROM loans ORDER BY id DESC");
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
         error_log("📚 [LoanRepository] findAll() returned " . count($rows) . " loans");
-        
         return array_map([$this->mapper, 'toDomain'], $rows);
     }
 
-    /**
-     * Find Active Loans by User ID
-     */
     public function findActiveByUserId(int $userId): array
     {
         $sql = "SELECT * FROM loans WHERE user_id = :user_id AND status = 'active' ORDER BY id DESC";
@@ -139,14 +113,42 @@ class LoanRepository implements LoanRepositoryInterface
         return array_map([$this->mapper, 'toDomain'], $rows);
     }
 
-    /**
-     * ✅ Delete a loan by ID
-     */
     public function delete(int $id): bool
     {
         $sql = "DELETE FROM loans WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $id]);
         return $stmt->rowCount() > 0;
+    }
+
+    public function count(): int
+    {
+        $stmt = $this->db->query("SELECT COUNT(*) FROM loans");
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function countByStatus(string $status): int
+    {
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM loans WHERE status = :status");
+        $stmt->execute([':status' => $status]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function countOverdue(): int
+    {
+        $now = date('Y-m-d H:i:s');
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM loans WHERE status = 'active' AND due_date < :now");
+        $stmt->execute([':now' => $now]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function findRecent(int $limit): array
+    {
+        $stmt = $this->db->prepare("SELECT * FROM loans ORDER BY created_at DESC LIMIT :limit");
+        // ✅ FIXED: Use PDO::PARAM_INT (no leading backslash)
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map([$this->mapper, 'toDomain'], $rows);
     }
 }

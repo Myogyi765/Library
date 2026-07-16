@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Librarian\Presentation\Controller;
 
 use App\User\Infrastructure\Security\UserAuthenticator;
@@ -10,6 +9,7 @@ use App\User\Domain\Repository\UserRepositoryInterface;
 use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Shared\Core\Authorization\Authorization;
 use App\Payment\Domain\Repository\PaymentRepositoryInterface;
+use App\Admin\Application\Service\DashboardStatisticsService; // ✅ Import
 
 class DashboardController extends BaseController
 {
@@ -20,6 +20,7 @@ class DashboardController extends BaseController
     private LoanRepositoryInterface $loanRepository;
     private PaymentRepositoryInterface $paymentRepo;
     private Authorization $authorization;
+    private DashboardStatisticsService $dashboardStats; // ✅ Add
 
     public function __construct(
         UserAuthenticator $userAuth,
@@ -28,7 +29,8 @@ class DashboardController extends BaseController
         UserRepositoryInterface $userRepository,
         LoanRepositoryInterface $loanRepository,
         PaymentRepositoryInterface $paymentRepo,
-        Authorization $authorization
+        Authorization $authorization,
+        DashboardStatisticsService $dashboardStats // ✅ Inject
     ) {
         $this->userAuth = $userAuth;
         $this->bookRepository = $bookRepository;
@@ -37,6 +39,7 @@ class DashboardController extends BaseController
         $this->loanRepository = $loanRepository;
         $this->paymentRepo = $paymentRepo;
         $this->authorization = $authorization;
+        $this->dashboardStats = $dashboardStats;
     }
 
     public function index(): void
@@ -47,7 +50,7 @@ class DashboardController extends BaseController
         }
 
         $page = $_GET['page'] ?? 'dashboard';
-        $statusFilter = $_GET['status'] ?? 'all';  // for payment/refund filter
+        $statusFilter = $_GET['status'] ?? 'all';
 
         // Permission mapping
         $permissionMap = [
@@ -57,7 +60,7 @@ class DashboardController extends BaseController
             'users'        => 'view_users',
             'reports'      => 'view_reports',
             'payments'     => 'view_payments',
-            'refunds'      => 'view_payments', // refunds require payment view permission
+            'refunds'      => 'view_payments',
         ];
 
         if (isset($permissionMap[$page])) {
@@ -72,24 +75,22 @@ class DashboardController extends BaseController
             }
         }
 
-        // ---- Data fetching ----
-        $allUsers = $this->userRepository->findAll();
+        // ---- Data fetching with limits ----
+        // For lists, limit to 200 to avoid memory exhaustion
+        $allUsers = $this->userRepository->findAll(); // Keep as is for now (can be limited later)
         $allBooks = $this->bookRepository->findAll();
         $allLoans = $this->loanRepository->findAll();
         $allCategories = $this->categoryRepository->findAll();
 
-        // Map users by ID for fast lookup
+        // Map users, books, categories
         $users = [];
         foreach ($allUsers as $user) {
             $users[$user->getId()] = $user;
         }
-
-        // Map books by ID
         $books = [];
         foreach ($allBooks as $book) {
             $books[$book->getId()] = $book;
         }
-
         $categoryMap = [];
         foreach ($allCategories as $category) {
             $categoryMap[$category->getId()] = $category->getName();
@@ -98,27 +99,11 @@ class DashboardController extends BaseController
         // ---- Stats (only for dashboard) ----
         $stats = [];
         if ($page === 'dashboard') {
-            $totalBooks = count($allBooks);
-            $available = 0;
-            $borrowed = 0;
-            foreach ($allBooks as $book) {
-                $available += $book->getAvailableQuantity();
-                $borrowed += $book->getQuantity() - $book->getAvailableQuantity();
-            }
-            $totalUsers = count($allUsers);
-            $activeLoans = 0;
-            $overdue = 0;
-            $now = new \DateTime();
-            foreach ($allLoans as $loan) {
-                $status = $loan->getStatus()->getValue();
-                if ($status === 'active') {
-                    $activeLoans++;
-                    if ($loan->getDueDate() && $loan->getDueDate() < $now) {
-                        $overdue++;
-                    }
-                }
-            }
-            $recentLoans = array_slice($allLoans, 0, 5);
+            // Use the optimized statistics service
+            $stats = $this->dashboardStats->getStats();
+
+            // Recent activities – fetch only last 5 loans
+            $recentLoans = $this->loanRepository->findRecent(5);
             $recentActivities = [];
             foreach ($recentLoans as $loan) {
                 $book = $books[$loan->getBookId()] ?? null;
@@ -131,15 +116,7 @@ class DashboardController extends BaseController
                     'status' => $loan->getStatus()->getValue(),
                 ];
             }
-            $stats = [
-                'totalBooks'   => $totalBooks,
-                'available'    => $available,
-                'borrowed'     => $borrowed,
-                'overdue'      => $overdue,
-                'totalUsers'   => $totalUsers,
-                'activeLoans'  => $activeLoans,
-                'recentActivities' => $recentActivities,
-            ];
+            $stats['recentActivities'] = $recentActivities;
         }
 
         // ---- Prepare base view data ----
@@ -147,60 +124,50 @@ class DashboardController extends BaseController
             'page'        => $page,
             'stats'       => $stats,
             'loans'       => $allLoans,
-            'users'       => $users,        // indexed by user ID
-            'books'       => $books,        // lookup array
+            'users'       => $users,
+            'books'       => $books,
             'allBooks'    => $allBooks,
             'categories'  => $allCategories,
             'categoryMap' => $categoryMap,
         ];
 
-        // ---- Payments: fetch with details and filters ----
+        // ---- Payments: fetch with details and filters (limit 100) ----
         if ($page === 'payments') {
             switch ($statusFilter) {
                 case 'pending':
-                    $payments = $this->paymentRepo->findPendingApprovalsWithDetails();
+                    $payments = $this->paymentRepo->findPendingApprovalsWithDetails(0, 100);
                     break;
                 case 'approved':
-                    $payments = $this->paymentRepo->findByStatusWithDetails('completed');
+                    $payments = $this->paymentRepo->findByStatusWithDetails('completed', 0, 100);
                     break;
                 case 'rejected':
-                    $payments = $this->paymentRepo->findByStatusWithDetails('rejected');
+                    $payments = $this->paymentRepo->findByStatusWithDetails('rejected', 0, 100);
                     break;
                 default:
-                    $payments = $this->paymentRepo->findAllWithDetails();
+                    $payments = $this->paymentRepo->findAllWithDetails(0, 100);
                     break;
             }
             $viewData['payments'] = $payments;
             $viewData['currentFilter'] = $statusFilter;
         }
 
-        // ---- Refunds: fetch refund data ----
+        // ---- Refunds: fetch refund data (limit 100) ----
         if ($page === 'refunds') {
-            // Get all payments with details
-            $allPayments = $this->paymentRepo->findAllWithDetails();
-
-            // Filter those with refund_status not 'none'
+            $allPayments = $this->paymentRepo->findAllWithDetails(0, 100);
             $refunds = array_filter($allPayments, function($payment) {
                 return isset($payment['refund_status']) && $payment['refund_status'] !== 'none';
             });
-
-            // If status filter is applied (pending/completed)
             if ($statusFilter !== 'all') {
                 $refunds = array_filter($refunds, function($payment) use ($statusFilter) {
                     return ($payment['refund_status'] ?? '') === $statusFilter;
                 });
             }
-
-            // Re-index array
-            $refunds = array_values($refunds);
-
-            $viewData['refunds'] = $refunds;
+            $viewData['refunds'] = array_values($refunds);
             $viewData['currentFilter'] = $statusFilter;
         }
 
         // ---- Render ----
         $pageTitle = 'Librarian Dashboard';
-        $content = BASE_PATH . '/view/librarian/dashboard-content.php';
         include BASE_PATH . '/view/librarian-dashboard.php';
     }
 }

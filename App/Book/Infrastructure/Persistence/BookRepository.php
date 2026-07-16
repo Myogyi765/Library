@@ -156,4 +156,24 @@ class BookRepository implements BookRepositoryInterface
             throw $e;
         }
     }
+
+
+    
+    public function count(): int
+    {
+        $stmt = $this->db->query("SELECT COUNT(*) FROM books");
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function getTotalAvailableQuantity(): int
+    {
+        $stmt = $this->db->query("SELECT SUM(available_quantity) FROM books");
+        return (int)$stmt->fetchColumn();
+    } 
+    
+    public function getTotalBorrowedQuantity(): int
+    {
+        $stmt = $this->db->query("SELECT SUM(quantity - available_quantity) FROM books");
+        return (int)$stmt->fetchColumn();
+    }
 }

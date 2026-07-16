@@ -15,6 +15,7 @@ use App\User\Domain\Repository\UserRepositoryInterface;
 use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Payment\Domain\Repository\PaymentRepositoryInterface;
 use App\Shared\Core\Authorization\Authorization;
+use App\Admin\Application\Service\DashboardStatisticsService; // ✅ Import
 
 return function ($container) {
 
@@ -39,7 +40,8 @@ return function ($container) {
             $c->get(UserRepositoryInterface::class),
             $c->get(LoanRepositoryInterface::class),
             $c->get(PaymentRepositoryInterface::class),
-            $c->get(Authorization::class)
+            $c->get(Authorization::class),
+            $c->get(DashboardStatisticsService::class) // ✅ Added missing dependency
         );
     });
 
@@ -58,7 +60,6 @@ return function ($container) {
         );
     });
 
-    // ✅ FIXED: UserController with correct dependencies
     $container->singleton(UserController::class, function ($c) {
         return new UserController(
             $c->get(UserAuthenticator::class),

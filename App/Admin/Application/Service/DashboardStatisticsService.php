@@ -23,38 +23,16 @@ class DashboardStatisticsService
 
     public function getStats(): array
     {
-        $allBooks = $this->bookRepo->findAll();
-        $totalBooks = count($allBooks);
-        $available = 0;
-        $borrowed = 0;
-        foreach ($allBooks as $book) {
-            $available += $book->getAvailableQuantity();
-            $borrowed += $book->getQuantity() - $book->getAvailableQuantity();
-        }
+        // ✅ Use count/sum methods instead of loading all entities
+        $totalBooks = $this->bookRepo->count();
+        $available = $this->bookRepo->getTotalAvailableQuantity();
+        $borrowed = $this->bookRepo->getTotalBorrowedQuantity();
 
-        $allUsers = $this->userRepo->findAll();
-        $totalUsers = count($allUsers);
-        $librarians = 0;
-        foreach ($allUsers as $user) {
-            if ($user->getRole() === 'librarian') {
-                $librarians++;
-            }
-        }
+        $totalUsers = $this->userRepo->count();
+        $librarians = $this->userRepo->countByRole('librarian');
 
-      
-        $allLoans = $this->loanRepo->findAll();
-        $activeLoans = 0;
-        $overdue = 0;
-        $now = new \DateTime();
-        foreach ($allLoans as $loan) {
-            $status = $loan->getStatus()->getValue();
-            if ($status === 'active') {
-                $activeLoans++;
-                if ($loan->getDueDate() < $now) {
-                    $overdue++;
-                }
-            }
-        }
+        $activeLoans = $this->loanRepo->countByStatus('active');
+        $overdue = $this->loanRepo->countOverdue();
 
         return [
             'users'       => $totalUsers,

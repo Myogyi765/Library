@@ -16,4 +16,9 @@ interface LoanRepositoryInterface
     public function findAll(): array;
 
       public function delete(int $id): bool;
+
+          public function count(): int;
+    public function countByStatus(string $status): int;
+    public function countOverdue(): int;
+    public function findRecent(int $limit): array;
 }
