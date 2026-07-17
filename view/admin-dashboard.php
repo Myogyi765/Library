@@ -50,60 +50,67 @@ if (!isset($stats) || !is_array($stats)) {
         class="w-64 bg-white dark:bg-gray-800 shadow-lg flex flex-col fixed inset-y-0 left-0 z-30 transition-all duration-300">
         <!-- Brand -->
         <div class="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700">
-            <a href="<?= BASE_URL ?>/admin/dashboard" class="flex items-center gap-2">
+            <!-- <a href="<?= BASE_URL ?>/admin/dashboard" class="flex items-center gap-2">
                 <i class="fas fa-book-open text-blue-600 dark:text-blue-400 text-2xl"></i>
                 <span class="text-xl font-bold text-gray-800 dark:text-white">Library Admin</span>
-            </a>
+            </a> -->
         </div>
 
         <!-- Navigation -->
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+            <!-- Dashboard (Blue) -->
             <a href="<?= BASE_URL ?>/admin/dashboard"
                 class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg <?= strpos($_SERVER['REQUEST_URI'], '/admin/dashboard') !== false ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-chart-pie w-5 text-center"></i>
+                <i class="fas fa-chart-pie w-5 text-center <?= strpos($_SERVER['REQUEST_URI'], '/admin/dashboard') !== false ? 'text-blue-600 dark:text-blue-400' : 'text-blue-500 dark:text-blue-400' ?>"></i>
                 <span>Dashboard</span>
             </a>
-          
+
+            <!-- Librarian (Purple) -->
             <a href="<?= BASE_URL ?>/admin/librarian"
                 class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg <?= strpos($_SERVER['REQUEST_URI'], '/admin/librarian') !== false ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-user-graduate w-5 text-center"></i>
+                <i class="fas fa-user-graduate w-5 text-center <?= strpos($_SERVER['REQUEST_URI'], '/admin/librarian') !== false ? 'text-blue-600 dark:text-blue-400' : 'text-purple-500 dark:text-purple-400' ?>"></i>
                 <span>Librarian</span>
             </a>
 
-              <a href="<?= BASE_URL ?>/admin/users"
+            <!-- Users (Green) -->
+            <a href="<?= BASE_URL ?>/admin/users"
                 class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg <?= strpos($_SERVER['REQUEST_URI'], '/admin/users') !== false ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-users w-5 text-center"></i>
+                <i class="fas fa-users w-5 text-center <?= strpos($_SERVER['REQUEST_URI'], '/admin/users') !== false ? 'text-blue-600 dark:text-blue-400' : 'text-green-500 dark:text-green-400' ?>"></i>
                 <span>Users</span>
             </a>
-            
+
+            <!-- Books (Amber/Orange) -->
             <a href="<?= BASE_URL ?>/admin/books"
                 class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg <?= strpos($_SERVER['REQUEST_URI'], '/admin/books') !== false ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-book w-5 text-center"></i>
+                <i class="fas fa-book w-5 text-center <?= strpos($_SERVER['REQUEST_URI'], '/admin/books') !== false ? 'text-blue-600 dark:text-blue-400' : 'text-amber-500 dark:text-amber-400' ?>"></i>
                 <span>Books</span>
             </a>
+
+            <!-- Loans (Indigo) -->
             <a href="<?= BASE_URL ?>/admin/loans"
                 class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg <?= strpos($_SERVER['REQUEST_URI'], '/admin/loans') !== false ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-hand-holding w-5 text-center"></i>
+                <i class="fas fa-hand-holding w-5 text-center <?= strpos($_SERVER['REQUEST_URI'], '/admin/loans') !== false ? 'text-blue-600 dark:text-blue-400' : 'text-indigo-500 dark:text-indigo-400' ?>"></i>
                 <span>Loans</span>
             </a>
-            <!-- ✅ NEW: Fines button -->
 
+            <!-- Reports (Rose/Pink) -->
             <a href="<?= BASE_URL ?>/admin/reports"
                 class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg <?= strpos($_SERVER['REQUEST_URI'], '/admin/reports') !== false ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-chart-bar w-5 text-center"></i>
+                <i class="fas fa-chart-bar w-5 text-center <?= strpos($_SERVER['REQUEST_URI'], '/admin/reports') !== false ? 'text-blue-600 dark:text-blue-400' : 'text-rose-500 dark:text-rose-400' ?>"></i>
                 <span>Reports</span>
             </a>
 
+            <!-- Fine & Fee Settings (Yellow) -->
             <a href="<?= BASE_URL ?>/admin/fines"
                 class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg <?= strpos($_SERVER['REQUEST_URI'], '/admin/fines') !== false ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-coins w-5 text-center"></i>
+                <i class="fas fa-coins w-5 text-center <?= strpos($_SERVER['REQUEST_URI'], '/admin/fines') !== false ? 'text-blue-600 dark:text-blue-400' : 'text-yellow-500 dark:text-yellow-400' ?>"></i>
                 <span>Fine & Fee Settings</span>
             </a>
 
-
+            <!-- ✅ Settings (Blue) – changed from gray to blue -->
             <a href="<?= BASE_URL ?>/admin/settings"
                 class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg <?= strpos($_SERVER['REQUEST_URI'], '/admin/settings') !== false ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-cog w-5 text-center"></i>
+                <i class="fas fa-cog w-5 text-center <?= strpos($_SERVER['REQUEST_URI'], '/admin/settings') !== false ? 'text-blue-600 dark:text-blue-400' : 'text-blue-500 dark:text-blue-400' ?>"></i>
                 <span>Settings</span>
             </a>
         </nav>
@@ -121,7 +128,7 @@ if (!isset($stats) || !is_array($stats)) {
                     <p class="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
                 </div>
             </div>
-
+         
         </div>
     </aside>
 

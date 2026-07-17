@@ -95,6 +95,14 @@ class LoanController extends BaseController
         try {
             $loan = new Loan($userId, $bookId);
             $this->loanRepo->save($loan);
+            $this->createNotification(
+                (int) ($_SESSION['user_id'] ?? 0),
+                'librarian',
+                'loan_created',
+                'Loan request created',
+                'A new loan request has been created and is awaiting review.',
+                '/librarian/dashboard?page=loans'
+            );
             $_SESSION['success_message'] = 'Loan request created successfully.';
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed to create loan: ' . $e->getMessage();
@@ -172,6 +180,14 @@ class LoanController extends BaseController
             $this->loanRepo->save($loan);
 
             $this->db->commit();
+            $this->createNotification(
+                (int) ($_SESSION['user_id'] ?? 0),
+                'librarian',
+                'loan_confirmed',
+                'Loan confirmed',
+                'The loan request was confirmed and the user must complete payment.',
+                '/librarian/dashboard?page=loans'
+            );
             $_SESSION['success_message'] = 'Loan confirmed. User must pay now.';
         } catch (\Exception $e) {
             $this->db->rollBack();
@@ -203,6 +219,14 @@ class LoanController extends BaseController
             $loan->reject();
             $this->loanRepo->save($loan);
             $this->db->commit();
+            $this->createNotification(
+                (int) ($_SESSION['user_id'] ?? 0),
+                'librarian',
+                'loan_rejected',
+                'Loan request rejected',
+                'The loan request was rejected by the librarian.',
+                '/librarian/dashboard?page=loans'
+            );
             $_SESSION['success_message'] = 'Loan request rejected successfully.';
         } catch (\Exception $e) {
             $this->db->rollBack();
@@ -241,6 +265,14 @@ class LoanController extends BaseController
             }
 
             $this->db->commit();
+            $this->createNotification(
+                (int) ($_SESSION['user_id'] ?? 0),
+                'librarian',
+                'loan_returned',
+                'Book returned',
+                'The borrowed book was successfully returned.',
+                '/librarian/dashboard?page=loans'
+            );
             $_SESSION['success_message'] = 'Book returned successfully.';
         } catch (\Exception $e) {
             $this->db->rollBack();

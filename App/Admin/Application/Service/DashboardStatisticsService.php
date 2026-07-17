@@ -23,7 +23,6 @@ class DashboardStatisticsService
 
     public function getStats(): array
     {
-        // ✅ Use count/sum methods instead of loading all entities
         $totalBooks = $this->bookRepo->count();
         $available = $this->bookRepo->getTotalAvailableQuantity();
         $borrowed = $this->bookRepo->getTotalBorrowedQuantity();

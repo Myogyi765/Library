@@ -30,6 +30,8 @@ ErrorHandler::initialize();
 try {
     // ---------- Container ----------
     $container = require BASE_PATH . '/config/bootstrap.php';
+   
+    $GLOBALS['container'] = $container;
 
     // ---------- Router ----------
     $router = new App\Shared\Core\Router($container);

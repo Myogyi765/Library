@@ -3,6 +3,8 @@
 use App\Notification\Infrastructure\Persistence\NotificationRepository;
 use App\Notification\Application\Service\NotificationService;
 use App\Notification\Presentation\Controller\NotificationController;
+use App\User\Infrastructure\Security\UserAuthenticator;
+use App\Shared\Core\Authorization\Authorization;
 
 return function ($container) {
 
@@ -20,6 +22,10 @@ return function ($container) {
 
     // ── Controller ──
     $container->singleton(NotificationController::class, function ($c) {
-        return new NotificationController($c->get(NotificationService::class));
+        return new NotificationController(
+            $c->get(NotificationService::class),
+            $c->get(UserAuthenticator::class),
+            $c->get(Authorization::class)
+        );
     });
 };

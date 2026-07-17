@@ -167,13 +167,17 @@ $pageTitle = 'Scan Result';
         <div class="card">
             <div class="label"><i class="fas fa-info-circle"></i> Status</div>
             <div class="value">
-                <span class="status-badge <?= 'status-' . $loan->getStatus()->getValue() ?>">
-                    <?= ucfirst(str_replace('_', ' ', $loan->getStatus()->getValue())) ?>
+                <?php
+                $status = $loan->getStatus()->getValue();
+                $statusClass = 'status-' . $status;
+                ?>
+                <span class="status-badge <?= $statusClass ?>">
+                    <?= ucfirst(str_replace('_', ' ', $status)) ?>
                 </span>
             </div>
         </div>
 
-        <?php if ($loan->getStatus()->isActive()): ?>
+        <?php if ($loan->getStatus()->getValue() === 'active'): ?>
             <div class="actions">
                 <form action="<?= BASE_URL ?>/librarian/scan/return" method="POST" style="flex:1;">
                     <input type="hidden" name="loan_id" value="<?= $loan->getId() ?>">

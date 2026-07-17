@@ -2,6 +2,8 @@
 
 namespace App\Shared\Base;
 
+use App\Notification\Application\Service\NotificationService;
+
 class BaseController
 {
     protected $container;
@@ -104,6 +106,36 @@ class BaseController
         $redirectUrl = $this->buildRedirectUrl($url);
         header('Location: ' . $redirectUrl);
         exit;
+    }
+
+    protected function createNotification(
+        int $userId,
+        string $role,
+        string $type,
+        string $title,
+        string $message,
+        ?string $link = null
+    ): void {
+        if ($userId <= 0) {
+            return;
+        }
+
+        $service = null;
+        $notificationServiceClass = NotificationService::class;
+
+        if ($this->container && $this->container->has($notificationServiceClass)) {
+            $service = $this->container->get($notificationServiceClass);
+        } elseif (isset($GLOBALS['container']) && $GLOBALS['container']->has($notificationServiceClass)) {
+            $service = $GLOBALS['container']->get($notificationServiceClass);
+        }
+
+        if ($service instanceof NotificationService) {
+            try {
+                $service->createNotification($userId, $role, $type, $title, $message, $link);
+            } catch (\Throwable $e) {
+                error_log('❌ Notification creation failed: ' . $e->getMessage());
+            }
+        }
     }
     
     protected function jsonResponse(array $data, int $status = 200): void

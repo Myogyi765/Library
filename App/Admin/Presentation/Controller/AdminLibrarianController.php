@@ -94,6 +94,14 @@ class AdminLibrarianController extends BaseController
             $dto->department = $department;
 
             $this->librarianService->register($dto);
+            $this->createNotification(
+                (int) ($_SESSION['user_id'] ?? 0),
+                'admin',
+                'librarian_created',
+                'Librarian created',
+                'A new librarian account was created successfully.',
+                '/admin/librarian'
+            );
 
             $_SESSION['success_message'] = 'Librarian created successfully.';
             $this->redirect('/admin/librarian');
@@ -144,6 +152,14 @@ class AdminLibrarianController extends BaseController
 
         try {
             $this->librarianService->updateLibrarian($id, $name, $department);
+            $this->createNotification(
+                (int) ($_SESSION['user_id'] ?? 0),
+                'admin',
+                'librarian_updated',
+                'Librarian updated',
+                'A librarian account was updated successfully.',
+                '/admin/librarian'
+            );
 
             $_SESSION['success_message'] = 'Librarian updated successfully.';
             $this->redirect('/admin/librarian');
@@ -161,6 +177,14 @@ class AdminLibrarianController extends BaseController
 
         try {
             $this->librarianService->deleteLibrarian($id);
+            $this->createNotification(
+                (int) ($_SESSION['user_id'] ?? 0),
+                'admin',
+                'librarian_deleted',
+                'Librarian deleted',
+                'A librarian account was deleted successfully.',
+                '/admin/librarian'
+            );
             $_SESSION['success_message'] = 'Librarian deleted.';
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed: ' . $e->getMessage();
@@ -202,6 +226,14 @@ class AdminLibrarianController extends BaseController
             // Since we only have the service, we can add a method to the service.
             // For now, we'll assume a method exists or we'll add it:
             $this->librarianService->updateLibrarianStatus($id, $newStatus);
+            $this->createNotification(
+                (int) ($_SESSION['user_id'] ?? 0),
+                'admin',
+                'librarian_status_toggled',
+                'Librarian status updated',
+                'A librarian account status was changed successfully.',
+                '/admin/librarian'
+            );
 
             $_SESSION['success_message'] = 'Librarian status updated to ' . ucfirst($newStatus) . '.';
         } catch (\Exception $e) {

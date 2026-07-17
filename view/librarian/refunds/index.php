@@ -9,7 +9,7 @@
 <div class="flex items-center justify-between mb-6">
     <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-            <i class="fas fa-undo-alt text-purple-600 dark:text-purple-400 mr-2"></i>Refund Management
+            <i class="fas fa-undo-alt text-blue-600 dark:text-blue-400 mr-2"></i>Refund Management
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400">Manage all refund requests</p>
     </div>
@@ -35,43 +35,33 @@
 
 <!-- Filter Tabs for Refunds -->
 <div class="flex flex-wrap gap-2 mb-6">
-    <a href="?page=refunds&status=all" class="px-4 py-2 rounded-lg transition <?= ($currentFilter ?? 'all') === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600' ?>">
+    <a href="?page=refunds&status=all" class="px-4 py-2 rounded-lg transition <?= ($currentFilter ?? 'all') === 'all' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600' ?>">
         All
     </a>
-    <a href="?page=refunds&status=pending" class="px-4 py-2 rounded-lg transition <?= ($currentFilter ?? 'all') === 'pending' ? 'bg-yellow-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600' ?>">
+    <a href="?page=refunds&status=pending" class="px-4 py-2 rounded-lg transition <?= ($currentFilter ?? 'all') === 'pending' ? 'bg-yellow-600 text-white shadow-md' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600' ?>">
         Pending
     </a>
-    <a href="?page=refunds&status=completed" class="px-4 py-2 rounded-lg transition <?= ($currentFilter ?? 'all') === 'completed' ? 'bg-green-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600' ?>">
+    <a href="?page=refunds&status=completed" class="px-4 py-2 rounded-lg transition <?= ($currentFilter ?? 'all') === 'completed' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600' ?>">
         Completed
     </a>
 </div>
 
-<!-- Refunds Table -->
+<!-- ===== SIMPLE TABLE – No fixed widths, all data visible ===== -->
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
     <div class="overflow-x-auto">
-        <table class="w-full text-sm table-fixed">
-            <colgroup>
-                <col style="width: 5%;" />
-                <col style="width: 15%;" />
-                <col style="width: 10%;" />
-                <col style="width: 10%;" />
-                <col style="width: 10%;" />
-                <col style="width: 15%;" />
-                <col style="width: 15%;" />
-                <col style="width: 10%;" />
-                <col style="width: 10%;" />
-            </colgroup>
+        <table class="w-full text-sm">
+            <!-- ===== SIMPLE HEADER ===== -->
             <thead class="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
-                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">#</th>
-                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">User</th>
-                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Loan</th>
-                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Amount</th>
-                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Method</th>
-                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Refund Status</th>
-                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Refund Reason</th>
-                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Refunded At</th>
-                    <th class="px-2 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">#</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">User</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Loan</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Amount</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Method</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Refund Status</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Refund Reason</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Refunded At</th>
+                    <th class="px-3 py-3 text-center text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -96,40 +86,40 @@
                                 default => 'text-gray-400 dark:text-gray-500'
                             };
                         ?>
-                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition">
-                            <td class="px-2 py-3 font-medium text-gray-900 dark:text-white">#<?= $id ?></td>
-                            <td class="px-2 py-3 text-gray-700 dark:text-gray-300 truncate">
-                                <?= htmlspecialchars($userName) ?>
+                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                            <td class="px-3 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">#<?= $id ?></td>
+                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300">
+                                <span class="font-medium"><?= htmlspecialchars($userName) ?></span>
                                 <?php if ($userEmail): ?>
-                                    <br><span class="text-xs text-gray-400 truncate block"><?= htmlspecialchars($userEmail) ?></span>
+                                    <br><span class="text-xs text-gray-400"><?= htmlspecialchars($userEmail) ?></span>
                                 <?php endif; ?>
                             </td>
-                            <td class="px-2 py-3 text-gray-700 dark:text-gray-300 truncate">#<?= $refund['loan_id'] ?? '?' ?></td>
-                            <td class="px-2 py-3 text-gray-700 dark:text-gray-300 truncate"><?= number_format($amount, 2) ?> MMK</td>
-                            <td class="px-2 py-3 truncate">
-                                <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 truncate block">
+                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">#<?= $refund['loan_id'] ?? '?' ?></td>
+                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 font-semibold whitespace-nowrap"><?= number_format($amount, 2) ?> MMK</td>
+                            <td class="px-3 py-3">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 whitespace-nowrap">
                                     <?= htmlspecialchars(ucfirst($paymentMethod)) ?>
                                 </span>
                             </td>
-                            <td class="px-2 py-3 truncate">
-                                <span class="<?= $refundColor ?> font-medium"><?= $refundLabel ?></span>
+                            <td class="px-3 py-3">
+                                <span class="<?= $refundColor ?> font-medium whitespace-nowrap"><?= $refundLabel ?></span>
                             </td>
-                            <td class="px-2 py-3 text-gray-700 dark:text-gray-300 truncate" title="<?= htmlspecialchars($refundReason) ?>">
+                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 break-words max-w-[200px]">
                                 <?= htmlspecialchars($refundReason) ?>
                             </td>
-                            <td class="px-2 py-3 text-gray-700 dark:text-gray-300 truncate">
+                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
                                 <?= $refundedAt ? date('d M Y, H:i', strtotime($refundedAt)) : '—' ?>
                             </td>
-                            <td class="px-2 py-3 text-center space-x-1 whitespace-nowrap">
+                            <td class="px-3 py-3 text-center space-x-1 whitespace-nowrap">
                                 <?php if ($refundStatus === 'pending'): ?>
                                     <form action="<?= BASE_URL ?>/librarian/refunds/<?= $id ?>/approve" method="POST" class="inline">
-                                        <button type="submit" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300" title="Approve Refund" onclick="return confirm('Approve this refund?')">
-                                            <i class="fas fa-check-circle"></i>
+                                        <button type="submit" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 transition" title="Approve Refund" onclick="return confirm('Approve this refund?')">
+                                            <i class="fas fa-check-circle text-base"></i>
                                         </button>
                                     </form>
                                     <form action="<?= BASE_URL ?>/librarian/refunds/<?= $id ?>/reject" method="POST" class="inline">
-                                        <button type="submit" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Reject Refund" onclick="return confirm('Reject this refund?')">
-                                            <i class="fas fa-times-circle"></i>
+                                        <button type="submit" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition" title="Reject Refund" onclick="return confirm('Reject this refund?')">
+                                            <i class="fas fa-times-circle text-base"></i>
                                         </button>
                                     </form>
                                 <?php elseif ($refundStatus === 'completed'): ?>
@@ -137,8 +127,8 @@
                                 <?php else: ?>
                                     <span class="text-xs text-gray-500 dark:text-gray-400">—</span>
                                 <?php endif; ?>
-                                <a href="<?= BASE_URL ?>/librarian/payments/<?= $id ?>" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="View Payment">
-                                    <i class="fas fa-eye"></i>
+                                <a href="<?= BASE_URL ?>/librarian/payments/<?= $id ?>" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition" title="View Payment">
+                                    <i class="fas fa-eye text-base"></i>
                                 </a>
                             </td>
                         </tr>

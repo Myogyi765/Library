@@ -23,6 +23,8 @@ use App\Librarian\Presentation\Controller\DashboardController as LibrarianDashbo
 use App\Librarian\Presentation\Controller\LibrarianCategoryController;
 use App\Librarian\Presentation\Controller\LoanController;
 use App\Librarian\Presentation\Controller\UserController;
+use App\Librarian\Presentation\Controller\RefundController;
+use App\Librarian\Presentation\Controller\ScanController; // ✅ Added
 
 use App\User\Presentation\Controller\LoginController;
 use App\Shared\Core\Middleware\AuthMiddleware;
@@ -31,9 +33,22 @@ use App\Shared\Core\Authorization\Authorization;
 use App\Book\Presentation\Controller\BookController;
 use App\Notification\Presentation\Controller\NotificationController;
 
-// ---------- Role check callbacks ----------
+// ---------- Helper: detect if request is API ----------
+function isApiRequest(): bool {
+    $uri = $_SERVER['REQUEST_URI'] ?? '/';
+    $path = parse_url($uri, PHP_URL_PATH) ?: '/';
+    return strpos($path, '/api') === 0;
+}
+
+// ---------- Role check callbacks (with JSON support) ----------
 $adminOnly = function () {
     if (($_SESSION['user_role'] ?? '') !== 'admin') {
+        if (isApiRequest()) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Admin access required.']);
+            return false;
+        }
         http_response_code(403);
         echo '<h1>403 Forbidden</h1><p>Admin access required.</p>';
         return false;
@@ -43,6 +58,12 @@ $adminOnly = function () {
 
 $librarianOnly = function () {
     if (($_SESSION['user_role'] ?? '') !== 'librarian') {
+        if (isApiRequest()) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Librarian access required.']);
+            return false;
+        }
         http_response_code(403);
         echo '<h1>403 Forbidden</h1><p>Librarian access required.</p>';
         return false;
@@ -52,6 +73,12 @@ $librarianOnly = function () {
 
 $userOnly = function () {
     if (($_SESSION['user_role'] ?? '') !== 'user') {
+        if (isApiRequest()) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'User access required.']);
+            return false;
+        }
         http_response_code(403);
         echo '<h1>403 Forbidden</h1><p>User access required.</p>';
         return false;
@@ -59,7 +86,7 @@ $userOnly = function () {
     return true;
 };
 
-// ---------- Permission check ----------
+// ---------- Permission check (with JSON support) ----------
 $authorizationCheck = function ($permission) use ($container) {
     return function () use ($container, $permission) {
         $authorization = $container->get(Authorization::class);
@@ -70,6 +97,12 @@ $authorizationCheck = function ($permission) use ($container) {
             $authorization->loadUserPermissions($_SESSION['user_id']);
         }
         if (!$authorization->hasPermission($permission)) {
+            if (isApiRequest()) {
+                http_response_code(403);
+                header('Content-Type: application/json');
+                echo json_encode(['error' => 'You do not have permission: ' . $permission]);
+                return false;
+            }
             http_response_code(403);
             echo '<h1>403 Forbidden</h1><p>You do not have permission: ' . htmlspecialchars($permission) . '</p>';
             return false;
@@ -158,7 +191,6 @@ $router->get('/librarian/users/edit/{id}', [UserController::class, 'edit'], arra
 $router->get('/librarian/users/delete/{id}', [UserController::class, 'delete'], array_merge($librarianMiddleware, [$authorizationCheck('delete_users')]));
 
 // ----- Payment routes (FIXED: index route placed FIRST) -----
-// ✅ Index route MUST be before any {id} routes
 $router->get('/librarian/payments', [LibrarianPaymentController::class, 'index'], 
     array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
 );
@@ -189,6 +221,25 @@ $router->get('/librarian/payments/invoice/{id}', [LibrarianPaymentController::cl
     array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
 );
 
+// ----- 🆕 Refund Management (separate listing & actions) -----
+$router->get('/librarian/refunds', [RefundController::class, 'index'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
+);
+$router->post('/librarian/refunds/{id}/approve', [RefundController::class, 'approve'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('refund_payments')])
+);
+$router->post('/librarian/refunds/{id}/reject', [RefundController::class, 'reject'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('refund_payments')])
+);
+
+// ✅ Scan & Return routes
+$router->get('/librarian/scan', [ScanController::class, 'scan'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('view_loans')])
+);
+$router->post('/librarian/scan/return', [ScanController::class, 'returnBook'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('edit_loans')])
+);
+
 // Categories
 $router->get('/librarian/categories', [LibrarianCategoryController::class, 'index'], array_merge($librarianMiddleware, [$authorizationCheck('view_categories')]));
 $router->get('/librarian/categories/create', [LibrarianCategoryController::class, 'create'], array_merge($librarianMiddleware, [$authorizationCheck('create_categories')]));
@@ -214,6 +265,58 @@ $router->get('/books/{id}', [BookController::class, 'show'], [AuthMiddleware::cl
 $router->get('/api/notifications', [NotificationController::class, 'getNotifications'], [AuthMiddleware::class, $authorizationCheck('view_notifications')]);
 $router->post('/api/notifications/read', [NotificationController::class, 'markRead'], [AuthMiddleware::class, $authorizationCheck('edit_notifications')]);
 
+// ---- Dev: seed notifications (localhost only) ----
+$router->get('/dev/seed-notifications', function () {
+    // Only allow from local dev environment
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    if (!in_array($ip, ['127.0.0.1', '::1'])) {
+        http_response_code(403);
+        echo 'Forbidden';
+        return;
+    }
+
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
+        http_response_code(401);
+        echo 'Unauthorized - please log in first';
+        return;
+    }
+
+    $userId = $_SESSION['user_id'] ?? null;
+    $role = $_SESSION['user_role'] ?? 'user';
+    if (!$userId) {
+        http_response_code(400);
+        echo 'Cannot determine user id from session';
+        return;
+    }
+
+    $db = $GLOBALS['container']->get('db');
+
+    $stmt = $db->prepare("INSERT INTO notifications (user_id, role, type, title, message, link, is_read, created_at) VALUES (:user_id, :role, :type, :title, :message, :link, 0, :created_at)");
+    $now = (new DateTime())->format('Y-m-d H:i:s');
+
+    $samples = [
+        ['type' => 'info', 'title' => 'Welcome back!', 'message' => 'Thanks for logging in. Check out the new books in the catalog.'],
+        ['type' => 'loan', 'title' => 'Loan due soon', 'message' => 'One of your loans is due in 3 days. Please return or extend it.'],
+        ['type' => 'payment', 'title' => 'Payment received', 'message' => 'Your payment was approved. Thank you!']
+    ];
+
+    foreach ($samples as $s) {
+        $stmt->execute([
+            ':user_id' => $userId,
+            ':role' => $role,
+            ':type' => $s['type'],
+            ':title' => $s['title'],
+            ':message' => $s['message'],
+            ':link' => null,
+            ':created_at' => $now,
+        ]);
+    }
+
+    header('Content-Type: application/json');
+    echo json_encode(['success' => true, 'inserted' => count($samples)]);
+}, [AuthMiddleware::class]);
+
 // ---- Fallback redirects ----
 $router->get('/admin/login', function () { header('Location: ' . BASE_URL . '/login'); exit; });
 $router->get('/librarian/login', function () { header('Location: ' . BASE_URL . '/login'); exit; });
@@ -233,3 +336,7 @@ $router->post('/verify-phone', [VerificationController::class, 'verifyPhone']);
 $router->post('/register', [AuthController::class, 'register']);
 $router->post('/verify-email-code', [VerificationController::class, 'verifyEmailWithCode']);
 $router->post('/login', [LoginController::class, 'login']);
+
+$router->get('/librarian/scanner', [ScanController::class, 'scanner'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('view_loans')])
+);

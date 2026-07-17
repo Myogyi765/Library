@@ -29,61 +29,70 @@ include BASE_PATH . '/view/layout/header.php';
 
 <div class="flex h-screen bg-gray-100 dark:bg-gray-900">
     <!-- ===== SIDEBAR ===== -->
-    <aside class="w-64 bg-white dark:bg-gray-800 shadow-lg flex flex-col fixed inset-y-0 left-0 z-30 transition-all duration-300">
+    <aside class="w-56 bg-white dark:bg-gray-800 shadow-lg flex flex-col fixed inset-y-0 left-0 z-30 transition-all duration-300">
         <!-- Brand -->
         <div class="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700">
             <a href="<?= BASE_URL ?>/librarian/dashboard" class="flex items-center gap-2">
-                <i class="fas fa-book-open text-green-600 dark:text-green-400 text-2xl"></i>
+                <i class="fas fa-book-open text-blue-600 dark:text-blue-400 text-2xl"></i>
                 <span class="text-xl font-bold text-gray-800 dark:text-white">Library Staff</span>
             </a>
         </div>
 
         <!-- Navigation -->
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            <!-- Dashboard -->
+            <!-- Dashboard (Blue) -->
             <a href="<?= BASE_URL ?>/librarian/dashboard?page=dashboard" 
-               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'dashboard' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-chart-pie w-5 text-center"></i>
+               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'dashboard' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
+                <i class="fas fa-chart-pie w-5 text-center <?= $page === 'dashboard' ? 'text-blue-600 dark:text-blue-400' : 'text-blue-500 dark:text-blue-400' ?>"></i>
                 <span>Dashboard</span>
             </a>
-              <!-- Users -->
+
+            <!-- Users (Purple) -->
             <a href="<?= BASE_URL ?>/librarian/dashboard?page=users" 
-               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'users' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-users w-5 text-center"></i>
+               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'users' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
+                <i class="fas fa-users w-5 text-center <?= $page === 'users' ? 'text-blue-600 dark:text-blue-400' : 'text-purple-500 dark:text-purple-400' ?>"></i>
                 <span>Users</span>
             </a>
 
-             <!-- Books -->
+            <!-- Books (Green) -->
             <a href="<?= BASE_URL ?>/librarian/dashboard?page=books" 
-               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'books' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-book w-5 text-center"></i>
+               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'books' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
+                <i class="fas fa-book w-5 text-center <?= $page === 'books' ? 'text-blue-600 dark:text-blue-400' : 'text-green-500 dark:text-green-400' ?>"></i>
                 <span>Books</span>
             </a>
 
-            <!-- Loans -->
+            <!-- Loans (Amber/Orange) -->
             <a href="<?= BASE_URL ?>/librarian/dashboard?page=loans" 
-               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'loans' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-hand-holding w-5 text-center"></i>
+               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'loans' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
+                <i class="fas fa-hand-holding w-5 text-center <?= $page === 'loans' ? 'text-blue-600 dark:text-blue-400' : 'text-amber-500 dark:text-amber-400' ?>"></i>
                 <span>Loans</span>
             </a>
-          
-           
-            <a href="<?= BASE_URL ?>/librarian/dashboard?page=payments" 
-       class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'payments' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-        <i class="fas fa-credit-card w-5 text-center"></i>
-        <span>Payments</span>
-    </a>
 
-    <!-- Refunds -->
-<a href="<?= BASE_URL ?>/librarian/dashboard?page=refunds" 
-   class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'refunds' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-    <i class="fas fa-undo-alt w-5 text-center"></i>
-    <span>Refunds</span>
+            <!-- Payments (Indigo) -->
+            <a href="<?= BASE_URL ?>/librarian/dashboard?page=payments" 
+               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'payments' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
+                <i class="fas fa-credit-card w-5 text-center <?= $page === 'payments' ? 'text-blue-600 dark:text-blue-400' : 'text-indigo-500 dark:text-indigo-400' ?>"></i>
+                <span>Payments</span>
+            </a>
+
+            <!-- Refunds (Rose/Pink) -->
+            <a href="<?= BASE_URL ?>/librarian/dashboard?page=refunds" 
+               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'refunds' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
+                <i class="fas fa-undo-alt w-5 text-center <?= $page === 'refunds' ? 'text-blue-600 dark:text-blue-400' : 'text-rose-500 dark:text-rose-400' ?>"></i>
+                <span>Refunds</span>
+            </a>
+
+            <!-- Scan -->
+<a href="<?= BASE_URL ?>/librarian/scanner" 
+   class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'scanner' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
+    <i class="fas fa-qrcode w-5 text-center <?= $page === 'scanner' ? 'text-blue-600 dark:text-blue-400' : 'text-blue-500 dark:text-blue-400' ?>"></i>
+    <span>Scan</span>
 </a>
-            <!-- Settings -->
+
+            <!-- Settings (Blue) – changed from gray to blue -->
             <a href="<?= BASE_URL ?>/librarian/dashboard?page=settings" 
-               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'settings' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-cog w-5 text-center"></i>
+               class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'settings' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
+                <i class="fas fa-cog w-5 text-center <?= $page === 'settings' ? 'text-blue-600 dark:text-blue-400' : 'text-blue-500 dark:text-blue-400' ?>"></i>
                 <span>Settings</span>
             </a>
         </nav>
@@ -91,20 +100,21 @@ include BASE_PATH . '/view/layout/header.php';
         <!-- User Profile & Logout -->
         <div class="border-t border-gray-200 dark:border-gray-700 p-4 space-y-2">
             <div class="flex items-center gap-3 px-2 py-2">
-                <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                    <i class="fas fa-user-graduate text-green-600 dark:text-green-400"></i>
+                <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <i class="fas fa-user-graduate text-blue-600 dark:text-blue-400"></i>
                 </div>
                 <div>
                     <p class="text-sm font-medium text-gray-800 dark:text-white"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Librarian') ?></p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Librarian</p>
                 </div>
             </div>
-       
+
+            
         </div>
     </aside>
 
     <!-- ===== MAIN CONTENT ===== -->
-    <main class="flex-1 ml-64 p-8 overflow-y-auto" id="main-content">
+    <main class="flex-1 ml-56 p-8 overflow-y-auto" id="main-content">
         <?php
         // ✅ Extract view data passed from DashboardController
         if (isset($viewData) && is_array($viewData)) {
@@ -118,7 +128,7 @@ include BASE_PATH . '/view/layout/header.php';
         $users = $users ?? [];
         $books = $books ?? [];
 
-        // ✅ Include the content file (handles page switching)
+        // ✅ Include the content file
         include BASE_PATH . '/view/librarian/dashboard-content.php';
         ?>
     </main>

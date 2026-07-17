@@ -86,7 +86,8 @@ class LibrarianPaymentController extends BaseController
         $payment = $this->paymentRepo->findById($id);
 
         if (!$payment) {
-            $this->view('404');
+            // ✅ Use a proper error view
+            $this->view('404', ['message' => 'Payment not found.']);
             return;
         }
 
@@ -104,7 +105,6 @@ class LibrarianPaymentController extends BaseController
             $cmd = new ApprovePaymentCommand($id, $_SESSION['user_id'] ?? 0);
             $this->approveHandler->handle($cmd);
 
-            // ✅ Fixed: Redirect to the correct invoice route
             $this->redirect(BASE_URL . '/librarian/payments/invoice/' . $id);
         } catch (\Exception $e) {
             $_SESSION['flash_error'] = $e->getMessage();

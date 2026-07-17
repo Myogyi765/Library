@@ -108,6 +108,14 @@ class PaymentController extends BaseController
 
             if ($payment instanceof Payment) {
                 $_SESSION['payment_id'] = $payment->getId();
+                $this->createNotification(
+                    (int) ($_SESSION['user_id'] ?? 0),
+                    'user',
+                    'payment_submitted',
+                    'Payment submitted',
+                    'Your payment is waiting for librarian review.',
+                    '/librarian/dashboard?page=payments'
+                );
             }
 
             $_SESSION['success_message'] = 'Payment submitted successfully! The librarian will review it shortly.';

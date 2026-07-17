@@ -15,6 +15,7 @@ use App\User\Exception\UserNotFoundException;
 use App\User\Infrastructure\Security\UserAuthenticator;
 use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Book\Domain\Repository\BookRepositoryInterface;
+use App\Admin\Application\Service\DashboardStatisticsService; // ✅ Added
 
 class AuthController extends BaseController
 {
@@ -24,6 +25,7 @@ class AuthController extends BaseController
     private UserAuthenticator $authenticator;
     private LoanRepositoryInterface $loanRepository;
     private BookRepositoryInterface $bookRepository;
+    private DashboardStatisticsService $dashboardStats; // ✅ Added
 
     
     public function __construct(
@@ -32,7 +34,8 @@ class AuthController extends BaseController
         LogoutUser $logoutUser,
         UserAuthenticator $authenticator,
         LoanRepositoryInterface $loanRepository,
-        BookRepositoryInterface $bookRepository
+        BookRepositoryInterface $bookRepository,
+        DashboardStatisticsService $dashboardStats // ✅ Added
     ) {
         parent::__construct(null);
 
@@ -42,6 +45,7 @@ class AuthController extends BaseController
         $this->authenticator = $authenticator;
         $this->loanRepository = $loanRepository;
         $this->bookRepository = $bookRepository;
+        $this->dashboardStats = $dashboardStats; // ✅ Added
     }
 
 
@@ -51,10 +55,14 @@ class AuthController extends BaseController
             define('BASE_PATH', dirname(__DIR__, 4));
         }
 
+        // ✅ Fetch real statistics
+        $stats = $this->dashboardStats->getStats();
+
         $this->view('home', [
             'pageTitle' => 'Welcome to Library Management System',
             'basePath' => BASE_PATH,
-            'baseUrl' => BASE_URL ?? '/Library/public'
+            'baseUrl' => BASE_URL ?? '/Library/public',
+            'stats' => $stats, // ✅ Pass to view
         ]);
     }
 

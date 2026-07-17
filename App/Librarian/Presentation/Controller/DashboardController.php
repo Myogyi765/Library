@@ -9,7 +9,7 @@ use App\User\Domain\Repository\UserRepositoryInterface;
 use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Shared\Core\Authorization\Authorization;
 use App\Payment\Domain\Repository\PaymentRepositoryInterface;
-use App\Admin\Application\Service\DashboardStatisticsService; // ✅ Import
+use App\Admin\Application\Service\DashboardStatisticsService;
 
 class DashboardController extends BaseController
 {
@@ -20,7 +20,7 @@ class DashboardController extends BaseController
     private LoanRepositoryInterface $loanRepository;
     private PaymentRepositoryInterface $paymentRepo;
     private Authorization $authorization;
-    private DashboardStatisticsService $dashboardStats; // ✅ Add
+    private DashboardStatisticsService $dashboardStats;
 
     public function __construct(
         UserAuthenticator $userAuth,
@@ -30,7 +30,7 @@ class DashboardController extends BaseController
         LoanRepositoryInterface $loanRepository,
         PaymentRepositoryInterface $paymentRepo,
         Authorization $authorization,
-        DashboardStatisticsService $dashboardStats // ✅ Inject
+        DashboardStatisticsService $dashboardStats
     ) {
         $this->userAuth = $userAuth;
         $this->bookRepository = $bookRepository;
@@ -75,39 +75,31 @@ class DashboardController extends BaseController
             }
         }
 
-        // ---- Data fetching with limits ----
-        // For lists, limit to 200 to avoid memory exhaustion
-        $allUsers = $this->userRepository->findAll(); // Keep as is for now (can be limited later)
-        $allBooks = $this->bookRepository->findAll();
-        $allLoans = $this->loanRepository->findAll();
-        $allCategories = $this->categoryRepository->findAll();
+        // ================================================================
+        // ✅ OPTIMIZED DATA FETCHING – Limit data to avoid memory exhaustion
+        // ================================================================
 
-        // Map users, books, categories
         $users = [];
-        foreach ($allUsers as $user) {
-            $users[$user->getId()] = $user;
-        }
         $books = [];
-        foreach ($allBooks as $book) {
-            $books[$book->getId()] = $book;
-        }
+        $allBooks = [];
+        $allLoans = [];
+        $allCategories = [];
         $categoryMap = [];
-        foreach ($allCategories as $category) {
-            $categoryMap[$category->getId()] = $category->getName();
-        }
-
-        // ---- Stats (only for dashboard) ----
         $stats = [];
+
+        // ── For Dashboard Page: use optimized stats service ──
         if ($page === 'dashboard') {
-            // Use the optimized statistics service
+            // Use optimized statistics service (uses COUNT queries)
             $stats = $this->dashboardStats->getStats();
 
-            // Recent activities – fetch only last 5 loans
+            // Only fetch recent 5 loans for activity feed
             $recentLoans = $this->loanRepository->findRecent(5);
             $recentActivities = [];
+
+            // Fetch only users and books needed for recent activities
             foreach ($recentLoans as $loan) {
-                $book = $books[$loan->getBookId()] ?? null;
-                $user = $users[$loan->getUserId()] ?? null;
+                $user = $this->userRepository->findById($loan->getUserId());
+                $book = $this->bookRepository->findById($loan->getBookId());
                 $recentActivities[] = [
                     'user'   => $user ? $user->getName() : 'Unknown',
                     'action' => $loan->getStatus()->getValue() === 'returned' ? 'Returned' : 'Borrowed',
@@ -117,6 +109,46 @@ class DashboardController extends BaseController
                 ];
             }
             $stats['recentActivities'] = $recentActivities;
+
+            // For dashboard, we don't need full lists - use empty arrays
+            $allBooks = [];
+            $allLoans = [];
+            $allCategories = [];
+            $categoryMap = [];
+            $users = [];
+            $books = [];
+
+        } else {
+            // ── For Other Pages (loans, users, books, etc.) ──
+            // 🔹 Limit data to 200 records per page to avoid memory exhaustion
+            $maxRecords = 200;
+
+            // Get users (for lookup)
+            $allUsers = $this->userRepository->findAll(); // Could also limit, but users are usually few
+            foreach ($allUsers as $user) {
+                $users[$user->getId()] = $user;
+            }
+
+            // Get books (for lookup)
+            $allBooks = $this->bookRepository->findAll(); // Could limit if needed
+            foreach ($allBooks as $book) {
+                $books[$book->getId()] = $book;
+            }
+
+            // Get loans – limit to $maxRecords
+            $allLoans = $this->loanRepository->findAll(); // This could be huge – we'll limit by slicing
+            if (count($allLoans) > $maxRecords) {
+                $allLoans = array_slice($allLoans, 0, $maxRecords);
+            }
+
+            // Categories (usually small)
+            $allCategories = $this->categoryRepository->findAll();
+            foreach ($allCategories as $category) {
+                $categoryMap[$category->getId()] = $category->getName();
+            }
+
+            // Stats for dashboard not needed in other pages
+            $stats = [];
         }
 
         // ---- Prepare base view data ----

@@ -1,7 +1,21 @@
 <?php
-// view/librarian/books/index.php – Table partial (no header, button, or messages)
+// view/librarian/books/index.php – Full page with header and table
 // Expects $books (flat array) and $categoryMap (passed from controller)
 ?>
+<!-- ===== BOOKS PAGE HEADER ===== -->
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+            <i class="fas fa-book text-blue-600 mr-2"></i>Book Management
+        </h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Manage library catalog</p>
+    </div>
+    <a href="<?= BASE_URL ?>/librarian/dashboard?page=books_create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition shadow-md hover:shadow-lg">
+        <i class="fas fa-plus"></i> Add Book
+    </a>
+</div>
+
+<!-- ===== BOOKS TABLE ===== -->
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
@@ -53,7 +67,7 @@
                     <tr>
                         <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                             No books found. 
-                            <a href="<?= BASE_URL ?>/librarian/books/create" class="text-blue-600 dark:text-blue-400 hover:underline">Add your first book</a>
+                            <a href="<?= BASE_URL ?>/librarian/dashboard?page=books_create" class="text-blue-600 dark:text-blue-400 hover:underline">Add your first book</a>
                         </td>
                     </tr>
                 <?php endif; ?>

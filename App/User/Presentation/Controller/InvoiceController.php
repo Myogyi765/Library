@@ -11,6 +11,12 @@ use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\User\Domain\Repository\UserRepositoryInterface;
 use App\Book\Domain\Repository\BookRepositoryInterface;
 
+// QR Code Library
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\SvgWriter;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
+
 class InvoiceController extends BaseController
 {
     private InvoiceRepositoryInterface $invoiceRepo;
@@ -68,21 +74,45 @@ class InvoiceController extends BaseController
         $user = $this->userRepo->findById($userId);
         $book = $this->bookRepo->findById($loan->getBookId());
 
+        $qrCode = null;
+        try {
+            $qrData = sprintf(
+                "Loan ID: #%d\nUser: %s\nBook: %s",
+                $loan->getId(),
+                $user ? $user->getName() : 'Unknown',
+                $book ? $book->getTitle() : 'Unknown'
+            );
+
+            $qrResult = Builder::create()
+                ->writer(new SvgWriter()) // SVG (GD မလိုပါ)
+                ->data($qrData)
+                ->encoding(new Encoding('UTF-8'))
+                ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
+                ->size(150)
+                ->margin(10)
+                ->build();
+
+            $qrCode = $qrResult->getDataUri();
+        } catch (\Exception $e) {
+            error_log('❌ QR Code generation failed: ' . $e->getMessage());
+            $qrCode = null;
+        }
+
         $invoiceData = [
             'invoice_number' => $invoice->getInvoiceNumber(),
-            'date' => $invoice->getIssuedAt()->format('d M Y'),
-            'user' => $user,
-            'book' => $book,
-            'loan' => $loan,
-            'payment' => $payment,
-            'borrowed_at' => $loan->getBorrowedAt(),
-            'due_date' => $loan->getDueDate(),
-            'invoice' => $invoice,
+            'date'           => $invoice->getIssuedAt()->format('d M Y'),
+            'user'           => $user,
+            'book'           => $book,
+            'loan'           => $loan,
+            'payment'        => $payment,
+            'borrowed_at'    => $loan->getBorrowedAt(),
+            'due_date'       => $loan->getDueDate(),
+            'invoice'        => $invoice,
+            'qrCode'         => $qrCode, 
         ];
 
         $this->view('payment/invoice', $invoiceData);
     }
-
 
     private function renderNotFound(string $message): void
     {

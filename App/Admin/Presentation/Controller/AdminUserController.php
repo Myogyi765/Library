@@ -66,6 +66,14 @@ class AdminUserController extends BaseController
 
         try {
             $this->userService->createUser($data);
+            $this->createNotification(
+                (int) ($_SESSION['user_id'] ?? 0),
+                'admin',
+                'user_created',
+                'User created',
+                'A new user account was created successfully.',
+                '/admin/users'
+            );
             $_SESSION['success_message'] = 'User created successfully.';
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed: ' . $e->getMessage();
@@ -104,6 +112,14 @@ class AdminUserController extends BaseController
 
         try {
             $this->userService->updateUser($id, $data);
+            $this->createNotification(
+                (int) ($_SESSION['user_id'] ?? 0),
+                'admin',
+                'user_updated',
+                'User updated',
+                'A user account was updated successfully.',
+                '/admin/users'
+            );
             $_SESSION['success_message'] = 'User updated successfully.';
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed: ' . $e->getMessage();
@@ -121,6 +137,14 @@ class AdminUserController extends BaseController
 
         try {
             $this->userRepository->delete($id);
+            $this->createNotification(
+                (int) ($_SESSION['user_id'] ?? 0),
+                'admin',
+                'user_deleted',
+                'User deleted',
+                'A user account was deleted successfully.',
+                '/admin/users'
+            );
             $_SESSION['success_message'] = 'User deleted successfully.';
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed: ' . $e->getMessage();
@@ -167,6 +191,14 @@ class AdminUserController extends BaseController
             $this->userRepository->save($user);
 
             // 7. Set success message
+            $this->createNotification(
+                (int) ($_SESSION['user_id'] ?? 0),
+                'admin',
+                'user_status_toggled',
+                'User status updated',
+                'A user account status was changed successfully.',
+                '/admin/users'
+            );
             $_SESSION['success_message'] = 'User status updated to ' . ucfirst($newStatusString) . '.';
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed to toggle status: ' . $e->getMessage();

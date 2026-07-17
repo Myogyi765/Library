@@ -49,39 +49,24 @@
     </a>
 </div>
 
-<!-- Payments Table – Premium Design, No Overflow -->
-<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+<!-- ===== SIMPLE TABLE – No fixed widths, all data visible ===== -->
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
     <div class="overflow-x-auto">
-        <table class="w-full text-sm table-fixed">
-            <!-- ===== COLUMN WIDTHS (Prevent Overflow) ===== -->
-            <colgroup>
-                <col style="width: 4%;" />   <!-- # -->
-                <col style="width: 12%;" />  <!-- User -->
-                <col style="width: 8%;" />   <!-- Loan -->
-                <col style="width: 9%;" />   <!-- Amount -->
-                <col style="width: 10%;" />  <!-- Payment Method -->
-                <col style="width: 13%;" />  <!-- Transaction Ref -->
-                <col style="width: 12%;" />  <!-- Book -->
-                <col style="width: 12%;" />  <!-- Submitted At -->
-                <col style="width: 8%;" />   <!-- Status -->
-                <col style="width: 8%;" />   <!-- Refund -->
-                <col style="width: 8%;" />   <!-- Actions -->
-            </colgroup>
-
-            <!-- ===== PREMIUM HEADER – Clean, Bold, Spacious ===== -->
-            <thead class="bg-gray-50 dark:bg-gray-900/50 border-b-2 border-blue-500 dark:border-blue-400">
+        <table class="w-full text-sm">
+            <!-- ===== SIMPLE HEADER ===== -->
+            <thead class="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
-                    <th class="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">#</th>
-                    <th class="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">User</th>
-                    <th class="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">Loan</th>
-                    <th class="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">Amount</th>
-                    <th class="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">Method</th>
-                    <th class="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">Transaction Ref</th>
-                    <th class="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">Book</th>
-                    <th class="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">Submitted</th>
-                    <th class="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">Status</th>
-                    <th class="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">Refund</th>
-                    <th class="px-3 py-3 text-center text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">Actions</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">#</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">User</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Loan</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Amount</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Method</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Transaction Ref</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Book</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Submitted At</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Status</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Refund</th>
+                    <th class="px-3 py-3 text-center text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -119,35 +104,35 @@
                                 default => 'text-gray-600 dark:text-gray-400'
                             };
                         ?>
-                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition duration-150">
-                            <td class="px-3 py-3 font-medium text-gray-900 dark:text-white truncate">#<?= $id ?></td>
-                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 truncate">
+                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                            <td class="px-3 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">#<?= $id ?></td>
+                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300">
                                 <span class="font-medium"><?= htmlspecialchars($userName) ?></span>
                                 <?php if ($userEmail): ?>
-                                    <br><span class="text-xs text-gray-400 truncate block"><?= htmlspecialchars($userEmail) ?></span>
+                                    <br><span class="text-xs text-gray-400"><?= htmlspecialchars($userEmail) ?></span>
                                 <?php endif; ?>
                             </td>
-                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 truncate">#<?= $payment['loan_id'] ?? '?' ?></td>
-                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 font-semibold truncate"><?= number_format($amount, 2) ?> MMK</td>
-                            <td class="px-3 py-3 truncate">
-                                <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">#<?= $payment['loan_id'] ?? '?' ?></td>
+                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 font-semibold whitespace-nowrap"><?= number_format($amount, 2) ?> MMK</td>
+                            <td class="px-3 py-3">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 whitespace-nowrap">
                                     <?= htmlspecialchars(ucfirst($paymentMethod)) ?>
                                 </span>
                             </td>
-                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 font-mono text-xs truncate" title="<?= htmlspecialchars($transactionRef) ?>">
+                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 font-mono text-xs break-all max-w-[150px]">
                                 <?= htmlspecialchars($transactionRef) ?>
                             </td>
-                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 truncate" title="<?= htmlspecialchars($bookTitle) ?>">
+                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 break-words max-w-[150px]">
                                 <?= htmlspecialchars($bookTitle) ?>
                             </td>
-                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 text-sm truncate">
+                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
                                 <?= $submittedAt ? date('d M Y, H:i', strtotime($submittedAt)) : '—' ?>
                             </td>
-                            <td class="px-3 py-3 truncate">
-                                <span class="<?= $statusColor ?> font-semibold"><?= $statusLabel ?></span>
+                            <td class="px-3 py-3">
+                                <span class="<?= $statusColor ?> font-semibold whitespace-nowrap"><?= $statusLabel ?></span>
                             </td>
-                            <td class="px-3 py-3 truncate">
-                                <span class="<?= $refundColor ?> font-medium"><?= $refundLabel ?></span>
+                            <td class="px-3 py-3">
+                                <span class="<?= $refundColor ?> font-medium whitespace-nowrap"><?= $refundLabel ?></span>
                             </td>
                             <td class="px-3 py-3 text-center space-x-1 whitespace-nowrap">
                                 <?php if ($status === 'pending_approval'): ?>

@@ -17,6 +17,7 @@ use App\User\Presentation\Controller\ViewController;
 use App\User\Presentation\Controller\DashboardController;
 use App\User\Presentation\Controller\BorrowController as UserBorrowController;
 use App\User\Presentation\Controller\InvoiceController as UserInvoiceController;
+use App\Admin\Application\Service\DashboardStatisticsService; // ✅ Added
 
 // These will be resolved when the container is run, but we need them for type hints
 use App\Circulation\Application\Handler\BorrowBookHandler;
@@ -88,7 +89,8 @@ return function ($container) {
             $c->get(LogoutUser::class),
             $c->get(UserAuthenticator::class),
             $c->get('loan.repository'),
-            $c->get('book.repository')
+            $c->get('book.repository'),
+            $c->get(DashboardStatisticsService::class) // ✅ Added
         );
     });
 

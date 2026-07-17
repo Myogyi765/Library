@@ -4,20 +4,23 @@ namespace App\Notification\Presentation\Controller;
 use App\Notification\Application\Service\NotificationService;
 use App\User\Infrastructure\Security\UserAuthenticator;
 use App\Shared\Base\BaseController;
-use App\Shared\Core\Authorization\Authorization; 
+use App\Shared\Core\Authorization\Authorization;
 
 class NotificationController extends BaseController
 {
     private NotificationService $notificationService;
     private UserAuthenticator $authenticator;
-    private Authorization $authorization; 
+    private Authorization $authorization;
 
-    public function __construct($container)
-    {
-        parent::__construct($container);
-        $this->notificationService = $this->container->get('notification.service');
-        $this->authenticator = $this->container->get('user.authenticator');
-        $this->authorization = $this->container->get('Authorization'); 
+    // ✅ Constructor ကို ပြင်ပါ – Service များကို တိုက်ရိုက်လက်ခံပါ
+    public function __construct(
+        NotificationService $notificationService,
+        UserAuthenticator $authenticator,
+        Authorization $authorization
+    ) {
+        $this->notificationService = $notificationService;
+        $this->authenticator = $authenticator;
+        $this->authorization = $authorization;
     }
 
     public function getNotifications(): void
@@ -28,17 +31,13 @@ class NotificationController extends BaseController
             return;
         }
 
-        if (isset($_SESSION['user_id'])) {
-            $this->authorization->loadUserPermissions($_SESSION['user_id']);
-        }
-
-        if (!$this->authorization->hasPermission('view_notifications')) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Permission denied']);
+        $user = $this->authenticator->getCurrentUser();
+        if (!$user) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized']);
             return;
         }
 
-        $user = $this->authenticator->getCurrentUser();
         $userId = $user->getId();
         $role = $user->getRole();
 
@@ -72,13 +71,10 @@ class NotificationController extends BaseController
             return;
         }
 
-        if (isset($_SESSION['user_id'])) {
-            $this->authorization->loadUserPermissions($_SESSION['user_id']);
-        }
-
-        if (!$this->authorization->hasPermission('edit_notifications')) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Permission denied']);
+        $user = $this->authenticator->getCurrentUser();
+        if (!$user) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized']);
             return;
         }
 

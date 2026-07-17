@@ -40,6 +40,14 @@ class BorrowController extends BaseController
             $this->handler->handle($command);
 
             $_SESSION['success_message'] = 'Borrow request submitted successfully. Waiting for librarian approval.';
+            $this->createNotification(
+                $userId,
+                'user',
+                'borrow_request',
+                'Borrow request submitted',
+                'Your borrow request is waiting for librarian approval.',
+                '/librarian/dashboard?page=loans'
+            );
             $this->redirect(BASE_URL . '/books/' . $id);
 
         } catch (\DomainException $e) {
