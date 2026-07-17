@@ -22,7 +22,6 @@ class RefundController extends BaseController
         $this->authorization = $authorization;
     }
 
-    
     public function index(): void
     {
         if (!$this->userAuth->isLoggedIn() || ($_SESSION['user_role'] ?? '') !== 'librarian') {
@@ -62,33 +61,41 @@ class RefundController extends BaseController
         include BASE_PATH . '/view/librarian-dashboard.php';
     }
 
-    
     public function approve(int $id): void
     {
-        $this->createNotification(
-            (int) ($_SESSION['user_id'] ?? 0),
-            'librarian',
-            'refund_approved',
-            'Refund approved',
-            'The refund request was approved successfully.',
-            '/librarian/dashboard?page=refunds'
-        );
+        $payment = $this->paymentRepo->findById($id);
+        if ($payment) {
+            $userId = $payment->getUserId();
+            $this->createNotification(
+                $userId,
+                'user',
+                'refund_approved',
+                'Refund approved',
+                'Your refund request has been approved.',
+                '/user-dashboard'
+            );
+        }
+
         $_SESSION['flash_success'] = 'Refund approved successfully.';
         header('Location: ' . BASE_URL . '/librarian/refunds');
         exit;
     }
 
-    
     public function reject(int $id): void
     {
-        $this->createNotification(
-            (int) ($_SESSION['user_id'] ?? 0),
-            'librarian',
-            'refund_rejected',
-            'Refund rejected',
-            'The refund request was rejected.',
-            '/librarian/dashboard?page=refunds'
-        );
+        $payment = $this->paymentRepo->findById($id);
+        if ($payment) {
+            $userId = $payment->getUserId();
+            $this->createNotification(
+                $userId,
+                'user',
+                'refund_rejected',
+                'Refund rejected',
+                'Your refund request has been rejected.',
+                '/user-dashboard'
+            );
+        }
+
         $_SESSION['flash_error'] = 'Refund rejected.';
         header('Location: ' . BASE_URL . '/librarian/refunds');
         exit;

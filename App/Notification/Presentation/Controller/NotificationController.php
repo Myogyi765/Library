@@ -77,13 +77,24 @@ class NotificationController extends BaseController
             return;
         }
 
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if ($input === null) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid JSON payload']);
+            return;
+        }
+
         $id = $input['id'] ?? null;
+
+        error_log("🔔 [markRead] User ID: {$user->getId()}, Notification ID: " . ($id ?? 'ALL'));
 
         if ($id) {
             $this->notificationService->markAsRead((int)$id);
+            error_log("🔔 [markRead] Marked notification #{$id} as read");
         } else {
-            $user = $this->authenticator->getCurrentUser();
             $this->notificationService->markAllAsRead($user->getId(), $user->getRole());
+            error_log("🔔 [markRead] Marked all notifications as read for user {$user->getId()}");
         }
 
         echo json_encode(['success' => true]);

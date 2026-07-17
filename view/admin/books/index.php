@@ -1,6 +1,7 @@
 <?php
 /**
  * @var array $books  Array of Book entities
+ * @var array $categoryMap  Category ID → Name
  */
 ?>
 
@@ -91,7 +92,7 @@
     .status-badge.outofstock { background: #fee2e2; color: #991b1b; }
     .dark .status-badge.outofstock { background: #7f1d1d; color: #fca5a5; }
 
-    /* Action Buttons */
+    /* ===== ACTION BUTTONS – COLORED ===== */
     .action-btn {
         display: inline-flex;
         align-items: center;
@@ -100,18 +101,58 @@
         height: 30px;
         border-radius: 6px;
         transition: all 0.15s;
-        color: #94a3b8;
         background: transparent;
         border: none;
         cursor: pointer;
         text-decoration: none;
     }
-    .action-btn:hover { background: #f1f5f9; color: #2563eb; }
-    .action-btn.delete:hover { color: #dc2626; }
-    .dark .action-btn { color: #64748b; }
-    .dark .action-btn:hover { background: #1e293b; color: #60a5fa; }
-    .dark .action-btn.delete:hover { color: #f87171; }
-    .action-btn.view:hover { color: #6b7280; }
+    /* View – Blue */
+    .action-btn.view {
+        color: #3b82f6;
+    }
+    .action-btn.view:hover {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+    .dark .action-btn.view {
+        color: #60a5fa;
+    }
+    .dark .action-btn.view:hover {
+        background: #1e293b;
+        color: #93c5fd;
+    }
+
+    /* Edit – Amber */
+    .action-btn.edit {
+        color: #f59e0b;
+    }
+    .action-btn.edit:hover {
+        background: #fffbeb;
+        color: #d97706;
+    }
+    .dark .action-btn.edit {
+        color: #fbbf24;
+    }
+    .dark .action-btn.edit:hover {
+        background: #1e293b;
+        color: #fcd34d;
+    }
+
+    /* Delete – Red */
+    .action-btn.delete {
+        color: #ef4444;
+    }
+    .action-btn.delete:hover {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+    .dark .action-btn.delete {
+        color: #f87171;
+    }
+    .dark .action-btn.delete:hover {
+        background: #1e293b;
+        color: #fca5a5;
+    }
 
     /* Search Input */
     .search-input {
@@ -274,29 +315,39 @@
                                     $statusIcon = 'fa-times-circle';
                                 }
 
-                                // ---- ✅ CORRECTED: Image Path using basename() ----
+                                // ---- ✅ FIXED: Handle full URLs and relative paths ----
                                 $cover = $book->getCoverImage();
-                                $hasImage = false;
-                                $imageUrl = '';
+                                $imageUrl = null;
 
                                 if ($cover) {
-                                    // Extract only the filename (remove any directory prefix)
-                                    $filename = basename($cover); // e.g., '6a57034c1dd7b.jpg'
-                                    
-                                    // Check possible physical locations
-                                    $possiblePaths = [
-                                        BASE_PATH . '/public/uploads/books/' . $filename,
-                                        BASE_PATH . '/uploads/books/' . $filename,
-                                        BASE_PATH . '/public/storage/upload/books/' . $filename,
-                                        BASE_PATH . '/storage/app/public/upload/books/' . $filename,
-                                    ];
-                                    
-                                    foreach ($possiblePaths as $path) {
-                                        if (file_exists($path)) {
-                                            $hasImage = true;
-                                            // Build the web URL (assuming images are served from public/uploads/books/)
-                                            $imageUrl = BASE_URL . '/uploads/books/' . $filename;
-                                            break;
+                                    // If it's a full URL, use it directly
+                                    if (filter_var($cover, FILTER_VALIDATE_URL)) {
+                                        $imageUrl = $cover;
+                                    } else {
+                                        // It's a relative path – try to locate the file
+                                        $filename = basename($cover); // e.g., '6a57034c1dd7b.jpg'
+                                        
+                                        // Check possible physical locations
+                                        $possiblePaths = [
+                                            BASE_PATH . '/public/uploads/books/' . $filename,
+                                            BASE_PATH . '/uploads/books/' . $filename,
+                                            BASE_PATH . '/public/storage/upload/books/' . $filename,
+                                            BASE_PATH . '/storage/app/public/upload/books/' . $filename,
+                                        ];
+                                        
+                                        $found = false;
+                                        foreach ($possiblePaths as $path) {
+                                            if (file_exists($path)) {
+                                                $found = true;
+                                                // Build the web URL (assume public/uploads/books/)
+                                                $imageUrl = BASE_URL . '/uploads/books/' . $filename;
+                                                break;
+                                            }
+                                        }
+                                        
+                                        // If not found, fallback to a placeholder (no image)
+                                        if (!$found) {
+                                            $imageUrl = null;
                                         }
                                     }
                                 }
@@ -306,7 +357,7 @@
                                 <td>
                                     <div class="flex items-center">
                                         <span class="book-cover">
-                                            <?php if ($hasImage): ?>
+                                            <?php if ($imageUrl): ?>
                                                 <img src="<?= $imageUrl ?>" 
                                                      alt="<?= htmlspecialchars($book->getTitle()) ?>"
                                                      onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'no-image\'><i class=\'fas fa-book\'></i></span>'">
@@ -319,7 +370,11 @@
                                 </td>
                                 <td class="text-gray-600 dark:text-gray-300"><?= htmlspecialchars($book->getAuthor()) ?></td>
                                 <td class="text-gray-600 dark:text-gray-300">
-                                    <?= htmlspecialchars($book->getCategoryId()) ?>
+                                    <?php
+                                    // ✅ Show category name using $categoryMap
+                                    $catId = $book->getCategoryId();
+                                    echo htmlspecialchars($categoryMap[$catId] ?? 'Uncategorized');
+                                    ?>
                                 </td>
                                 <td>
                                     <span class="status-badge <?= $statusClass ?>">
@@ -332,14 +387,17 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="flex items-center justify-center gap-1">
+                                        <!-- View – Blue -->
                                         <a href="<?= BASE_URL ?>/admin/books/show?id=<?= $book->getId() ?>"
                                            class="action-btn view" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        <!-- Edit – Amber -->
                                         <a href="<?= BASE_URL ?>/admin/books/edit?id=<?= $book->getId() ?>"
-                                           class="action-btn" title="Edit">
+                                           class="action-btn edit" title="Edit">
                                             <i class="fas fa-pen"></i>
                                         </a>
+                                        <!-- Delete – Red -->
                                         <a href="<?= BASE_URL ?>/admin/books/delete?id=<?= $book->getId() ?>"
                                            class="action-btn delete" title="Delete"
                                            onclick="return confirm('Are you sure you want to delete this book? This action cannot be undone.')">

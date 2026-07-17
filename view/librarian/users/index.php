@@ -15,9 +15,7 @@ $filteredUsers = array_values($filteredUsers);
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">Manage library members (users only)</p>
         </div>
-        <a href="<?= BASE_URL ?>/librarian/users/create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 shadow-sm hover:shadow-md">
-            <i class="fas fa-user-plus"></i> Add User
-        </a>
+      
     </div>
 
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">

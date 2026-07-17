@@ -81,7 +81,7 @@
     .status-badge.banned { background: #fee2e2; color: #991b1b; }
     .dark .status-badge.banned { background: #7f1d1d; color: #fca5a5; }
 
-    /* Action Buttons – minimal */
+    /* ===== ACTION BUTTON – DELETE (Red) ===== */
     .action-btn {
         display: inline-flex;
         align-items: center;
@@ -90,16 +90,25 @@
         height: 30px;
         border-radius: 6px;
         transition: all 0.15s;
-        color: #94a3b8;
         background: transparent;
         border: none;
         cursor: pointer;
+        text-decoration: none;
     }
-    .action-btn:hover { background: #f1f5f9; color: #2563eb; }
-    .action-btn.delete:hover { color: #dc2626; }
-    .dark .action-btn { color: #64748b; }
-    .dark .action-btn:hover { background: #1e293b; color: #60a5fa; }
-    .dark .action-btn.delete:hover { color: #f87171; }
+    .action-btn.delete {
+        color: #ef4444;
+    }
+    .action-btn.delete:hover {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+    .dark .action-btn.delete {
+        color: #f87171;
+    }
+    .dark .action-btn.delete:hover {
+        background: #1e293b;
+        color: #fca5a5;
+    }
 
     /* Search Input – clean */
     .search-input {
@@ -226,7 +235,7 @@
             <table class="user-table">
                 <thead>
                     <tr>
-                        <th class="serial-number">#</th>   <!-- Serial Number column -->
+                        <th class="serial-number">#</th>
                         <th>Name</th>
                         <th>Email</th>
                         <th>Phone</th>
@@ -274,10 +283,7 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="flex items-center justify-center gap-1">
-                                        <a href="<?= BASE_URL ?>/admin/users/edit/<?= $user->getId() ?>"
-                                           class="action-btn" title="Edit">
-                                            <i class="fas fa-pen"></i>
-                                        </a>
+                                        <!-- ✅ Delete only – red colored -->
                                         <button onclick="confirmDelete(<?= $user->getId() ?>)"
                                                 class="action-btn delete" title="Delete">
                                             <i class="fas fa-trash"></i>
@@ -312,7 +318,7 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Script (English) -->
+<!-- Delete Confirmation Script -->
 <script>
 function confirmDelete(id) {
     if (confirm('Are you sure you want to delete user #' + id + '? This action cannot be undone.')) {

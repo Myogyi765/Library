@@ -6,3 +6,310 @@ ISBN-13 ‏ : ‎ 978-1718502703
 description Eric Matthes was a high school science, math, and programming teacher, now full-time author, living in Alaska. He has been writing programs since he was five years old and is the author of the Python Flash Cards, also from No Starch Press.
 
 
+
+-- ================================================================
+-- 🚀 INSERT 30 BOOKS WITH REAL COVERS FROM OpenLibrary
+-- ================================================================
+
+INSERT INTO books (
+    title, author, isbn, category_id, description, 
+    cover_image, quantity, available_quantity, created_at, updated_at
+) VALUES
+-- 🔹 Category 1: Programming (5 books)
+(
+    'Clean Code: A Handbook of Agile Software Craftsmanship',
+    'Robert C. Martin',
+    '978-0132350884',
+    1,
+    'A comprehensive guide to writing clean, maintainable code with practical examples and best practices for software developers.',
+    'https://covers.openlibrary.org/b/isbn/978-0132350884-L.jpg',
+    15, 12, NOW(), NOW()
+),
+(
+    'The Pragmatic Programmer: Your Journey to Mastery',
+    'David Thomas, Andrew Hunt',
+    '978-0201616224',
+    1,
+    'Classic book that covers practical programming techniques, craftsmanship, and professional development practices.',
+    'https://covers.openlibrary.org/b/isbn/978-0201616224-L.jpg',
+    12, 9, NOW(), NOW()
+),
+(
+    'Design Patterns: Elements of Reusable Object-Oriented Software',
+    'Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides',
+    '978-0201633610',
+    1,
+    'The seminal book on software design patterns that every developer should know.',
+    'https://covers.openlibrary.org/b/isbn/978-0201633610-L.jpg',
+    10, 7, NOW(), NOW()
+),
+(
+    'Introduction to Algorithms',
+    'Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein',
+    '978-0262046305',
+    1,
+    'Comprehensive textbook on algorithms and data structures, used in computer science education worldwide.',
+    'https://covers.openlibrary.org/b/isbn/978-0262046305-L.jpg',
+    8, 5, NOW(), NOW()
+),
+(
+    'Code Complete: A Practical Handbook of Software Construction',
+    'Steve McConnell',
+    '978-0735619678',
+    1,
+    'A definitive guide to software construction, covering everything from coding to debugging and testing.',
+    'https://covers.openlibrary.org/b/isbn/978-0735619678-L.jpg',
+    10, 8, NOW(), NOW()
+),
+
+-- 🔹 Category 2: Networking (4 books)
+(
+    'Computer Networking: A Top-Down Approach',
+    'James F. Kurose, Keith W. Ross',
+    '978-0136079675',
+    2,
+    'A comprehensive introduction to computer networking with a focus on the internet and network protocols.',
+    'https://covers.openlibrary.org/b/isbn/978-0136079675-L.jpg',
+    12, 10, NOW(), NOW()
+),
+(
+    'TCP/IP Illustrated, Volume 1: The Protocols',
+    'W. Richard Stevens',
+    '978-0201633467',
+    2,
+    'A detailed explanation of TCP/IP protocols with clear diagrams and practical examples.',
+    'https://covers.openlibrary.org/b/isbn/978-0201633467-L.jpg',
+    8, 5, NOW(), NOW()
+),
+(
+    'Network Security Essentials: Applications and Standards',
+    'William Stallings',
+    '978-0134527338',
+    2,
+    'A comprehensive guide to network security, cryptography, and secure communications.',
+    'https://covers.openlibrary.org/b/isbn/978-0134527338-L.jpg',
+    6, 4, NOW(), NOW()
+),
+(
+    'Data Communications and Networking',
+    'Behrouz A. Forouzan',
+    '978-0073376226',
+    2,
+    'A thorough introduction to data communications and networking principles and protocols.',
+    'https://covers.openlibrary.org/b/isbn/978-0073376226-L.jpg',
+    7, 5, NOW(), NOW()
+),
+
+-- 🔹 Category 3: History (4 books)
+(
+    'A History of the World',
+    'J.M. Roberts',
+    '978-0195210439',
+    3,
+    'A sweeping narrative of human history from the earliest civilizations to the modern era.',
+    'https://covers.openlibrary.org/b/isbn/978-0195210439-L.jpg',
+    10, 8, NOW(), NOW()
+),
+(
+    'The Second World War',
+    'Antony Beevor',
+    '978-0316023740',
+    3,
+    'A comprehensive account of World War II, covering all theaters of the war and its aftermath.',
+    'https://covers.openlibrary.org/b/isbn/978-0316023740-L.jpg',
+    8, 6, NOW(), NOW()
+),
+(
+    'Sapiens: A Brief History of Humankind',
+    'Yuval Noah Harari',
+    '978-0062316097',
+    3,
+    'An exploration of human history from the Stone Age to the present, examining how we became the dominant species.',
+    'https://covers.openlibrary.org/b/isbn/978-0062316097-L.jpg',
+    15, 11, NOW(), NOW()
+),
+(
+    'The Rise and Fall of Ancient Egypt',
+    'Toby Wilkinson',
+    '978-0553384901',
+    3,
+    'A comprehensive history of ancient Egypt, from its origins to its decline and fall.',
+    'https://covers.openlibrary.org/b/isbn/978-0553384901-L.jpg',
+    6, 4, NOW(), NOW()
+),
+
+-- 🔹 Category 4: Business (4 books)
+(
+    'The Lean Startup',
+    'Eric Ries',
+    '978-0307887894',
+    4,
+    'A revolutionary approach to entrepreneurship that emphasizes rapid iteration and customer feedback.',
+    'https://covers.openlibrary.org/b/isbn/978-0307887894-L.jpg',
+    12, 9, NOW(), NOW()
+),
+(
+    'Good to Great',
+    'Jim Collins',
+    '978-0066620992',
+    4,
+    'A study of why some companies achieve greatness while others fail, based on extensive research.',
+    'https://covers.openlibrary.org/b/isbn/978-0066620992-L.jpg',
+    10, 7, NOW(), NOW()
+),
+(
+    'The 7 Habits of Highly Effective People',
+    'Stephen R. Covey',
+    '978-0743269517',
+    4,
+    'A classic book on personal and professional effectiveness, based on timeless principles.',
+    'https://covers.openlibrary.org/b/isbn/978-0743269517-L.jpg',
+    14, 10, NOW(), NOW()
+),
+(
+    'Thinking, Fast and Slow',
+    'Daniel Kahneman',
+    '978-0374533557',
+    4,
+    'A groundbreaking work on cognitive biases and how human decision-making works in two different systems.',
+    'https://covers.openlibrary.org/b/isbn/978-0374533557-L.jpg',
+    11, 8, NOW(), NOW()
+),
+
+-- 🔹 Category 5: Art (3 books)
+(
+    'The Story of Art',
+    'E.H. Gombrich',
+    '978-0714832470',
+    5,
+    'A classic introduction to the history of art, from prehistoric times to the modern era.',
+    'https://covers.openlibrary.org/b/isbn/978-0714832470-L.jpg',
+    8, 6, NOW(), NOW()
+),
+(
+    'Design for the Real World',
+    'Victor Papanek',
+    '978-0897335470',
+    5,
+    'A critical look at industrial design and its role in society, advocating for socially responsible design.',
+    'https://covers.openlibrary.org/b/isbn/978-0897335470-L.jpg',
+    6, 4, NOW(), NOW()
+),
+(
+    'The Art of Color',
+    'Johannes Itten',
+    '978-0471289289',
+    5,
+    'A comprehensive guide to color theory and its application in art and design.',
+    'https://covers.openlibrary.org/b/isbn/978-0471289289-L.jpg',
+    7, 5, NOW(), NOW()
+),
+
+-- 🔹 Category 6: Travel (3 books)
+(
+    'The Art of Travel',
+    'Alain de Botton',
+    '978-0375712751',
+    6,
+    'A philosophical exploration of travel and its impact on the human mind and spirit.',
+    'https://covers.openlibrary.org/b/isbn/978-0375712751-L.jpg',
+    9, 7, NOW(), NOW()
+),
+(
+    'In Patagonia',
+    'Bruce Chatwin',
+    '978-0142437193',
+    6,
+    'A classic travelogue about a journey through Patagonia, blending history, geography, and personal narrative.',
+    'https://covers.openlibrary.org/b/isbn/978-0142437193-L.jpg',
+    5, 3, NOW(), NOW()
+),
+(
+    'The Geography of Bliss',
+    'Eric Weiner',
+    '978-0446698894',
+    6,
+    'A humorous and insightful journey around the world to discover what makes people happy.',
+    'https://covers.openlibrary.org/b/isbn/978-0446698894-L.jpg',
+    8, 6, NOW(), NOW()
+),
+
+-- 🔹 Category 7: Cooking (3 books)
+(
+    'Salt, Fat, Acid, Heat',
+    'Samin Nosrat',
+    '978-1476753836',
+    7,
+    'A modern take on cooking that emphasizes four essential elements for creating delicious food.',
+    'https://covers.openlibrary.org/b/isbn/978-1476753836-L.jpg',
+    12, 9, NOW(), NOW()
+),
+(
+    'The Joy of Cooking',
+    'Irma S. Rombauer, Marion Rombauer Becker',
+    '978-0743246266',
+    7,
+    'A comprehensive American cookbook with thousands of recipes and cooking techniques.',
+    'https://covers.openlibrary.org/b/isbn/978-0743246266-L.jpg',
+    10, 7, NOW(), NOW()
+),
+(
+    'Mastering the Art of French Cooking',
+    'Julia Child, Louisette Bertholle, Simone Beck',
+    '978-0375413405',
+    7,
+    'The classic French cookbook that brought French cuisine to American home cooks.',
+    'https://covers.openlibrary.org/b/isbn/978-0375413405-L.jpg',
+    8, 5, NOW(), NOW()
+),
+
+-- 🔹 Category 8: Health (2 books)
+(
+    'The Complete Guide to Fitness',
+    'Dr. James Roberts',
+    '978-1450498503',
+    8,
+    'A comprehensive guide to physical fitness, covering exercise, nutrition, and mental wellness.',
+    'https://covers.openlibrary.org/b/isbn/978-1450498503-L.jpg',
+    10, 8, NOW(), NOW()
+),
+(
+    'The Blue Zones: Lessons for Living Longer',
+    'Dan Buettner',
+    '978-1426207556',
+    8,
+    'An exploration of the worlds longest-lived communities and the secrets to their longevity.',
+    'https://covers.openlibrary.org/b/isbn/978-1426207556-L.jpg',
+    9, 6, NOW(), NOW()
+),
+
+-- 🔹 Category 9: Science (3 books)
+(
+    'A Brief History of Time',
+    'Stephen Hawking',
+    '978-0553380163',
+    9,
+    'A classic popular science book that explores cosmology, black holes, and the origins of the universe.',
+    'https://covers.openlibrary.org/b/isbn/978-0553380163-L.jpg',
+    14, 10, NOW(), NOW()
+),
+(
+    'The Selfish Gene',
+    'Richard Dawkins',
+    '978-0199291151',
+    9,
+    'A groundbreaking work on evolutionary biology that introduced the concept of the "selfish gene."',
+    'https://covers.openlibrary.org/b/isbn/978-0199291151-L.jpg',
+    12, 8, NOW(), NOW()
+),
+(
+    'The Power of Habit',
+    'Charles Duhigg',
+    '978-0812981605',
+    9,
+    'An exploration of how habits work and how they can be changed to improve our lives.',
+    'https://covers.openlibrary.org/b/isbn/978-0812981605-L.jpg',
+    11, 9, NOW(), NOW()
+);
+
+

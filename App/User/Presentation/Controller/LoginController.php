@@ -76,9 +76,6 @@ class LoginController extends BaseController
         $this->redirect(BASE_URL . '/login');
     }
 
-    /**
-     * Get redirect URL based on user role (PHP 7.4 compatible)
-     */
     private function getRedirectUrlByRole(string $role): string
     {
         switch ($role) {

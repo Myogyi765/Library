@@ -75,7 +75,7 @@
         color: #93c5fd;
     }
 
-    /* Action Buttons – Blue accent */
+    /* ===== ACTION BUTTON – DELETE (Red) ===== */
     .action-btn {
         display: inline-flex;
         align-items: center;
@@ -84,16 +84,26 @@
         height: 30px;
         border-radius: 6px;
         transition: all 0.15s;
-        color: #94a3b8;
         background: transparent;
         border: none;
         cursor: pointer;
+        text-decoration: none;
     }
-    .action-btn:hover { background: #f1f5f9; color: #2563eb; }
-    .action-btn.delete:hover { color: #dc2626; }
-    .dark .action-btn { color: #64748b; }
-    .dark .action-btn:hover { background: #1e293b; color: #60a5fa; }
-    .dark .action-btn.delete:hover { color: #f87171; }
+    /* Delete – Red */
+    .action-btn.delete {
+        color: #ef4444;
+    }
+    .action-btn.delete:hover {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+    .dark .action-btn.delete {
+        color: #f87171;
+    }
+    .dark .action-btn.delete:hover {
+        background: #1e293b;
+        color: #fca5a5;
+    }
 
     /* Primary Button – Blue */
     .btn-primary {
@@ -181,7 +191,7 @@
             <table class="librarian-table">
                 <thead>
                     <tr>
-                        <th class="serial-number" style="width: 50px;">#</th>   <!-- Serial Number column -->
+                        <th class="serial-number" style="width: 50px;">#</th>
                         <th>Name</th>
                         <th>Email</th>
                         <th>Department</th>
@@ -214,10 +224,7 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="flex items-center justify-center gap-1">
-                                        <a href="<?= BASE_URL ?>/admin/librarian/edit/<?= $lib->getId() ?>"
-                                           class="action-btn" title="Edit">
-                                            <i class="fas fa-pen"></i>
-                                        </a>
+                                        <!-- ✅ Delete only (Edit removed) -->
                                         <button onclick="confirmDelete(<?= $lib->getId() ?>)"
                                                 class="action-btn delete" title="Delete">
                                             <i class="fas fa-trash"></i>

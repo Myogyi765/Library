@@ -100,7 +100,6 @@
         }
     }
 
-    // ... (rest of modal code unchanged) ...
 })();
 
 // ================================================================
@@ -134,18 +133,15 @@ console.log('🌓 Current theme:', document.documentElement.classList.contains('
 (function() {
     'use strict';
 
-    // ---- BASE_URL - reliable with multiple fallbacks ----
     let BASE_URL = window.BASE_URL;
     
     if (!BASE_URL) {
         console.warn('⚠️ window.BASE_URL is not set, using fallback');
-        // Try to get from meta tag
         const meta = document.querySelector('meta[name="base-url"]');
         if (meta) {
             BASE_URL = meta.getAttribute('content');
             console.log('📌 Using meta tag base URL:', BASE_URL);
         } else {
-            // Final fallback: construct from location
             BASE_URL = window.location.origin + '/Library/public';
             console.log('📌 Using constructed base URL:', BASE_URL);
         }
@@ -153,7 +149,6 @@ console.log('🌓 Current theme:', document.documentElement.classList.contains('
         console.log('✅ Using window.BASE_URL:', BASE_URL);
     }
 
-    // Ensure BASE_URL doesn't have trailing slash
     BASE_URL = BASE_URL.replace(/\/+$/, '');
     console.log('🔔 [Notification] FINAL BASE_URL =', BASE_URL);
 
@@ -176,8 +171,8 @@ console.log('🌓 Current theme:', document.documentElement.classList.contains('
         console.log('✅ Notification bell found');
 
         let isDropdownOpen = false;
+        let pollingInterval = null;
 
-        // ── Helper: fetch with credentials and JSON parsing ──
         function fetchJSON(url, options = {}) {
             const defaultOptions = {
                 credentials: 'include',
@@ -212,7 +207,6 @@ console.log('🌓 Current theme:', document.documentElement.classList.contains('
                 });
         }
 
-        // ── Fetch notifications ──
         function fetchNotifications() {
             const url = BASE_URL + '/api/notifications';
             console.log('🔄 Fetching notifications from:', url);
@@ -241,8 +235,14 @@ console.log('🌓 Current theme:', document.documentElement.classList.contains('
                     mobileBadge.classList.remove('hidden');
                 }
             } else {
-                if (badge) badge.classList.add('hidden');
-                if (mobileBadge) mobileBadge.classList.add('hidden');
+                if (badge) {
+                    badge.textContent = '0';
+                    badge.classList.add('hidden');
+                }
+                if (mobileBadge) {
+                    mobileBadge.textContent = '0';
+                    mobileBadge.classList.add('hidden');
+                }
             }
         }
 
@@ -284,8 +284,33 @@ console.log('🌓 Current theme:', document.documentElement.classList.contains('
             return div.innerHTML;
         }
 
+        // ================================================================
+        // ✅ OPTIMISTIC UI – Instant mark as read with rollback
+        // ================================================================
         function markAsRead(id) {
-            console.log('📌 Marking notification as read:', id);
+            console.log('📌 Marking as read (optimistic):', id);
+
+            // ---------- 1. Update UI instantly (Optimistic) ----------
+            const oldCount = parseInt(badge?.textContent) || 0;
+            const newCount = Math.max(0, oldCount - 1);
+            updateBadge(newCount);
+
+            let targetItem = null;
+            if (list) {
+                const items = list.querySelectorAll('[data-id]');
+                items.forEach(el => {
+                    if (el.dataset.id == id) {
+                        // Remove unread styling
+                        el.classList.remove('bg-blue-50', 'dark:bg-blue-900/20');
+                        const dot = el.querySelector('.w-2.h-2.bg-blue-500');
+                        if (dot) dot.remove();
+                        targetItem = el; // save for rollback
+                        console.log('🎨 UI instantly updated for notification:', id);
+                    }
+                });
+            }
+
+            // ---------- 2. Send request in background ----------
             fetchJSON(BASE_URL + '/api/notifications/read', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -293,15 +318,38 @@ console.log('🌓 Current theme:', document.documentElement.classList.contains('
             })
             .then(data => {
                 if (data.success) {
-                    fetchNotifications();
+                    console.log('✅ Server confirmed mark as read.');
+                    // Optional: sync with server data (already consistent)
                 } else {
-                    console.warn('⚠️ Mark as read failed:', data);
+                    console.warn('⚠️ Server failed to mark as read. Rolling back...');
+                    rollbackMarkAsRead(id, targetItem, oldCount);
                 }
             })
-            .catch(err => console.error('❌ Error marking as read:', err.message));
+            .catch(err => {
+                console.error('❌ Error marking as read:', err.message);
+                rollbackMarkAsRead(id, targetItem, oldCount);
+            });
         }
 
-        // ── Event: Bell click ──
+        // ---------- Rollback function ----------
+        function rollbackMarkAsRead(id, targetItem, oldCount) {
+            // Restore badge
+            updateBadge(oldCount);
+            // Restore list item
+            if (targetItem) {
+                targetItem.classList.add('bg-blue-50', 'dark:bg-blue-900/20');
+                // Re-add the blue dot
+                const flexDiv = targetItem.querySelector('.flex-1');
+                if (flexDiv) {
+                    const dot = document.createElement('span');
+                    dot.className = 'w-2 h-2 bg-blue-500 rounded-full mt-1 flex-shrink-0';
+                    flexDiv.parentElement.appendChild(dot);
+                }
+                console.log('🔄 UI rolled back for notification:', id);
+            }
+        }
+
+        // ── Bell click ──
         bell.addEventListener('click', function(e) {
             e.stopPropagation();
             console.log('🔔 Bell clicked');
@@ -322,7 +370,7 @@ console.log('🌓 Current theme:', document.documentElement.classList.contains('
             });
         }
 
-        // ── Close dropdown when clicking outside ──
+        // ── Click outside to close ──
         document.addEventListener('click', function(e) {
             const container = document.getElementById('notification-container');
             if (container && !container.contains(e.target)) {
@@ -356,11 +404,35 @@ console.log('🌓 Current theme:', document.documentElement.classList.contains('
             });
         }
 
-        // ── Initial fetch and periodic refresh ──
-        fetchNotifications();
-        setInterval(fetchNotifications, 3000); // 3 seconds
+        // ================================================================
+        // 🚀 REAL-TIME POLLING – EVERY 2 SECONDS
+        // ================================================================
 
-        console.log('✅ Notification system fully initialized');
+        fetchNotifications(); // initial
+        pollingInterval = setInterval(fetchNotifications, 2000);
+        console.log('⏱️ Polling set to 2 seconds');
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                console.log('👁️ Tab visible – refreshing notifications');
+                fetchNotifications();
+            }
+        });
+
+        window.addEventListener('focus', function() {
+            console.log('👁️ Window focused – refreshing notifications');
+            fetchNotifications();
+        });
+
+        window.addEventListener('beforeunload', function() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                console.log('🧹 Polling interval cleared');
+            }
+        });
+
+        console.log('✅ Notification system ready (polling every 2 seconds)');
     }
 
     if (document.readyState === 'loading') {

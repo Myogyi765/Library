@@ -423,6 +423,62 @@ include __DIR__ . '/../layout/header.php';
     .dark .has-error .field-input { border-color: #f87171; }
     .dark .has-error .field-input:focus { box-shadow: 0 0 0 4px rgba(248,113,113,0.25); }
 
+    /* ─── FIX: White backgrounds in dark mode for all inputs and contact method ─── */
+    .dark .field-input {
+        background-color: #ffffff !important;
+        color: #1e293b !important;
+        border-color: #cbd5e1 !important;
+    }
+    .dark .field-input::placeholder {
+        color: #94a3b8 !important;
+    }
+    .dark .input-wrapper i {
+        color: #64748b !important;
+    }
+    .dark .toggle-pwd {
+        color: #64748b !important;
+    }
+    .dark .toggle-pwd:hover {
+        color: #3b82f6 !important;
+        background: rgba(59,130,246,0.1) !important;
+    }
+    .dark .strength-text {
+        color: #334155 !important;
+    }
+    .dark .match-feedback.match {
+        color: #2563eb !important;
+    }
+    .dark .match-feedback.no-match {
+        color: #dc2626 !important;
+    }
+    /* Contact method tabs white background */
+    .dark .flex.bg-gray-100 {
+        background-color: #ffffff !important;
+    }
+    .dark .tab-btn {
+        color: #1e293b !important;
+    }
+    .dark .tab-btn.active {
+        background-color: #ffffff !important;
+        color: #1d4ed8 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+    }
+    .dark .tab-btn:hover:not(.active) {
+        background: rgba(0,0,0,0.05) !important;
+    }
+    /* Focus and error states on white background */
+    .dark .field-input:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 4px rgba(59,130,246,0.25) !important;
+    }
+    .dark .has-error .field-input {
+        border-color: #dc2626 !important;
+    }
+    .dark .has-error .field-input:focus {
+        box-shadow: 0 0 0 4px rgba(220,38,38,0.2) !important;
+    }
+    /* ─── End fix ─── */
+
     @media (max-width: 768px) {
         .container { flex-direction: column; align-items: center; }
         .glass-card { max-width: 460px; margin: 0 auto; }

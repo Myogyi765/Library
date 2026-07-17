@@ -173,4 +173,17 @@ class BookRepository implements BookRepositoryInterface
         $stmt = $this->db->query("SELECT SUM(quantity - available_quantity) FROM books");
         return (int)$stmt->fetchColumn();
     }
+
+
+    public function getLatestBooks(int $limit): array
+{
+    $sql = "SELECT * FROM books ORDER BY created_at DESC LIMIT :limit";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':limit' => $limit]);
+    $books = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $books[] = $this->hydrate($row);
+    }
+    return $books;
+}
 }

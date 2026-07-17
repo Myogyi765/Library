@@ -2,8 +2,9 @@
 
 use App\User\Presentation\Controller\AuthController;
 use App\User\Presentation\Controller\VerificationController;
-use App\User\Presentation\Controller\ViewController;
+use App\User\Presentation\Controller\ProfileController;
 use App\User\Presentation\Controller\BorrowController;
+use App\User\Presentation\Controller\HomeController;
 
 
 use App\Invoice\Presentation\Controller\InvoiceController as UserInvoiceController;
@@ -119,7 +120,7 @@ $router->get('/', function () {
     exit;
 });
 
-$router->get('/home', [AuthController::class, 'home']);
+$router->get('/home', [HomeController::class, 'index']);
 $router->get('/register', [AuthController::class, 'showRegister']);
 $router->get('/login', [LoginController::class, 'showLogin']);
 $router->get('/verify', [VerificationController::class, 'verifyEmail']);
@@ -128,8 +129,8 @@ $router->get('/resend-verification', [VerificationController::class, 'resendVeri
 $router->get('/logout', [LoginController::class, 'logout']);
 
 $router->get('/user-dashboard', [AuthController::class, 'userDashboard'], $userMiddleware);
-$router->get('/profile', [ViewController::class, 'profile'], array_merge($userMiddleware, [$authorizationCheck('view_profile')]));
-$router->get('/profile/edit', [ViewController::class, 'editProfile'], array_merge($userMiddleware, [$authorizationCheck('edit_profile')]));
+$router->get('/profile', [ProfileController::class, 'profile'], array_merge($userMiddleware, [$authorizationCheck('view_profile')]));
+$router->get('/profile/edit', [ProfileController::class, 'editProfile'], array_merge($userMiddleware, [$authorizationCheck('edit_profile')]));
 $router->get('/payment/submit/{loan}', [PaymentController::class, 'showSubmitForm'], array_merge($userMiddleware, [$authorizationCheck('view_payments')]));
 $router->get('/payment/success', [PaymentController::class, 'success'], $userMiddleware);
 $router->post('/payment/submit', [PaymentController::class, 'submit'], array_merge($userMiddleware, [$authorizationCheck('create_payments')]));

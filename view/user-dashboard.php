@@ -70,7 +70,7 @@ try {
 <!-- ─── FULL PAGE WRAPPER WITH DARK MODE BACKGROUND ─── -->
 <main class="min-h-screen w-full bg-gray-50 dark:bg-gray-900">
     <div class="container mx-auto px-4 py-8">
-        
+
         <!-- Success Message -->
         <?php if (isset($_SESSION['success_message'])): ?>
             <div class="bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-6 py-4 rounded-xl mb-6 flex items-center justify-between">
@@ -85,14 +85,14 @@ try {
             <?php unset($_SESSION['success_message']); ?>
         <?php endif; ?>
 
-        <!-- Welcome Section -->
-        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-8 text-white shadow-lg mb-8">
+        <!-- Welcome Section – Auto‑adapts to dark/light mode -->
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-900 dark:to-indigo-900 rounded-2xl p-8 text-white shadow-lg mb-8">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold mb-2">
                         Welcome, <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'User'); ?>! 👋
                     </h1>
-                    <p class="text-blue-100">
+                    <p class="text-blue-100 dark:text-blue-300">
                         Here's what's happening with your library account today.
                     </p>
                 </div>
@@ -169,8 +169,54 @@ try {
             </div>
         </div>
 
-        <!-- Borrowed Books List -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden mb-8">
+        <!-- ===== MY PROFILE – Full width (Quick Actions removed) ===== -->
+        <?php if ($hasViewProfile || $hasEditProfile): ?>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 mb-8 max-w-3xl mx-auto">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                    <i class="fas fa-user-circle text-blue-600 dark:text-blue-400 mr-2"></i>
+                    My Profile
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Full Name</p>
+                        <p class="font-medium text-gray-900 dark:text-white">
+                            <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'N/A'); ?>
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Email</p>
+                        <p class="font-medium text-gray-900 dark:text-white">
+                            <?php echo htmlspecialchars($_SESSION['user_email'] ?? 'N/A'); ?>
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Phone</p>
+                        <p class="font-medium text-gray-900 dark:text-white">
+                            <?php echo htmlspecialchars($_SESSION['user_phone'] ?? 'N/A'); ?>
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Status</p>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                            <?php echo ($_SESSION['user_status'] ?? 'active') === 'active' 
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'; ?>">
+                            <?php echo ucfirst($_SESSION['user_status'] ?? 'Active'); ?>
+                        </span>
+                    </div>
+                </div>
+                <?php if ($hasEditProfile): ?>
+                    <div class="mt-4">
+                        <a href="<?php echo BASE_URL; ?>/profile/edit" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- ===== BORROWED BOOKS (bottom) ===== -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white">
                     <i class="fas fa-book-open text-blue-600 dark:text-blue-400 mr-2"></i>
@@ -191,7 +237,6 @@ try {
                                 <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Status</th>
                                 <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Days Left</th>
                                 <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Invoice</th>
-                                <!-- ✅ NEW: Refund Status Column -->
                                 <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Refund</th>
                             </tr>
                         </thead>
@@ -215,8 +260,7 @@ try {
                                             if ($invoice) {
                                                 $invoiceLink = BASE_URL . '/invoice/' . $invoice->getId();
                                             }
-                                            // Get refund status
-                                            $refundStatus = $payment->getRefundStatus(); // 'none', 'pending', 'completed', etc.
+                                            $refundStatus = $payment->getRefundStatus();
                                         }
                                     } catch (\Exception $e) {
                                         // ignore
@@ -264,7 +308,6 @@ try {
                                             <span class="text-gray-400">—</span>
                                         <?php endif; ?>
                                     </td>
-                                    <!-- Invoice -->
                                     <td class="px-4 py-3 text-center">
                                         <?php if ($invoiceLink): ?>
                                             <a href="<?= $invoiceLink ?>" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" title="View Invoice">
@@ -274,7 +317,6 @@ try {
                                             <span class="text-gray-400">—</span>
                                         <?php endif; ?>
                                     </td>
-                                    <!-- ✅ Refund Status -->
                                     <td class="px-4 py-3 text-center">
                                         <?php if ($payment && $payment->getStatus()->isApproved()): ?>
                                             <?php if ($refundStatus === 'completed'): ?>
@@ -306,89 +348,6 @@ try {
             <?php endif; ?>
         </div>
 
-        <!-- User Info & Quick Actions -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <?php if ($hasViewProfile || $hasEditProfile): ?>
-                <!-- User Profile Card -->
-                <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
-                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                        <i class="fas fa-user-circle text-blue-600 dark:text-blue-400 mr-2"></i>
-                        My Profile
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Full Name</p>
-                            <p class="font-medium text-gray-900 dark:text-white">
-                                <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'N/A'); ?>
-                            </p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Email</p>
-                            <p class="font-medium text-gray-900 dark:text-white">
-                                <?php echo htmlspecialchars($_SESSION['user_email'] ?? 'N/A'); ?>
-                            </p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Phone</p>
-                            <p class="font-medium text-gray-900 dark:text-white">
-                                <?php echo htmlspecialchars($_SESSION['user_phone'] ?? 'N/A'); ?>
-                            </p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Status</p>
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
-                                <?php echo ($_SESSION['user_status'] ?? 'active') === 'active' 
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
-                                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'; ?>">
-                                <?php echo ucfirst($_SESSION['user_status'] ?? 'Active'); ?>
-                            </span>
-                        </div>
-                    </div>
-                    <?php if ($hasEditProfile): ?>
-                        <div class="mt-4">
-                            <a href="<?php echo BASE_URL; ?>/profile/edit" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
-                                <i class="fas fa-edit"></i> Edit Profile
-                            </a>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            <?php endif; ?>
-
-            <!-- Quick Actions -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                    <i class="fas fa-bolt text-yellow-500 mr-2"></i>
-                    Quick Actions
-                </h2>
-                <div class="space-y-3">
-                    <a href="<?php echo BASE_URL; ?>/books" 
-                       class="block w-full bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl p-4 text-center transition">
-                        <i class="fas fa-search text-blue-600 dark:text-blue-400 text-xl mr-2"></i>
-                        <span class="font-medium text-gray-900 dark:text-white">Browse Books</span>
-                    </a>
-                    
-                    <?php if ($hasEditProfile): ?>
-                        <a href="<?php echo BASE_URL; ?>/profile/edit" 
-                           class="block w-full bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-xl p-4 text-center transition">
-                            <i class="fas fa-user-edit text-green-600 dark:text-green-400 text-xl mr-2"></i>
-                            <span class="font-medium text-gray-900 dark:text-white">Edit Profile</span>
-                        </a>
-                    <?php elseif ($hasViewProfile): ?>
-                        <a href="<?php echo BASE_URL; ?>/profile" 
-                           class="block w-full bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-xl p-4 text-center transition">
-                            <i class="fas fa-eye text-green-600 dark:text-green-400 text-xl mr-2"></i>
-                            <span class="font-medium text-gray-900 dark:text-white">View Profile</span>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <a href="<?php echo BASE_URL; ?>/logout" 
-                       class="block w-full bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl p-4 text-center transition">
-                        <i class="fas fa-sign-out-alt text-red-600 dark:text-red-400 text-xl mr-2"></i>
-                        <span class="font-medium text-gray-900 dark:text-white">Logout</span>
-                    </a>
-                </div>
-            </div>
-        </div>
     </div>
 </main>
 

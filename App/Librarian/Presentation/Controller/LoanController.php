@@ -10,7 +10,6 @@ use App\Circulation\Domain\Entity\Loan;
 use App\Circulation\Domain\ValueObject\LoanStatus;
 use PDO;
 
-
 class LoanController extends BaseController
 {
     private LoanRepositoryInterface $loanRepo;
@@ -95,14 +94,16 @@ class LoanController extends BaseController
         try {
             $loan = new Loan($userId, $bookId);
             $this->loanRepo->save($loan);
+
             $this->createNotification(
-                (int) ($_SESSION['user_id'] ?? 0),
-                'librarian',
+                $userId,
+                'user',
                 'loan_created',
                 'Loan request created',
-                'A new loan request has been created and is awaiting review.',
-                '/librarian/dashboard?page=loans'
+                'A librarian has created a loan request for you.',
+                '/user-dashboard'
             );
+
             $_SESSION['success_message'] = 'Loan request created successfully.';
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed to create loan: ' . $e->getMessage();
@@ -156,7 +157,6 @@ class LoanController extends BaseController
         $this->redirect('/librarian/loans');
     }
 
-    
     public function confirm($id): void
     {
         $loan = $this->loanRepo->findById((int)$id);
@@ -178,14 +178,17 @@ class LoanController extends BaseController
             $this->loanRepo->save($loan);
 
             $this->db->commit();
+
+            $userId = $loan->getUserId();
             $this->createNotification(
-                (int) ($_SESSION['user_id'] ?? 0),
-                'librarian',
+                $userId,
+                'user',
                 'loan_confirmed',
                 'Loan confirmed',
-                'The loan request was confirmed and the user must complete payment.',
-                '/librarian/dashboard?page=loans'
+                'Your loan request has been confirmed. Please complete payment.',
+                '/user-dashboard'
             );
+
             $_SESSION['success_message'] = 'Loan confirmed. User must pay now.';
         } catch (\Exception $e) {
             $this->db->rollBack();
@@ -217,14 +220,17 @@ class LoanController extends BaseController
             $loan->reject();
             $this->loanRepo->save($loan);
             $this->db->commit();
+
+            $userId = $loan->getUserId();
             $this->createNotification(
-                (int) ($_SESSION['user_id'] ?? 0),
-                'librarian',
+                $userId,
+                'user',
                 'loan_rejected',
-                'Loan request rejected',
-                'The loan request was rejected by the librarian.',
-                '/librarian/dashboard?page=loans'
+                'Loan rejected',
+                'Your loan request has been rejected by the librarian.',
+                '/user-dashboard'
             );
+
             $_SESSION['success_message'] = 'Loan request rejected successfully.';
         } catch (\Exception $e) {
             $this->db->rollBack();
@@ -263,14 +269,17 @@ class LoanController extends BaseController
             }
 
             $this->db->commit();
+
+            $userId = $loan->getUserId();
             $this->createNotification(
-                (int) ($_SESSION['user_id'] ?? 0),
-                'librarian',
+                $userId,
+                'user',
                 'loan_returned',
                 'Book returned',
-                'The borrowed book was successfully returned.',
-                '/librarian/dashboard?page=loans'
+                'Your borrowed book has been returned successfully.',
+                '/user-dashboard'
             );
+
             $_SESSION['success_message'] = 'Book returned successfully.';
         } catch (\Exception $e) {
             $this->db->rollBack();

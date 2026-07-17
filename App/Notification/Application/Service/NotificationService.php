@@ -14,7 +14,7 @@ class NotificationService
     }
 
     public function createNotification(
-        int $userId,
+        ?int $userId,          
         string $role,
         string $type,
         string $title,

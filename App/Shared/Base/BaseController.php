@@ -109,14 +109,14 @@ class BaseController
     }
 
     protected function createNotification(
-        int $userId,
+        ?int $userId,
         string $role,
         string $type,
         string $title,
         string $message,
         ?string $link = null
     ): void {
-        if ($userId <= 0) {
+        if ($userId !== null && $userId <= 0) {
             return;
         }
 

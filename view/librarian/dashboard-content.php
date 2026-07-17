@@ -12,74 +12,92 @@ $categoryMap = $categoryMap ?? [];
 <?php if ($page === 'dashboard'): ?>
     <div class="space-y-6">
         <!-- ===== HEADER ===== -->
-      <!-- ===== HEADER ===== -->
-<div class="flex items-end justify-between">
-    <div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400">of library operations</p>
-    </div>
-    <div class="flex items-center gap-4">
-        <!-- ✅ Scan Button – Camera Icon -->
-<a href="<?= BASE_URL ?>/librarian/scanner" 
-   class="flex items-center gap-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-              d="M3 8V5a1 1 0 011-1h3M3 16v3a1 1 0 001 1h3M21 8V5a1 1 0 00-1-1h-3M21 16v3a1 1 0 01-1 1h-3"/>
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" 
-              d="M7 10h1v4H7zM10 10h1v4h-1zM13 10h1v4h-1zM16 10h1v4h-1z"/>
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-              d="M5 12h14"/>
-        <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
-    </svg>
-    <span class="text-sm font-medium">Scan</span>
-</a>
-        <div class="text-sm text-gray-500 dark:text-gray-400">
-            <?= date('M j, Y') ?>
+        <div class="flex items-end justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400">of library operations</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- ✅ Scan Button – Camera Icon -->
+                <a href="<?= BASE_URL ?>/librarian/scanner" 
+                   class="flex items-center gap-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M3 8V5a1 1 0 011-1h3M3 16v3a1 1 0 001 1h3M21 8V5a1 1 0 00-1-1h-3M21 16v3a1 1 0 01-1 1h-3"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" 
+                              d="M7 10h1v4H7zM10 10h1v4h-1zM13 10h1v4h-1zM16 10h1v4h-1z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M5 12h14"/>
+                        <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+                    </svg>
+                    <span class="text-sm font-medium">Scan</span>
+                </a>
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                    <?= date('M j, Y') ?>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
-        <!-- ===== STATS CARDS (Simple) ===== -->
+        <!-- ===== STATS CARDS (with Color) ===== -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <!-- Total Users – Blue -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden transition hover:shadow-md hover:-translate-y-1">
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Total Users</p>
                         <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><?= number_format($stats['users'] ?? 0) ?></p>
                     </div>
-                    <i class="fas fa-users text-blue-500 text-2xl"></i>
+                    <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                        <i class="fas fa-users text-2xl"></i>
+                    </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+
+            <!-- Total Books – Indigo -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden transition hover:shadow-md hover:-translate-y-1">
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-400 to-indigo-600"></div>
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Total Books</p>
                         <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><?= number_format($stats['books'] ?? 0) ?></p>
                     </div>
-                    <i class="fas fa-book text-indigo-500 text-2xl"></i>
+                    <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                        <i class="fas fa-book text-2xl"></i>
+                    </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+
+            <!-- Active Loans – Green -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden transition hover:shadow-md hover:-translate-y-1">
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Active Loans</p>
                         <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><?= number_format($stats['activeLoans'] ?? 0) ?></p>
                     </div>
-                    <i class="fas fa-hand-holding text-green-500 text-2xl"></i>
+                    <div class="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                        <i class="fas fa-hand-holding text-2xl"></i>
+                    </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+
+            <!-- Overdue – Red -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden transition hover:shadow-md hover:-translate-y-1">
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-400 to-rose-600"></div>
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Overdue</p>
                         <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><?= number_format($stats['overdue'] ?? 0) ?></p>
                     </div>
-                    <i class="fas fa-clock text-red-500 text-2xl"></i>
+                    <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                        <i class="fas fa-clock text-2xl"></i>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- ===== QUICK ACTIONS (without scan) ===== -->
+        <!-- ===== QUICK ACTIONS ===== -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -102,7 +120,7 @@ $categoryMap = $categoryMap ?? [];
             </div>
         </div>
 
-        <!-- ===== RECENT ACTIVITY (Simple) ===== -->
+        <!-- ===== RECENT ACTIVITY ===== -->
         <?php if (!empty($stats['recentActivities'] ?? [])): ?>
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <div class="flex items-center justify-between mb-4">
@@ -134,6 +152,7 @@ $categoryMap = $categoryMap ?? [];
             </div>
         <?php endif; ?>
     </div>
+
 <?php elseif ($page === 'users'): ?>
     <?php include BASE_PATH . '/view/librarian/users/index.php'; ?>
 
@@ -163,6 +182,17 @@ $categoryMap = $categoryMap ?? [];
         </a>
     </div>
     <?php include BASE_PATH . '/view/librarian/books/create.php'; ?>
+
+<?php elseif ($page === 'books_edit'): ?>
+    <!-- ===== BOOKS EDIT FORM ===== -->
+    <?php
+    // Variables $book and $categories should be available from controller via $viewData
+    if (isset($book) && isset($categories)) {
+        include BASE_PATH . '/view/librarian/books/edit.php';
+    } else {
+        echo '<p class="text-red-500">Error: Book data not found.</p>';
+    }
+    ?>
 
 <?php else: ?>
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">

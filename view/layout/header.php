@@ -46,11 +46,9 @@ if (!defined('BASE_PATH')) {
 $pageTitle = $pageTitle ?? 'Library Management System';
 
 // ---- Notification bell visibility ----
-$showNotifications = false; // Start with false
+$showNotifications = false;
 
-// If user is not logged in, skip everything
 if (isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] === true) {
-    // User is logged in – check permission if possible
     $authClass = \App\Shared\Core\Authorization\Authorization::class;
     $container = $GLOBALS['container'] ?? null;
 
@@ -60,23 +58,14 @@ if (isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] ==
             if (isset($_SESSION['user_id']) && $_SESSION['user_id'] > 0) {
                 $authorization->loadUserPermissions($_SESSION['user_id']);
                 $showNotifications = $authorization->hasPermission('view_notifications');
-                error_log('🔔 [DEBUG] Permission check passed, showNotifications = ' . ($showNotifications ? 'true' : 'false'));
-            } else {
-                error_log('🔔 [DEBUG] User ID not set in session');
             }
         } catch (\Exception $e) {
-            error_log('❌ Permission check error: ' . $e->getMessage());
-            // Fallback: show bell if user is logged in (even without permission check)
             $showNotifications = true;
         }
     } else {
-        // Container or Authorization service not available – fallback to login status
         $showNotifications = true;
-        error_log('⚠️ [DEBUG] Container/Authorization not found, showing bell anyway (fallback)');
     }
 }
-
-error_log('🔔 [FINAL] showNotifications = ' . ($showNotifications ? 'true' : 'false'));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -281,7 +270,7 @@ error_log('🔔 [FINAL] showNotifications = ' . ($showNotifications ? 'true' : '
             min-width: 1.25rem;
             height: 1.25rem;
             padding: 0 0.35rem;
-            line-height: 1.15;
+            line-height: 2.15;
             font-weight: 700;
         }
         #notification-badge:not(.hidden) {

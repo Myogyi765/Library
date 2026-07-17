@@ -12,11 +12,12 @@ use App\User\Application\UseCase\GetUser;
 use App\User\Presentation\Controller\AuthController;
 use App\User\Presentation\Controller\LoginController;
 use App\User\Presentation\Controller\VerificationController;
-use App\User\Presentation\Controller\ViewController;
+use App\User\Presentation\Controller\ProfileController;
 use App\User\Presentation\Controller\DashboardController;
 use App\User\Presentation\Controller\BorrowController as UserBorrowController;
+use App\User\Presentation\Controller\HomeController; 
 use App\Invoice\Presentation\Controller\InvoiceController as UserInvoiceController;
-use App\Admin\Application\Service\DashboardStatisticsService; 
+use App\Admin\Application\Service\DashboardStatisticsService;
 
 use App\Circulation\Application\Handler\BorrowBookHandler;
 use App\Invoice\Domain\Repository\InvoiceRepositoryInterface;
@@ -74,6 +75,7 @@ return function ($container) {
         );
     });
 
+    // ✅ AuthController – DashboardStatisticsService ကို ဖယ်ရှားပြီး HomeController က ကိုင်တွယ်မယ်
     $container->singleton(AuthController::class, function ($c) {
         return new AuthController(
             $c->get(RegisterUser::class),
@@ -81,7 +83,15 @@ return function ($container) {
             $c->get(LogoutUser::class),
             $c->get(UserAuthenticator::class),
             $c->get('loan.repository'),
-            $c->get('book.repository'),
+            $c->get('book.repository')
+            // DashboardStatisticsService မပါတော့ပါ
+        );
+    });
+
+    // ✅ HomeController အသစ် – ပင်မစာမျက်နှာအတွက်
+    $container->singleton(HomeController::class, function ($c) {
+        return new HomeController(
+            $c->get('book.repository'),          // BookRepositoryInterface
             $c->get(DashboardStatisticsService::class)
         );
     });
@@ -101,8 +111,8 @@ return function ($container) {
         );
     });
 
-    $container->singleton(ViewController::class, function ($c) {
-        return new ViewController(
+    $container->singleton(ProfileController::class, function ($c) {
+        return new ProfileController(
             $c->get(Authorization::class),
             $c->get(UserRepositoryInterface::class),
             $c->get('payment.repository')

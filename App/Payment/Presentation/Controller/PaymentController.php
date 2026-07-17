@@ -33,7 +33,6 @@ class PaymentController extends BaseController
         $this->settingsService = $settingsService;
     }
 
-    
     public function showSubmitForm(int $loanId): void
     {
         $loan = $this->loanRepo->findById($loanId);
@@ -75,7 +74,6 @@ class PaymentController extends BaseController
         ]);
     }
 
-    
     public function submit(): void
     {
         try {
@@ -100,12 +98,13 @@ class PaymentController extends BaseController
 
             if ($payment instanceof Payment) {
                 $_SESSION['payment_id'] = $payment->getId();
+
                 $this->createNotification(
-                    (int) ($_SESSION['user_id'] ?? 0),
-                    'user',
+                    null,                  
+                    'librarian',            
                     'payment_submitted',
                     'Payment submitted',
-                    'Your payment is waiting for librarian review.',
+                    'A user has submitted a payment for review.',
                     '/librarian/dashboard?page=payments'
                 );
             }
@@ -127,13 +126,11 @@ class PaymentController extends BaseController
         }
     }
 
-    
     public function success(): void
     {
         $this->view('payment/success');
     }
 
-    
     private function generateUuid(): string
     {
         $data = random_bytes(16);

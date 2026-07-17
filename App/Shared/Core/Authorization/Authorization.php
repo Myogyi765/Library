@@ -16,7 +16,6 @@ class Authorization
         $this->db = $db;
     }
 
-   
     public function loadUserPermissions(int $userId): void
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -68,7 +67,6 @@ class Authorization
         }
     }
 
-   
     public function getRoles(): array
     {
         if (empty($this->roles) && isset($_SESSION['user_roles'])) {
@@ -77,7 +75,6 @@ class Authorization
         return $this->roles;
     }
 
-    
     public function getPermissions(): array
     {
         if (empty($this->permissions) && isset($_SESSION['user_permissions'])) {
@@ -86,19 +83,23 @@ class Authorization
         return $this->permissions;
     }
 
-    
     public function hasRole(string $role): bool
     {
+        if (in_array('admin', $this->getRoles(), true)) {
+            return true;
+        }
         return in_array($role, $this->getRoles(), true);
     }
 
-    
     public function hasPermission(string $permission): bool
     {
+        if (in_array('admin', $this->getRoles(), true)) {
+            return true; 
+        }
+        
         return in_array($permission, $this->getPermissions(), true);
     }
 
-    
     public function requirePermission(string $permission): void
     {
         if (!$this->hasPermission($permission)) {
@@ -106,7 +107,6 @@ class Authorization
         }
     }
 
-    
     public function requireRole(string $role): void
     {
         if (!$this->hasRole($role)) {
@@ -114,7 +114,6 @@ class Authorization
         }
     }
 
-    
     private function clearPermissions(): void
     {
         $this->roles = [];
@@ -125,7 +124,6 @@ class Authorization
         }
     }
 
-    
     private function sendForbidden(string $message): void
     {
         http_response_code(403);

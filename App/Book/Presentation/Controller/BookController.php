@@ -36,7 +36,6 @@ class BookController extends BaseController
         $this->authorization = $this->container->get('Authorization');
     }
 
-    
     private function ensurePermissions(string $permission): void
     {
         if (isset($_SESSION['user_id'])) {
@@ -111,32 +110,48 @@ class BookController extends BaseController
 
         try {
             $this->createBook->execute($dto);
+
+            $this->createNotification(
+                null,
+                'admin',
+                'book_created',
+                'New book added',
+                'A new book has been added to the catalog by librarian.',
+                '/admin/books'
+            );
+
             $_SESSION['success_message'] = 'Book created successfully.';
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed to create book: ' . $e->getMessage();
         }
-        header('Location: ' . BASE_URL . '/librarian/books');
+        header('Location: ' . BASE_URL . '/librarian/dashboard?page=books');
         exit;
     }
 
-    public function edit(int $id): void
-    {
-        $this->ensurePermissions('edit_books');
+ public function edit(int $id): void
+{
+    $this->ensurePermissions('edit_books');
 
-        $book = $this->getBook->execute($id);
-        if (!$book) {
-            $_SESSION['error_message'] = 'Book not found.';
-            header('Location: ' . BASE_URL . '/librarian/books');
-            exit;
-        }
-        $categories = $this->categoryRepository->findAll();
-        
-        $pageTitle = 'Edit Book';
-        $viewData = ['book' => $book, 'categories' => $categories];
-        $content = BASE_PATH . '/view/librarian/books/edit.php';
-        include BASE_PATH . '/view/librarian-dashboard.php';
+    $book = $this->getBook->execute($id);
+    if (!$book) {
+        $_SESSION['error_message'] = 'Book not found.';
+        header('Location: ' . BASE_URL . '/librarian/dashboard?page=books');
+        exit;
     }
+    $categories = $this->categoryRepository->findAll();
 
+    $page = 'books_edit';
+    $pageTitle = 'Edit Book';
+    
+    $viewData = [
+        'book' => $book,
+        'categories' => $categories,
+    ];
+    extract($viewData);
+
+    $content = BASE_PATH . '/view/librarian/books/edit.php';
+    include BASE_PATH . '/view/librarian-dashboard.php';
+}
     public function update(int $id): void
     {
         $this->ensurePermissions('edit_books');
@@ -166,7 +181,7 @@ class BookController extends BaseController
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed to update book: ' . $e->getMessage();
         }
-        header('Location: ' . BASE_URL . '/librarian/books');
+        header('Location: ' . BASE_URL . '/librarian/dashboard?page=books');
         exit;
     }
 
@@ -180,13 +195,12 @@ class BookController extends BaseController
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed to delete book: ' . $e->getMessage();
         }
-        header('Location: ' . BASE_URL . '/librarian/books');
+        header('Location: ' . BASE_URL . '/librarian/dashboard?page=books');
         exit;
     }
 
     public function publicIndex(): void
     {
-      
         if (isset($_SESSION['user_id'])) {
             $this->authorization->loadUserPermissions($_SESSION['user_id']);
         }
@@ -204,7 +218,6 @@ class BookController extends BaseController
 
     public function show(int $id): void
     {
-        
         if (isset($_SESSION['user_id'])) {
             $this->authorization->loadUserPermissions($_SESSION['user_id']);
         }

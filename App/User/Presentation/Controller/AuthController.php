@@ -4,8 +4,7 @@ namespace App\User\Presentation\Controller;
 
 use App\Shared\Base\BaseController;
 use App\User\Application\DTO\LoginDTO;
-use App\User\Application\DTO\RegisterDTO;
-use App\User\Application\Request\RegisterRequest; 
+use App\User\Application\Request\RegisterRequest;
 use App\User\Application\UseCase\LoginUser;
 use App\User\Application\UseCase\LogoutUser;
 use App\User\Application\UseCase\RegisterUser;
@@ -15,7 +14,6 @@ use App\User\Exception\UserNotFoundException;
 use App\User\Infrastructure\Security\UserAuthenticator;
 use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Book\Domain\Repository\BookRepositoryInterface;
-use App\Admin\Application\Service\DashboardStatisticsService;
 
 class AuthController extends BaseController
 {
@@ -25,17 +23,14 @@ class AuthController extends BaseController
     private UserAuthenticator $authenticator;
     private LoanRepositoryInterface $loanRepository;
     private BookRepositoryInterface $bookRepository;
-    private DashboardStatisticsService $dashboardStats; 
 
-    
     public function __construct(
         RegisterUser $registerUser,
         LoginUser $loginUser,
         LogoutUser $logoutUser,
         UserAuthenticator $authenticator,
         LoanRepositoryInterface $loanRepository,
-        BookRepositoryInterface $bookRepository,
-        DashboardStatisticsService $dashboardStats
+        BookRepositoryInterface $bookRepository
     ) {
         parent::__construct(null);
 
@@ -45,34 +40,8 @@ class AuthController extends BaseController
         $this->authenticator = $authenticator;
         $this->loanRepository = $loanRepository;
         $this->bookRepository = $bookRepository;
-        $this->dashboardStats = $dashboardStats; 
     }
 
-
-    public function home(): void
-    {
-        if (!defined('BASE_PATH')) {
-            define('BASE_PATH', dirname(__DIR__, 4));
-        }
-
-        $stats = $this->dashboardStats->getStats();
-
-        $this->view('home', [
-            'pageTitle' => 'Welcome to Library Management System',
-            'basePath' => BASE_PATH,
-            'baseUrl' => BASE_URL ?? '/Library/public',
-            'stats' => $stats, 
-        ]);
-    }
-
-    public function showLogin(): void
-    {
-        if ($this->authenticator->isAuthenticated()) {
-            $this->redirect(BASE_URL . '/user-dashboard');
-            return;
-        }
-        $this->view('auth/login');
-    }
 
     public function showRegister(): void
     {
@@ -83,7 +52,6 @@ class AuthController extends BaseController
         $this->view('auth/register');
     }
 
-
     public function register(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -92,85 +60,31 @@ class AuthController extends BaseController
         }
 
         try {
-            
             $request = RegisterRequest::fromArray($_POST);
-            $userDTO = $this->registerUser->execute($request); 
+            $userDTO = $this->registerUser->execute($request);
 
             $_SESSION['register_success'] = 'Account created successfully! Please check your email/phone for verification.';
             $_SESSION['just_registered'] = true;
 
             $this->redirect(BASE_URL . '/verify');
-
         } catch (DuplicateEmailException $e) {
             $_SESSION['register_errors']['email'] = $e->getMessage();
             $_SESSION['register_old'] = $_POST;
             $this->redirect(BASE_URL . '/register');
-
         } catch (DuplicatePhoneException $e) {
             $_SESSION['register_errors']['phone'] = $e->getMessage();
             $_SESSION['register_old'] = $_POST;
             $this->redirect(BASE_URL . '/register');
-
         } catch (\InvalidArgumentException $e) {
             $_SESSION['register_errors']['general'] = $e->getMessage();
             $_SESSION['register_old'] = $_POST;
             $this->redirect(BASE_URL . '/register');
-
         } catch (\Exception $e) {
             $_SESSION['register_errors']['general'] = 'Registration failed: ' . $e->getMessage();
             $_SESSION['register_old'] = $_POST;
             $this->redirect(BASE_URL . '/register');
         }
     }
-
-    public function login(): void
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect(BASE_URL . '/home');
-            return;
-        }
-
-        try {
-            $dto = LoginDTO::fromArray($_POST);
-            $userDTO = $this->loginUser->execute($dto);
-
-            $_SESSION['login_success'] = 'Welcome back, ' . $userDTO->name . '!';
-            $this->redirect(BASE_URL . '/user-dashboard');
-
-        } catch (UserNotFoundException $e) {
-            $_SESSION['login_errors']['general'] = 'No account found with this email/phone';
-            $_SESSION['login_old'] = $_POST;
-            $this->redirect(BASE_URL . '/login');
-
-        } catch (\RuntimeException $e) {
-            $_SESSION['login_errors']['general'] = $e->getMessage();
-
-            if (strpos($e->getMessage(), 'verify') !== false) {
-                $_SESSION['warning_message'] = $e->getMessage();
-                $this->redirect(BASE_URL . '/verify');
-                return;
-            }
-
-            $_SESSION['login_old'] = $_POST;
-            $this->redirect(BASE_URL . '/login');
-
-        } catch (\Exception $e) {
-            $_SESSION['login_errors']['general'] = 'Login failed: ' . $e->getMessage();
-            $_SESSION['login_old'] = $_POST;
-            $this->redirect(BASE_URL . '/login');
-        }
-    }
-
-    public function logout(): void
-    {
-        try {
-            $this->logoutUser->execute();
-            $_SESSION['logout_success'] = 'You have been logged out successfully.';
-        } catch (\Exception $e) {
-        }
-        $this->redirect(BASE_URL . '/home');
-    }
-
 
     public function userDashboard(): void
     {
@@ -234,7 +148,6 @@ class AuthController extends BaseController
 
         $this->view('admin-dashboard');
     }
-
 
     public function checkAuth(): array
     {

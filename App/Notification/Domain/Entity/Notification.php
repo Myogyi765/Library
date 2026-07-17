@@ -4,7 +4,7 @@ namespace App\Notification\Domain\Entity;
 class Notification
 {
     private ?int $id;
-    private int $userId;
+    private ?int $userId;         
     private string $role;
     private string $type;
     private string $title;
@@ -14,7 +14,7 @@ class Notification
     private \DateTime $createdAt;
 
     public function __construct(
-        int $userId,
+        ?int $userId,            
         string $role,
         string $type,
         string $title,
@@ -36,7 +36,7 @@ class Notification
     }
 
     public function getId(): ?int { return $this->id; }
-    public function getUserId(): int { return $this->userId; }
+    public function getUserId(): ?int { return $this->userId; }  
     public function getRole(): string { return $this->role; }
     public function getType(): string { return $this->type; }
     public function getTitle(): string { return $this->title; }

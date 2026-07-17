@@ -8,7 +8,7 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
             <i class="fas fa-book text-blue-600 mr-2"></i>Book Management
         </h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Manage library catalog</p>
+        <p class="text-sm text-gray-700 dark:text-gray-400">Manage library catalog</p>
     </div>
     <a href="<?= BASE_URL ?>/librarian/dashboard?page=books_create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition shadow-md hover:shadow-lg">
         <i class="fas fa-plus"></i> Add Book
@@ -32,11 +32,30 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 <?php if (!empty($books)): ?>
-                    <?php foreach ($books as $book): ?>
+                    <?php foreach ($books as $book): 
+                        // ---- ✅ FIXED: Handle full URLs and relative paths ----
+                        $cover = $book->getCoverImage();
+                        $imageSrc = null;
+                        if ($cover) {
+                            // If it's a full URL (starts with http:// or https://), use directly
+                            if (strpos($cover, 'http://') === 0 || strpos($cover, 'https://') === 0) {
+                                $imageSrc = $cover;
+                            } else {
+                                // Otherwise, prepend BASE_URL (assume it's a relative path)
+                                $imageSrc = BASE_URL . $cover;
+                            }
+                        }
+                    ?>
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition">
                             <td class="px-4 py-3">
-                                <?php if ($book->getCoverImage()): ?>
-                                    <img src="<?= BASE_URL . $book->getCoverImage() ?>" alt="<?= htmlspecialchars($book->getTitle()) ?>" class="w-12 h-16 object-cover rounded">
+                                <?php if ($imageSrc): ?>
+                                    <img src="<?= $imageSrc ?>" 
+                                         alt="<?= htmlspecialchars($book->getTitle()) ?>" 
+                                         class="w-12 h-16 object-cover rounded"
+                                         onerror="this.style.display='none'; this.parentElement.querySelector('.fallback-icon').style.display='flex';">
+                                    <div class="fallback-icon w-12 h-16 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-gray-400" style="display:none;">
+                                        <i class="fas fa-book text-2xl"></i>
+                                    </div>
                                 <?php else: ?>
                                     <div class="w-12 h-16 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-gray-400">
                                         <i class="fas fa-book text-2xl"></i>
@@ -65,7 +84,7 @@
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="7" class="px-4 py-8 text-center text-gray-700 dark:text-gray-400">
                             No books found. 
                             <a href="<?= BASE_URL ?>/librarian/dashboard?page=books_create" class="text-blue-600 dark:text-blue-400 hover:underline">Add your first book</a>
                         </td>

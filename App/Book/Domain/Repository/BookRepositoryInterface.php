@@ -16,4 +16,6 @@ interface BookRepositoryInterface
         public function count(): int;
     public function getTotalAvailableQuantity(): int;
     public function getTotalBorrowedQuantity(): int;
+
+       public function getLatestBooks(int $limit): array;
 }

@@ -61,9 +61,7 @@ include __DIR__ . '/../layout/header.php';
 
             <form action="<?= BASE_URL ?>/login" method="POST" class="auth-form" autocomplete="on">
 
-                <!-- ========================================================= -->
-                <!--  🚀 ACCOUNT TYPE DROPDOWN ကို ဖယ်ရှားလိုက်ပြီ                -->
-                <!-- ========================================================= -->
+               
 
                 <!-- Email -->
                 <div class="form-group <?= isset($_SESSION['login_errors']['email']) ? 'has-error' : '' ?>">
@@ -118,7 +116,7 @@ include __DIR__ . '/../layout/header.php';
 </div>
 
 <style>
-    /* ဒီနေရာမှာ သင့်ရဲ့ CSS တွေ အကုန်လုံးကို ထားပါ (ကျွန်တော် အတိုချုံးပြထားတာပါ) */
+   
     :root {
         --bg-body: #eef4ff;
         --bg-card: rgba(255,255,255,0.95);

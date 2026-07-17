@@ -39,10 +39,20 @@ class NotificationRepository implements NotificationRepositoryInterface
 
     public function findUnreadByUserIdAndRole(int $userId, string $role): array
     {
-        $stmt = $this->db->prepare(
-            "SELECT * FROM notifications WHERE user_id = :user_id AND role = :role AND is_read = 0 ORDER BY created_at DESC"
-        );
-        $stmt->execute([':user_id' => $userId, ':role' => $role]);
+        $stmt = $this->db->prepare("
+            SELECT * FROM notifications 
+            WHERE role = :role
+            AND is_read = 0
+            AND (
+                user_id = :user_id
+                OR user_id IS NULL
+            )
+            ORDER BY created_at DESC
+        ");
+        $stmt->execute([
+            ':role' => $role,
+            ':user_id' => $userId
+        ]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return array_map([$this, 'hydrate'], $rows);
     }
@@ -60,25 +70,48 @@ class NotificationRepository implements NotificationRepositoryInterface
     public function markAsRead(int $id): void
     {
         $stmt = $this->db->prepare("UPDATE notifications SET is_read = 1 WHERE id = :id");
-        $stmt->execute([':id' => $id]);
+        $result = $stmt->execute([':id' => $id]);
+        
+        if ($result && $stmt->rowCount() > 0) {
+            error_log("🔔 [Repository] Notification #{$id} marked as read successfully");
+        } else {
+            error_log("⚠️ [Repository] Notification #{$id} not found or already read");
+        }
     }
 
     public function markAllAsRead(int $userId, string $role): void
     {
-        $stmt = $this->db->prepare(
-            "UPDATE notifications SET is_read = 1 WHERE user_id = :user_id AND role = :role AND is_read = 0"
-        );
-        $stmt->execute([':user_id' => $userId, ':role' => $role]);
+        $stmt = $this->db->prepare("
+            UPDATE notifications 
+            SET is_read = 1 
+            WHERE role = :role
+            AND is_read = 0
+            AND (
+                user_id = :user_id
+                OR user_id IS NULL
+            )
+        ");
+        $stmt->execute([
+            ':role' => $role,
+            ':user_id' => $userId
+        ]);
+        error_log("🔔 [Repository] Marked all notifications as read for user #{$userId} with role '{$role}'");
     }
 
     public function findLatest(int $userId, string $role, int $limit = 10): array
     {
-        $stmt = $this->db->prepare(
-            "SELECT * FROM notifications WHERE user_id = :user_id AND role = :role 
-             ORDER BY created_at DESC LIMIT :limit"
-        );
-        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt = $this->db->prepare("
+            SELECT * FROM notifications 
+            WHERE role = :role
+            AND (
+                user_id = :user_id
+                OR user_id IS NULL
+            )
+            ORDER BY created_at DESC 
+            LIMIT :limit
+        ");
         $stmt->bindValue(':role', $role, PDO::PARAM_STR);
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -88,7 +121,7 @@ class NotificationRepository implements NotificationRepositoryInterface
     private function hydrate(array $row): Notification
     {
         return new Notification(
-            (int)$row['user_id'],
+            $row['user_id'] !== null ? (int)$row['user_id'] : null, 
             $row['role'],
             $row['type'],
             $row['title'],
