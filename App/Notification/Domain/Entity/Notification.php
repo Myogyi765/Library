@@ -35,7 +35,6 @@ class Notification
         $this->createdAt = $createdAt ?? new \DateTime();
     }
 
-    // Getters and Setters
     public function getId(): ?int { return $this->id; }
     public function getUserId(): int { return $this->userId; }
     public function getRole(): string { return $this->role; }

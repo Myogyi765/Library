@@ -71,9 +71,7 @@ class RoleRepository implements RoleRepositoryInterface
         return $role;
     }
 
-    /**
-     * Update permissions for a role (optional, for admin settings)
-     */
+    
     public function updatePermissions(string $roleName, array $permissions): void
     {
         $stmt = $this->db->prepare("SELECT id FROM roles WHERE name = ?");

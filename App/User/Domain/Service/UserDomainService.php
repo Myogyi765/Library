@@ -31,7 +31,6 @@ class UserDomainService
         }
     }
     
-    // ✅ FIXED: Use Password value object to verify
     public function validateUserCredentials(string $identifier, string $password): bool
     {
         $user = $this->repository->findByIdentifier($identifier);

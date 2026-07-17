@@ -6,10 +6,7 @@ class Password
 {
     private string $hash;
 
-    /**
-     * @param string $value Plain password or already hashed
-     * @param bool $alreadyHashed If true, value is treated as hash
-     */
+    
     public function __construct(string $value, bool $alreadyHashed = false)
     {
         if ($alreadyHashed) {

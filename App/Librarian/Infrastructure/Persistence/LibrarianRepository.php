@@ -135,9 +135,7 @@ class LibrarianRepository implements LibrarianRepositoryInterface
         }
     }
 }
-    /**
-     * ✅ Assign 'librarian' role to user (with duplicate check)
-     */
+    
     private function assignLibrarianRole(int $userId): void
     {
         $stmt = $this->db->prepare("SELECT id FROM roles WHERE name = 'librarian'");

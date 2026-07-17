@@ -25,13 +25,11 @@ use App\Shared\Core\Authorization\Authorization;
 
 return function ($container) {
 
-    // ── Repositories ──
     $container->singleton(SettingRepository::class, function ($c) {
         return new SettingRepository($c->get('db'));
     });
     $container->set('setting.repository', fn($c) => $c->get(SettingRepository::class));
 
-    // ── Services ──
     $container->singleton(SettingsService::class, function ($c) {
         return new SettingsService($c->get(SettingRepository::class));
     });
@@ -59,7 +57,6 @@ return function ($container) {
         );
     });
 
-    // ── Admin Controllers ──
     $container->singleton(AdminDashboardController::class, function ($c) {
         return new AdminDashboardController(
             $c->get(UserAuthenticator::class),

@@ -11,9 +11,7 @@ class UserController extends BaseController
     private UserAuthenticator $authenticator;
     private UserRepositoryInterface $userRepository;
 
-    /**
-     * Constructor – inject dependencies explicitly
-     */
+    
     public function __construct(
         UserAuthenticator $authenticator,
         UserRepositoryInterface $userRepository
@@ -22,9 +20,7 @@ class UserController extends BaseController
         $this->userRepository = $userRepository;
     }
 
-    /**
-     * Display list of users (only 'user' role)
-     */
+    
     public function index(): void
     {
         if (!$this->authenticator->isLoggedIn() || ($_SESSION['user_role'] ?? '') !== 'librarian') {
@@ -32,7 +28,6 @@ class UserController extends BaseController
             exit;
         }
 
-        // Fetch only users with role 'user'
         $allUsers = $this->userRepository->findAll();
         $users = array_filter($allUsers, function($user) {
             return $user->getRole() === 'user';
@@ -44,9 +39,7 @@ class UserController extends BaseController
         include BASE_PATH . '/view/librarian-dashboard.php';
     }
 
-    /**
-     * Show create user form
-     */
+    
     public function create(): void
     {
         if (!$this->authenticator->isLoggedIn() || ($_SESSION['user_role'] ?? '') !== 'librarian') {
@@ -59,21 +52,15 @@ class UserController extends BaseController
         include BASE_PATH . '/view/librarian-dashboard.php';
     }
 
-    /**
-     * Store a new user (POST)
-     */
+    
     public function store(): void
     {
-        // Your store logic here
-        // ...
         $_SESSION['success_message'] = 'User created successfully.';
         header('Location: ' . BASE_URL . '/librarian/dashboard?page=users');
         exit;
     }
 
-    /**
-     * Show edit user form
-     */
+    
     public function edit(int $id): void
     {
         if (!$this->authenticator->isLoggedIn() || ($_SESSION['user_role'] ?? '') !== 'librarian') {
@@ -94,21 +81,16 @@ class UserController extends BaseController
         include BASE_PATH . '/view/librarian-dashboard.php';
     }
 
-    /**
-     * Update a user (POST)
-     */
+    
     public function update(int $id): void
     {
-        // Your update logic here
-        // ...
+        
         $_SESSION['success_message'] = 'User updated successfully.';
         header('Location: ' . BASE_URL . '/librarian/dashboard?page=users');
         exit;
     }
 
-    /**
-     * Delete a user
-     */
+    
     public function delete(int $id): void
     {
         if (!$this->authenticator->isLoggedIn() || ($_SESSION['user_role'] ?? '') !== 'librarian') {

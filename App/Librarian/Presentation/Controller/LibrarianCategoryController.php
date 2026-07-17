@@ -31,7 +31,7 @@ class LibrarianCategoryController extends BaseController
         }
         $categories = $this->categoryRepository->findAll();
         $pageTitle = 'Manage Categories';
-        $viewData = ['categories' => $categories]; // ✅ Pass data to view
+        $viewData = ['categories' => $categories]; 
         $content = BASE_PATH . '/view/librarian/categories/index.php';
         include BASE_PATH . '/view/librarian-dashboard.php';
     }

@@ -25,7 +25,6 @@ class InvoiceRepository implements InvoiceRepositoryInterface
           error_log("🔍 Invoice data to save: " . print_r($data, true));
 
         if ($invoice->getId()) {
-            // UPDATE
             $sql = "UPDATE invoices SET 
                         invoice_number = :invoice_number,
                         payment_id = :payment_id,
@@ -59,7 +58,6 @@ class InvoiceRepository implements InvoiceRepositoryInterface
                 ':status' => $data['status'],
             ]);
         } else {
-            // INSERT
             $sql = "INSERT INTO invoices (
                         invoice_number, payment_id, loan_id, user_id, book_id,
                         amount, currency, payment_method, transaction_reference,

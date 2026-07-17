@@ -20,7 +20,6 @@ class Payment
     private ?\DateTimeImmutable $rejectedAt = null;
     private ?string $idempotencyKey = null;
 
-    // ============ Refund Properties ============
     private ?string $refundStatus = 'none';
     private ?\DateTimeImmutable $refundedAt = null;
     private ?string $refundReason = null;
@@ -48,7 +47,6 @@ class Payment
         $this->idempotencyKey = $idempotencyKey;
     }
 
-    // ============ Business Methods ============
     public function approve(): void
     {
         if (!$this->status->equals(PaymentStatus::PENDING_APPROVAL())) {
@@ -67,7 +65,6 @@ class Payment
         $this->rejectedAt = new \DateTimeImmutable();
     }
 
-    // ============ Getters ============
     public function getId(): ?int { return $this->id; }
     public function getLoanId(): int { return $this->loanId; }
     public function getUserId(): int { return $this->userId; }
@@ -81,7 +78,6 @@ class Payment
     public function getRejectedAt(): ?\DateTimeImmutable { return $this->rejectedAt; }
     public function getIdempotencyKey(): ?string { return $this->idempotencyKey; }
 
-    // ============ Refund Getters ============
     public function getRefundStatus(): ?string
     {
         return $this->refundStatus;
@@ -97,7 +93,6 @@ class Payment
         return $this->refundReason;
     }
 
-    // ============ Setters ============
     public function setId(int $id): void { $this->id = $id; }
     public function setScreenshotPath(string $path): void { $this->screenshotPath = $path; }
     public function setStatus(PaymentStatus $status): void { $this->status = $status; }

@@ -19,19 +19,16 @@ use App\Admin\Application\Service\DashboardStatisticsService;
 
 return function ($container) {
 
-    // ── Repository ──
     $container->singleton(LibrarianRepository::class, function ($c) {
         return new LibrarianRepository($c->get('db'));
     });
     $container->set('librarian.repository', fn($c) => $c->get(LibrarianRepository::class));
 
-    // ── Service ──
     $container->singleton(LibrarianService::class, function ($c) {
         return new LibrarianService($c->get('librarian.repository'));
     });
     $container->set('librarian.service', fn($c) => $c->get(LibrarianService::class));
 
-    // ── Controllers ──
     $container->singleton(LibrarianDashboardController::class, function ($c) {
         return new LibrarianDashboardController(
             $c->get(UserAuthenticator::class),
@@ -67,13 +64,12 @@ return function ($container) {
         );
     });
 
-    // ✅ FIXED: Correct order of dependencies
     $container->singleton(ScanController::class, function ($c) {
         return new ScanController(
-            $c->get(LoanRepositoryInterface::class),   // 1st: LoanRepository
-            $c->get(BookRepositoryInterface::class),   // 2nd: BookRepository
-            $c->get(UserRepositoryInterface::class),   // 3rd: UserRepository
-            $c->get(UserAuthenticator::class)          // 4th: UserAuthenticator
+            $c->get(LoanRepositoryInterface::class),   
+            $c->get(BookRepositoryInterface::class),
+            $c->get(UserRepositoryInterface::class),   
+            $c->get(UserAuthenticator::class)         
         );
     });
 

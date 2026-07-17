@@ -21,10 +21,7 @@ class UserAuthenticator
         $this->authorization = $authorization;
     }
 
-    /**
-     * Authenticate user by identifier (email or phone) and password.
-     * No role parameter needed – role is determined from user data.
-     */
+    
     public function authenticate(string $identifier, string $password): bool
     {
         $user = $this->userRepository->findByEmail(new Email($identifier));
@@ -36,21 +33,15 @@ class UserAuthenticator
                 $user = null;
             }
         }
-
-        // Check if user exists and password is valid
         if (!$user || !$user->getPassword()->verify($password)) {
             $_SESSION['login_errors']['general'] = 'Invalid email/phone or password.';
             return false;
         }
-
-        // All good – perform login
         $this->login($user);
         return true;
     }
 
-    /**
-     * Check if string looks like a phone number
-     */
+    
     private function isPhoneNumber(string $value): bool
     {
         return preg_match('/^\+?[0-9]{7,15}$/', $value) === 1;
@@ -61,8 +52,6 @@ class UserAuthenticator
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-
-        // Clear old authentication flags
         unset(
             $_SESSION['admin_logged_in'],
             $_SESSION['librarian_logged_in'],
@@ -72,20 +61,16 @@ class UserAuthenticator
             $_SESSION['librarian_name'],
             $_SESSION['librarian_department']
         );
-
-        // Set unified session variables
         $_SESSION['user_id'] = $user->getId();
         $_SESSION['user_name'] = $user->getName();
         $_SESSION['user_email'] = $user->getEmail()->getValue();
         $_SESSION['user_phone'] = $user->getPhone()?->getValue();
-        $_SESSION['user_role'] = $user->getRole() ?? 'user';  // ← role comes from user
+        $_SESSION['user_role'] = $user->getRole() ?? 'user';
         $_SESSION['user_status'] = $user->getStatus()?->getValue() ?? 'active';
         $_SESSION['user_login_method'] = $user->getLoginMethod() ?? 'email';
         $_SESSION['user_identifier'] = $user->getIdentifier() ?? $user->getEmail()->getValue();
         $_SESSION['user_authenticated'] = true;
         $_SESSION['logged_in'] = true;
-
-        // Load permissions via Authorization
         $this->authorization->loadUserPermissions($user->getId());
 
         session_regenerate_id(true);

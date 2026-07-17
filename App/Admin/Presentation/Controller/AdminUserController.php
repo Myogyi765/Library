@@ -6,7 +6,7 @@ use App\User\Domain\Repository\UserRepositoryInterface;
 use App\User\Infrastructure\Security\UserAuthenticator;
 use App\Shared\Base\BaseController;
 use App\Admin\Application\Service\UserManagementService;
-use App\User\Domain\ValueObject\UserStatus; // ✅ Import the value object
+use App\User\Domain\ValueObject\UserStatus;
 
 class AdminUserController extends BaseController
 {
@@ -152,10 +152,6 @@ class AdminUserController extends BaseController
 
         $this->redirect('/admin/users');
     }
-
-    /**
-     * Toggle user status (Enable / Disable)
-     */
     public function toggleStatus(int $id): void
     {
         if (!$this->isAdmin()) {
@@ -163,34 +159,24 @@ class AdminUserController extends BaseController
         }
 
         try {
-            // 1. Fetch the user
             $user = $this->userRepository->findById($id);
             if (!$user) {
                 throw new \Exception('User not found.');
             }
 
-            // 2. Get the current status (a UserStatus value object)
-            $currentStatus = $user->getStatus(); // e.g., UserStatus::ACTIVE
-
-            // 3. Determine the new status string based on the current one
-            // Assuming UserStatus has a method getValue() or you can compare directly
-            // If you have constants: UserStatus::ACTIVE and UserStatus::INACTIVE
+            $currentStatus = $user->getStatus(); 
             if ($currentStatus->getValue() === 'active') {
                 $newStatusString = 'inactive';
             } else {
                 $newStatusString = 'active';
             }
 
-            // 4. Create a new UserStatus value object with the new status
             $newStatus = new UserStatus($newStatusString);
 
-            // 5. Set the new status on the user entity
             $user->setStatus($newStatus);
 
-            // 6. Save via repository (make sure your repository has a save() method)
             $this->userRepository->save($user);
 
-            // 7. Set success message
             $this->createNotification(
                 (int) ($_SESSION['user_id'] ?? 0),
                 'admin',
@@ -204,7 +190,6 @@ class AdminUserController extends BaseController
             $_SESSION['error_message'] = 'Failed to toggle status: ' . $e->getMessage();
         }
 
-        // 8. Redirect back to the user list
         $this->redirect('/admin/users');
     }
 }

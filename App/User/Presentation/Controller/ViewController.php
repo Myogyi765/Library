@@ -28,9 +28,7 @@ class ViewController extends BaseController
         $this->paymentRepo = $paymentRepo;
     }
 
-    /**
-     * Home page.
-     */
+    
     public function home(): void
     {
         $this->view('home', [
@@ -38,9 +36,7 @@ class ViewController extends BaseController
         ]);
     }
 
-    /**
-     * Show user profile.
-     */
+    
     public function profile(): void
     {
         if (!$this->checkPermission('view_profile')) {
@@ -53,9 +49,7 @@ class ViewController extends BaseController
         ]);
     }
 
-    /**
-     * Show profile edit form.
-     */
+    
     public function editProfile(): void
     {
         if (!$this->checkPermission('edit_profile')) {
@@ -68,9 +62,7 @@ class ViewController extends BaseController
         ]);
     }
 
-    /**
-     * Show user payment history.
-     */
+    
     public function payments(): void
     {
         $userId = $this->getCurrentUserId();
@@ -92,9 +84,7 @@ class ViewController extends BaseController
         ]);
     }
 
-    /**
-     * Update user profile (including image upload).
-     */
+    
     public function updateProfile(): void
     {
         $userId = $this->getCurrentUserId();
@@ -109,13 +99,10 @@ class ViewController extends BaseController
                 throw new \Exception('User not found.');
             }
 
-            // Validate and update basic info
             $this->validateAndUpdateUserInfo($user);
 
-            // Handle profile image upload
             $this->handleProfileImageUpload($user, $userId);
 
-            // Save and update session
             $this->userRepo->save($user);
             $this->updateSessionUserData($user);
 
@@ -128,11 +115,8 @@ class ViewController extends BaseController
         }
     }
 
-    // ─── Private Helper Methods ────────────────────────────────────
 
-    /**
-     * Check permission and load if needed.
-     */
+    
     private function checkPermission(string $permission): bool
     {
         $userId = $this->getCurrentUserId();
@@ -142,17 +126,13 @@ class ViewController extends BaseController
         return $this->authorization->hasPermission($permission);
     }
 
-    /**
-     * Get current user ID from session.
-     */
+    
     private function getCurrentUserId(): ?int
     {
         return isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
     }
 
-    /**
-     * Get current user object.
-     */
+    
     private function getCurrentUser()
     {
         $userId = $this->getCurrentUserId();
@@ -162,9 +142,7 @@ class ViewController extends BaseController
         return $this->userRepo->findById($userId);
     }
 
-    /**
-     * Send HTTP 403 forbidden response.
-     */
+    
     private function sendForbidden(string $message = 'Access Denied'): void
     {
         http_response_code(403);
@@ -172,9 +150,7 @@ class ViewController extends BaseController
         exit;
     }
 
-    /**
-     * Validate and update user basic info (name, email, phone).
-     */
+    
     private function validateAndUpdateUserInfo($user): void
     {
         $name = trim($_POST['name'] ?? '');
@@ -197,18 +173,14 @@ class ViewController extends BaseController
         }
     }
 
-    /**
-     * Handle profile image upload.
-     */
+    
     private function handleProfileImageUpload($user, int $userId): void
     {
         if (!isset($_FILES['profile_image']) || $_FILES['profile_image']['error'] !== UPLOAD_ERR_OK) {
-            return; // No file uploaded or upload error
         }
 
         $uploadDir = BASE_PATH . '/public/uploads/profiles/';
 
-        // Create directory if not exists
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
@@ -228,7 +200,6 @@ class ViewController extends BaseController
             throw new \Exception('Failed to upload profile image.');
         }
 
-        // Delete old profile image if exists
         if ($user->getProfileImage()) {
             $oldPath = BASE_PATH . '/public/' . $user->getProfileImage();
             if (file_exists($oldPath)) {
@@ -239,9 +210,7 @@ class ViewController extends BaseController
         $user->setProfileImage('uploads/profiles/' . $newFileName);
     }
 
-    /**
-     * Update session with latest user data.
-     */
+    
     private function updateSessionUserData($user): void
     {
         $_SESSION['user_name'] = $user->getName();

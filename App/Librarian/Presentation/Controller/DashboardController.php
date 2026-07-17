@@ -52,7 +52,6 @@ class DashboardController extends BaseController
         $page = $_GET['page'] ?? 'dashboard';
         $statusFilter = $_GET['status'] ?? 'all';
 
-        // Permission mapping
         $permissionMap = [
             'books'        => 'view_books',
             'books_create' => 'view_books',
@@ -75,9 +74,6 @@ class DashboardController extends BaseController
             }
         }
 
-        // ================================================================
-        // ✅ OPTIMIZED DATA FETCHING – Limit data to avoid memory exhaustion
-        // ================================================================
 
         $users = [];
         $books = [];
@@ -87,16 +83,12 @@ class DashboardController extends BaseController
         $categoryMap = [];
         $stats = [];
 
-        // ── For Dashboard Page: use optimized stats service ──
         if ($page === 'dashboard') {
-            // Use optimized statistics service (uses COUNT queries)
             $stats = $this->dashboardStats->getStats();
 
-            // Only fetch recent 5 loans for activity feed
             $recentLoans = $this->loanRepository->findRecent(5);
             $recentActivities = [];
 
-            // Fetch only users and books needed for recent activities
             foreach ($recentLoans as $loan) {
                 $user = $this->userRepository->findById($loan->getUserId());
                 $book = $this->bookRepository->findById($loan->getBookId());
@@ -110,7 +102,6 @@ class DashboardController extends BaseController
             }
             $stats['recentActivities'] = $recentActivities;
 
-            // For dashboard, we don't need full lists - use empty arrays
             $allBooks = [];
             $allLoans = [];
             $allCategories = [];
@@ -119,39 +110,31 @@ class DashboardController extends BaseController
             $books = [];
 
         } else {
-            // ── For Other Pages (loans, users, books, etc.) ──
-            // 🔹 Limit data to 200 records per page to avoid memory exhaustion
             $maxRecords = 200;
 
-            // Get users (for lookup)
-            $allUsers = $this->userRepository->findAll(); // Could also limit, but users are usually few
+            $allUsers = $this->userRepository->findAll();
             foreach ($allUsers as $user) {
                 $users[$user->getId()] = $user;
             }
 
-            // Get books (for lookup)
-            $allBooks = $this->bookRepository->findAll(); // Could limit if needed
+            $allBooks = $this->bookRepository->findAll(); 
             foreach ($allBooks as $book) {
                 $books[$book->getId()] = $book;
             }
 
-            // Get loans – limit to $maxRecords
-            $allLoans = $this->loanRepository->findAll(); // This could be huge – we'll limit by slicing
+            $allLoans = $this->loanRepository->findAll();
             if (count($allLoans) > $maxRecords) {
                 $allLoans = array_slice($allLoans, 0, $maxRecords);
             }
 
-            // Categories (usually small)
             $allCategories = $this->categoryRepository->findAll();
             foreach ($allCategories as $category) {
                 $categoryMap[$category->getId()] = $category->getName();
             }
 
-            // Stats for dashboard not needed in other pages
             $stats = [];
         }
 
-        // ---- Prepare base view data ----
         $viewData = [
             'page'        => $page,
             'stats'       => $stats,
@@ -163,7 +146,6 @@ class DashboardController extends BaseController
             'categoryMap' => $categoryMap,
         ];
 
-        // ---- Payments: fetch with details and filters (limit 100) ----
         if ($page === 'payments') {
             switch ($statusFilter) {
                 case 'pending':
@@ -183,7 +165,6 @@ class DashboardController extends BaseController
             $viewData['currentFilter'] = $statusFilter;
         }
 
-        // ---- Refunds: fetch refund data (limit 100) ----
         if ($page === 'refunds') {
             $allPayments = $this->paymentRepo->findAllWithDetails(0, 100);
             $refunds = array_filter($allPayments, function($payment) {
@@ -198,7 +179,6 @@ class DashboardController extends BaseController
             $viewData['currentFilter'] = $statusFilter;
         }
 
-        // ---- Render ----
         $pageTitle = 'Librarian Dashboard';
         include BASE_PATH . '/view/librarian-dashboard.php';
     }

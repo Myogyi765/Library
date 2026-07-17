@@ -25,7 +25,6 @@ class PaymentStatus
     public function getValue(): string { return $this->value; }
     public function equals(self $other): bool { return $this->value === $other->value; }
 
-    // ✅ Added helper methods for cleaner checks
     public function isPendingApproval(): bool
     {
         return $this->value === self::PENDING_APPROVAL;

@@ -33,9 +33,6 @@ use App\Payment\Application\Handler\ApprovePaymentHandler;
 use App\Payment\Application\Handler\RejectPaymentHandler;
 use App\Payment\Presentation\Controller\LibrarianPaymentController;
 
-// ================================================================
-// ✅ Verify Critical Services
-// ================================================================
 
 $critical = [
     'db',
@@ -43,7 +40,6 @@ $critical = [
     'user.authenticator',
     UserAuthenticator::class,
     Authorization::class,        
-    // 'Authorization',          
     'verification.service',
     LoginController::class,
     AuthController::class,

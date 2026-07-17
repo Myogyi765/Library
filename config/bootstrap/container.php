@@ -5,9 +5,6 @@ declare(strict_types=1);
 use App\Shared\Core\ErrorHandler;
 use App\Shared\Core\Authorization\Authorization;
 
-// ================================================================
-// 🚀 CONTAINER DEFINITION
-// ================================================================
 
 $container = new class {
     private array $services = [];
@@ -53,9 +50,6 @@ $container = new class {
     }
 };
 
-// ================================================================
-// 1️⃣ CORE SERVICES
-// ================================================================
 
 $container->singleton('db', function () {
     $host = $_ENV['DB_HOST'] ?? 'localhost';
@@ -74,16 +68,13 @@ $container->singleton('db', function () {
     return new \PDO($dsn, $user, $pass, $options);
 });
 
-// Register Authorization with multiple key aliases
 $container->singleton(Authorization::class, function ($c) {
     return new Authorization($c->get('db'));
 });
 $container->set('authorization', fn($c) => $c->get(Authorization::class));
 $container->set('Authorization', fn($c) => $c->get(Authorization::class));
 
-// ✅ ADD DUMMY admin.service TO AVOID MISSING SERVICE ERRORS
 $container->singleton('admin.service', function ($c) {
-    // This is a dummy service – admin functionality is now handled by User module
     return new class {
         public function __call($name, $args) {
             return null;
@@ -91,9 +82,6 @@ $container->singleton('admin.service', function ($c) {
     };
 });
 
-// ================================================================
-// 2️⃣ LOAD MODULES IN CORRECT ORDER
-// ================================================================
 
 $moduleFiles = [
     __DIR__ . '/../../config/services/user.php',
@@ -115,9 +103,6 @@ foreach ($moduleFiles as $path) {
     }
 }
 
-// ================================================================
-// ✅ DONE
-// ================================================================
 
 ErrorHandler::log('📦 Service Container created (explicit order, no prefixes)', 'INFO');
 

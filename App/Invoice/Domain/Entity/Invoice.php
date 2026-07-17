@@ -49,7 +49,6 @@ class Invoice
         $this->status = InvoiceStatus::ISSUED();
     }
 
-    // ─── Getters ────────────────────────────────────────────────────────
     public function getId(): ?int { return $this->id; }
     public function getInvoiceNumber(): string { return $this->invoiceNumber; }
     public function getPaymentId(): int { return $this->paymentId; }
@@ -65,12 +64,10 @@ class Invoice
     public function getIssuedAt(): \DateTimeImmutable { return $this->issuedAt; }
     public function getStatus(): InvoiceStatus { return $this->status; }
 
-    // ─── Setters ────────────────────────────────────────────────────────
     public function setId(int $id): void { $this->id = $id; }
     public function setStatus(InvoiceStatus $status): void { $this->status = $status; }
     public function setIssuedAt(\DateTimeImmutable $issuedAt): void { $this->issuedAt = $issuedAt; }
 
-    // ─── Business Logic ────────────────────────────────────────────────
     public function cancel(): void
     {
         $this->status = InvoiceStatus::CANCELLED();

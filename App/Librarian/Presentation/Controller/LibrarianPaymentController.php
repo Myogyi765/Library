@@ -47,15 +47,11 @@ class LibrarianPaymentController extends BaseController
         $this->invoiceRepo = $invoiceRepo;
     }
 
-    /**
-     * List all payments with filtering by status.
-     * Supports query param ?status=all|pending|approved|rejected (default: all).
-     */
+    
     public function index(): void
     {
         $statusFilter = $_GET['status'] ?? 'all';
 
-        // Fetch payments based on filter using repository methods
         switch ($statusFilter) {
             case 'pending':
                 $payments = $this->paymentRepo->findPendingApprovalsWithDetails();
@@ -77,16 +73,13 @@ class LibrarianPaymentController extends BaseController
         ]);
     }
 
-    /**
-     * Show single payment details.
-     */
+    
     public function show(array $params): void
     {
         $id = (int) ($params['id'] ?? 0);
         $payment = $this->paymentRepo->findById($id);
 
         if (!$payment) {
-            // ✅ Use a proper error view
             $this->view('404', ['message' => 'Payment not found.']);
             return;
         }
@@ -94,9 +87,7 @@ class LibrarianPaymentController extends BaseController
         $this->view('payment/librarian/show', ['payment' => $payment]);
     }
 
-    /**
-     * Approve a payment and redirect to the invoice page.
-     */
+    
     public function approve(array $params): void
     {
         $id = (int) ($params['id'] ?? 0);
@@ -112,9 +103,7 @@ class LibrarianPaymentController extends BaseController
         }
     }
 
-    /**
-     * Reject a payment.
-     */
+    
     public function reject(array $params): void
     {
         $id = (int) ($params['id'] ?? 0);
@@ -131,10 +120,7 @@ class LibrarianPaymentController extends BaseController
         }
     }
 
-    /**
-     * Display invoice for a given payment ID.
-     * If invoice doesn't exist (e.g., old payments), generate it on the fly.
-     */
+    
     public function viewInvoice(array $params): void
     {
         $id = (int) ($params['id'] ?? 0);
@@ -145,10 +131,8 @@ class LibrarianPaymentController extends BaseController
                 throw new \Exception('Payment not found.');
             }
 
-            // Try to find existing invoice
             $invoice = $this->invoiceRepo->findByPaymentId($id);
             if (!$invoice) {
-                // ✅ Generate invoice on the fly for approved payments
                 if ($payment->getStatus()->getValue() !== 'completed') {
                     throw new \Exception('Invoice can only be generated for approved payments.');
                 }
@@ -175,7 +159,6 @@ class LibrarianPaymentController extends BaseController
                 $this->invoiceRepo->save($invoice);
             }
 
-            // Fetch related data for the invoice view
             $loan = $this->loanRepo->findById($payment->getLoanId());
             if (!$loan) {
                 throw new \Exception('Loan not found.');
@@ -189,7 +172,6 @@ class LibrarianPaymentController extends BaseController
                 throw new \Exception('Book not found.');
             }
 
-            // Generate QR Code (using SVG writer – no GD required)
             $qrData = BASE_URL . '/librarian/scan?loan_id=' . $loan->getId();
             $qrCode = Builder::create()
                 ->writer(new SvgWriter())

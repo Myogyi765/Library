@@ -4,12 +4,13 @@ use App\User\Presentation\Controller\AuthController;
 use App\User\Presentation\Controller\VerificationController;
 use App\User\Presentation\Controller\ViewController;
 use App\User\Presentation\Controller\BorrowController;
-use App\User\Presentation\Controller\InvoiceController as UserInvoiceController;
+
+
+use App\Invoice\Presentation\Controller\InvoiceController as UserInvoiceController;
 
 use App\Payment\Presentation\Controller\PaymentController;
 use App\Payment\Presentation\Controller\LibrarianPaymentController;
 
-// ✅ Fixed: use exact class names
 use App\Admin\Presentation\Controller\AdminDashboardController;
 use App\Admin\Presentation\Controller\AdminLibrarianController;
 use App\Admin\Presentation\Controller\AdminUserController;
@@ -24,7 +25,7 @@ use App\Librarian\Presentation\Controller\LibrarianCategoryController;
 use App\Librarian\Presentation\Controller\LoanController;
 use App\Librarian\Presentation\Controller\UserController;
 use App\Librarian\Presentation\Controller\RefundController;
-use App\Librarian\Presentation\Controller\ScanController; // ✅ Added
+use App\Librarian\Presentation\Controller\ScanController;
 
 use App\User\Presentation\Controller\LoginController;
 use App\Shared\Core\Middleware\AuthMiddleware;
@@ -33,7 +34,6 @@ use App\Shared\Core\Authorization\Authorization;
 use App\Book\Presentation\Controller\BookController;
 use App\Notification\Presentation\Controller\NotificationController;
 
-// ---------- Helper: detect if request is API ----------
 function isApiRequest(): bool {
     $uri = $_SERVER['REQUEST_URI'] ?? '/';
     $path = parse_url($uri, PHP_URL_PATH) ?: '/';
@@ -86,7 +86,6 @@ $userOnly = function () {
     return true;
 };
 
-// ---------- Permission check (with JSON support) ----------
 $authorizationCheck = function ($permission) use ($container) {
     return function () use ($container, $permission) {
         $authorization = $container->get(Authorization::class);
@@ -111,12 +110,10 @@ $authorizationCheck = function ($permission) use ($container) {
     };
 };
 
-// ---------- Middleware shortcuts ----------
 $adminMiddleware = [AuthMiddleware::class, $adminOnly];
 $librarianMiddleware = [AuthMiddleware::class, $librarianOnly];
 $userMiddleware = [AuthMiddleware::class, $userOnly];
 
-// ---------- Routes ----------
 $router->get('/', function () {
     header('Location: ' . BASE_URL . '/home');
     exit;
@@ -130,7 +127,6 @@ $router->get('/verify-phone', [VerificationController::class, 'showVerifyPhone']
 $router->get('/resend-verification', [VerificationController::class, 'resendVerification']);
 $router->get('/logout', [LoginController::class, 'logout']);
 
-// ---- User area (role = user) ----
 $router->get('/user-dashboard', [AuthController::class, 'userDashboard'], $userMiddleware);
 $router->get('/profile', [ViewController::class, 'profile'], array_merge($userMiddleware, [$authorizationCheck('view_profile')]));
 $router->get('/profile/edit', [ViewController::class, 'editProfile'], array_merge($userMiddleware, [$authorizationCheck('edit_profile')]));
@@ -140,7 +136,6 @@ $router->post('/payment/submit', [PaymentController::class, 'submit'], array_mer
 $router->post('/books/borrow/{id}', [BorrowController::class, 'borrow'], array_merge($userMiddleware, [$authorizationCheck('borrow_books')]));
 $router->get('/invoice/{id}', [UserInvoiceController::class, 'show'], $userMiddleware);
 
-// ---- Admin area (role = admin) ----
 $router->get('/admin/dashboard', [AdminDashboardController::class, 'index'], $adminMiddleware);
 $router->get('/admin/reports', [ReportController::class, 'index'], $adminMiddleware);
 $router->get('/admin/reports/export/csv', [ReportController::class, 'exportCsv'], $adminMiddleware);
@@ -160,7 +155,6 @@ $router->get('/admin/fines', [AdminFineController::class, 'index'], $adminMiddle
 $router->get('/admin/books', [AdminBookController::class, 'index'], $adminMiddleware);
 $router->get('/admin/books/show', [AdminBookController::class, 'show'], $adminMiddleware);
 
-// ✅ ADDED: Enable/Disable toggle routes for users and librarians (POST)
 $router->post('/admin/users/toggle/{id}', [AdminUserController::class, 'toggleStatus'], $adminMiddleware);
 $router->post('/admin/librarians/toggle/{id}', [AdminLibrarianController::class, 'toggleStatus'], $adminMiddleware);
 
@@ -172,7 +166,6 @@ $router->post('/admin/settings/update', [AdminSettingsController::class, 'update
 $router->post('/admin/roles/update/{id}', [AdminRoleController::class, 'update'], $adminMiddleware);
 $router->post('/admin/fines/update', [AdminFineController::class, 'update'], $adminMiddleware);
 
-// ---- Librarian area (role = librarian) ----
 $router->get('/librarian/dashboard', [LibrarianDashboardController::class, 'index'], $librarianMiddleware);
 
 $router->get('/librarian/books', [BookController::class, 'librarianIndex'], array_merge($librarianMiddleware, [$authorizationCheck('view_books')]));
@@ -190,12 +183,10 @@ $router->get('/librarian/users/create', [UserController::class, 'create'], array
 $router->get('/librarian/users/edit/{id}', [UserController::class, 'edit'], array_merge($librarianMiddleware, [$authorizationCheck('edit_users')]));
 $router->get('/librarian/users/delete/{id}', [UserController::class, 'delete'], array_merge($librarianMiddleware, [$authorizationCheck('delete_users')]));
 
-// ----- Payment routes (FIXED: index route placed FIRST) -----
 $router->get('/librarian/payments', [LibrarianPaymentController::class, 'index'], 
     array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
 );
 
-// Refund (GET form + POST process)
 $router->get('/librarian/payments/{id}/refund', [LibrarianPaymentController::class, 'showRefundForm'], 
     array_merge($librarianMiddleware, [$authorizationCheck('refund_payments')])
 );
@@ -203,7 +194,6 @@ $router->post('/librarian/payments/{id}/refund', [LibrarianPaymentController::cl
     array_merge($librarianMiddleware, [$authorizationCheck('refund_payments')])
 );
 
-// Approve / Reject
 $router->post('/librarian/payments/{id}/approve', [LibrarianPaymentController::class, 'approve'], 
     array_merge($librarianMiddleware, [$authorizationCheck('edit_payments')])
 );
@@ -211,17 +201,14 @@ $router->post('/librarian/payments/{id}/reject', [LibrarianPaymentController::cl
     array_merge($librarianMiddleware, [$authorizationCheck('edit_payments')])
 );
 
-// Generic show (payment details) – this must come AFTER the exact '/payments' route
 $router->get('/librarian/payments/{id}', [LibrarianPaymentController::class, 'show'], 
     array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
 );
 
-// Invoice (view invoice)
 $router->get('/librarian/payments/invoice/{id}', [LibrarianPaymentController::class, 'viewInvoice'], 
     array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
 );
 
-// ----- 🆕 Refund Management (separate listing & actions) -----
 $router->get('/librarian/refunds', [RefundController::class, 'index'], 
     array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
 );
@@ -232,7 +219,6 @@ $router->post('/librarian/refunds/{id}/reject', [RefundController::class, 'rejec
     array_merge($librarianMiddleware, [$authorizationCheck('refund_payments')])
 );
 
-// ✅ Scan & Return routes
 $router->get('/librarian/scan', [ScanController::class, 'scan'], 
     array_merge($librarianMiddleware, [$authorizationCheck('view_loans')])
 );
@@ -240,12 +226,10 @@ $router->post('/librarian/scan/return', [ScanController::class, 'returnBook'],
     array_merge($librarianMiddleware, [$authorizationCheck('edit_loans')])
 );
 
-// Categories
 $router->get('/librarian/categories', [LibrarianCategoryController::class, 'index'], array_merge($librarianMiddleware, [$authorizationCheck('view_categories')]));
 $router->get('/librarian/categories/create', [LibrarianCategoryController::class, 'create'], array_merge($librarianMiddleware, [$authorizationCheck('create_categories')]));
 $router->get('/librarian/categories/delete/{id}', [LibrarianCategoryController::class, 'delete'], array_merge($librarianMiddleware, [$authorizationCheck('delete_categories')]));
 
-// ---- POST routes for librarian ----
 $router->post('/librarian/categories/store', [LibrarianCategoryController::class, 'store'], array_merge($librarianMiddleware, [$authorizationCheck('create_categories')]));
 $router->post('/librarian/books/store', [BookController::class, 'store'], array_merge($librarianMiddleware, [$authorizationCheck('create_books')]));
 $router->post('/librarian/books/update/{id}', [BookController::class, 'update'], array_merge($librarianMiddleware, [$authorizationCheck('edit_books')]));
@@ -257,17 +241,13 @@ $router->post('/librarian/loans/reject/{id}', [LoanController::class, 'reject'],
 $router->post('/librarian/users/store', [UserController::class, 'store'], array_merge($librarianMiddleware, [$authorizationCheck('create_users')]));
 $router->post('/librarian/users/update/{id}', [UserController::class, 'update'], array_merge($librarianMiddleware, [$authorizationCheck('edit_users')]));
 
-// ---- Public (authenticated) book viewing ----
 $router->get('/books', [BookController::class, 'publicIndex'], [AuthMiddleware::class, $authorizationCheck('view_books')]);
 $router->get('/books/{id}', [BookController::class, 'show'], [AuthMiddleware::class, $authorizationCheck('view_books')]);
 
-// ---- API & misc ----
 $router->get('/api/notifications', [NotificationController::class, 'getNotifications'], [AuthMiddleware::class, $authorizationCheck('view_notifications')]);
 $router->post('/api/notifications/read', [NotificationController::class, 'markRead'], [AuthMiddleware::class, $authorizationCheck('edit_notifications')]);
 
-// ---- Dev: seed notifications (localhost only) ----
 $router->get('/dev/seed-notifications', function () {
-    // Only allow from local dev environment
     $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
     if (!in_array($ip, ['127.0.0.1', '::1'])) {
         http_response_code(403);
@@ -317,7 +297,6 @@ $router->get('/dev/seed-notifications', function () {
     echo json_encode(['success' => true, 'inserted' => count($samples)]);
 }, [AuthMiddleware::class]);
 
-// ---- Fallback redirects ----
 $router->get('/admin/login', function () { header('Location: ' . BASE_URL . '/login'); exit; });
 $router->get('/librarian/login', function () { header('Location: ' . BASE_URL . '/login'); exit; });
 $router->get('/librarian/logout', function () {
@@ -331,7 +310,6 @@ $router->get('/librarian/logout', function () {
     exit;
 });
 
-// ---- Verification & auth posts ----
 $router->post('/verify-phone', [VerificationController::class, 'verifyPhone']);
 $router->post('/register', [AuthController::class, 'register']);
 $router->post('/verify-email-code', [VerificationController::class, 'verifyEmailWithCode']);

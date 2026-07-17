@@ -16,7 +16,6 @@ class AdminLibrarianController extends BaseController
     {
         $this->userAuth = $userAuth;
         $this->librarianService = $librarianService;
-        // Set view base path for librarian partials
         $this->setViewBasePath(BASE_PATH . '/view/admin/librarian/');
     }
 
@@ -38,7 +37,6 @@ class AdminLibrarianController extends BaseController
         $pageTitle = 'Manage Librarians';
         $content = BASE_PATH . '/view/admin/librarian/index.php';
 
-        // AJAX request – return partial view only
         if (
             !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
             strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
@@ -47,7 +45,6 @@ class AdminLibrarianController extends BaseController
             return;
         }
 
-        // Full page load – use single layout
         include BASE_PATH . '/view/admin-dashboard.php';
     }
 
@@ -193,9 +190,7 @@ class AdminLibrarianController extends BaseController
         $this->redirect('/admin/librarian');
     }
 
-    /**
-     * Toggle librarian status (Enable / Disable)
-     */
+   
     public function toggleStatus(int $id): void
     {
         if (!$this->isAdmin()) {
@@ -203,28 +198,16 @@ class AdminLibrarianController extends BaseController
         }
 
         try {
-            // Fetch the librarian
             $librarian = $this->librarianService->getLibrarian($id);
             if (!$librarian) {
                 throw new \Exception('Librarian not found.');
             }
 
-            // Determine the new status
-            // Assuming the librarian entity has getStatus() and setStatus() methods.
-            // Status can be 'active' or 'inactive' (adjust according to your database).
-            $currentStatus = $librarian->getStatus(); // e.g., 'active'
+            $currentStatus = $librarian->getStatus(); 
             $newStatus = ($currentStatus === 'active') ? 'inactive' : 'active';
 
-            // Update status
-            // Option A: If LibrarianService has a dedicated method:
-            // $this->librarianService->updateLibrarianStatus($id, $newStatus);
 
-            // Option B: If you have direct repository access via service, you can do:
-            // $librarian->setStatus($newStatus);
-            // $this->librarianService->saveLibrarian($librarian); // you would need to implement this
 
-            // Since we only have the service, we can add a method to the service.
-            // For now, we'll assume a method exists or we'll add it:
             $this->librarianService->updateLibrarianStatus($id, $newStatus);
             $this->createNotification(
                 (int) ($_SESSION['user_id'] ?? 0),

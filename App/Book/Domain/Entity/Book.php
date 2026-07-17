@@ -41,7 +41,6 @@ class Book
         $this->updatedAt = $updatedAt ?? new \DateTimeImmutable();
     }
 
-    // ─── Getters ───
     public function getId(): ?int { return $this->id; }
     public function getTitle(): string { return $this->title; }
     public function getAuthor(): string { return $this->author; }
@@ -54,7 +53,6 @@ class Book
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
     public function getUpdatedAt(): \DateTimeImmutable { return $this->updatedAt; }
 
-    // ─── Setters (fluent) ───
     public function setId(int $id): self { $this->id = $id; return $this; }
     public function setTitle(string $title): self { $this->title = $title; return $this; }
     public function setAuthor(string $author): self { $this->author = $author; return $this; }

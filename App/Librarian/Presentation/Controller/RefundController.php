@@ -22,18 +22,14 @@ class RefundController extends BaseController
         $this->authorization = $authorization;
     }
 
-    /**
-     * Display refund list
-     */
+    
     public function index(): void
     {
-        // Authentication & role check
         if (!$this->userAuth->isLoggedIn() || ($_SESSION['user_role'] ?? '') !== 'librarian') {
             header('Location: ' . BASE_URL . '/login');
             exit;
         }
 
-        // Permission check
         $this->authorization->loadUserPermissions($_SESSION['user_id'] ?? 0);
         if (!$this->authorization->hasPermission('view_payments')) {
             http_response_code(403);
@@ -41,10 +37,8 @@ class RefundController extends BaseController
             exit;
         }
 
-        // Get filter status from query string
         $statusFilter = $_GET['status'] ?? 'all';
 
-        // Fetch refund data (limit 100)
         $allPayments = $this->paymentRepo->findAllWithDetails(0, 100);
         $refunds = array_filter($allPayments, function($p) {
             return isset($p['refund_status']) && $p['refund_status'] !== 'none';
@@ -58,26 +52,19 @@ class RefundController extends BaseController
 
         $refunds = array_values($refunds);
 
-        // Prepare view data
         $viewData = [
             'refunds'       => $refunds,
             'currentFilter' => $statusFilter,
-            'page'          => 'refunds', // For sidebar highlighting
+            'page'          => 'refunds', 
         ];
 
-        // Render using the existing librarian dashboard layout
         $pageTitle = 'Refund Management';
         include BASE_PATH . '/view/librarian-dashboard.php';
     }
 
-    /**
-     * Approve a refund
-     */
+    
     public function approve(int $id): void
     {
-        // Your approve logic here
-        // Example: update payment refund_status to 'completed'
-        // Redirect back with success message
         $this->createNotification(
             (int) ($_SESSION['user_id'] ?? 0),
             'librarian',
@@ -91,14 +78,9 @@ class RefundController extends BaseController
         exit;
     }
 
-    /**
-     * Reject a refund
-     */
+    
     public function reject(int $id): void
     {
-        // Your reject logic here
-        // Example: update payment refund_status to 'rejected'
-        // Redirect back with error message
         $this->createNotification(
             (int) ($_SESSION['user_id'] ?? 0),
             'librarian',

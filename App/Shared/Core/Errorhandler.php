@@ -12,19 +12,16 @@ class ErrorHandler
         self::$logFile = __DIR__ . '/../../../storage/logs/error.log';
         self::$debug = $_ENV['APP_DEBUG'] ?? false;
         
-        // Ensure log directory exists
         $logDir = dirname(self::$logFile);
         if (!is_dir($logDir)) {
             mkdir($logDir, 0777, true);
         }
         
-        // Ensure log file exists
         if (!file_exists(self::$logFile)) {
             touch(self::$logFile);
             chmod(self::$logFile, 0666);
         }
         
-        // Set error handlers
         set_error_handler([self::class, 'handleError']);
         set_exception_handler([self::class, 'handleException']);
         register_shutdown_function([self::class, 'handleShutdown']);
@@ -92,14 +89,12 @@ class ErrorHandler
         error_log($logEntry, 3, self::$logFile);
     }
     
-    // Alias for writeLog for backward compatibility
     public static function log(string $message, string $level = 'INFO'): void
     {
         $logMessage = "[{$level}] {$message}";
         self::writeLog($logMessage);
     }
     
-    // Handle exception with logging
     public static function exception(\Throwable $exception): void
     {
         $logMessage = sprintf(
@@ -111,7 +106,6 @@ class ErrorHandler
         );
         self::writeLog($logMessage);
         
-        // Also log to error log for PHP's built-in logging
         error_log($exception->getMessage() . ' in ' . $exception->getFile() . ' on line ' . $exception->getLine());
     }
     

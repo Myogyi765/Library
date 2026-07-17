@@ -38,7 +38,6 @@ class LibrarianService
 
     public function register(RegisterDTO $dto): Librarian
     {
-        // The Librarian constructor now has a default status = 'active'
         $librarian = new Librarian(
             $dto->name,
             new Email($dto->email),
@@ -79,13 +78,7 @@ class LibrarianService
         $this->repo->delete($librarian);
     }
 
-    /**
-     * Update the status of a librarian (active/inactive)
-     *
-     * @param int $id
-     * @param string $status Must be 'active' or 'inactive'
-     * @throws \Exception
-     */
+    
     public function updateLibrarianStatus(int $id, string $status): void
     {
         $librarian = $this->repo->findById($id);
@@ -93,7 +86,6 @@ class LibrarianService
             throw new \Exception('Librarian not found');
         }
 
-        // Validate status (optional but recommended)
         if (!in_array($status, [Librarian::STATUS_ACTIVE, Librarian::STATUS_INACTIVE], true)) {
             throw new \InvalidArgumentException('Invalid status. Must be "active" or "inactive".');
         }

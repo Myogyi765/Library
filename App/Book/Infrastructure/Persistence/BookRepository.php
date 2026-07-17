@@ -126,14 +126,11 @@ class BookRepository implements BookRepositoryInterface
         );
     }
 
-    /**
-     * Decrement the available quantity of a book by the given amount.
-     * Uses positional placeholders (?) to avoid "Invalid parameter number" errors.
-     */
+    
     public function decrementQuantity(int $bookId, int $amount = 1): void
     {
         try {
-            // ✅ FIXED: Use positional placeholders instead of named placeholders
+           
             $sql = "UPDATE books 
                     SET available_quantity = available_quantity - ? 
                     WHERE id = ? AND available_quantity >= ?";

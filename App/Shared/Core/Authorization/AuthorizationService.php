@@ -22,13 +22,7 @@ class AuthorizationService
         $this->permissionRepo = $permissionRepo;
     }
 
-    /**
-     * Check if a role has a specific permission.
-     *
-     * @param string $roleName
-     * @param string $permissionName
-     * @return bool
-     */
+    
     public function hasPermission(string $roleName, string $permissionName): bool
     {
         $role = $this->getRoleWithPermissions($roleName);
@@ -38,12 +32,7 @@ class AuthorizationService
         return $role->hasPermission($permissionName);
     }
 
-    /**
-     * Get all permissions for a specific role.
-     *
-     * @param string $roleName
-     * @return array
-     */
+    
     public function getPermissionsForRole(string $roleName): array
     {
         $role = $this->getRoleWithPermissions($roleName);
@@ -53,54 +42,32 @@ class AuthorizationService
         return $role->getPermissions();
     }
 
-    /**
-     * Get all roles.
-     *
-     * @return array
-     */
+    
     public function getAllRoles(): array
     {
         return $this->roleRepo->findAll();
     }
 
-    /**
-     * Get all permissions.
-     *
-     * @return array
-     */
+    
     public function getAllPermissions(): array
     {
         return $this->permissionRepo->findAll();
     }
 
-    /**
-     * Check if a role exists.
-     *
-     * @param string $roleName
-     * @return bool
-     */
+    
     public function roleExists(string $roleName): bool
     {
         $role = $this->roleRepo->findByName($roleName);
         return $role !== null;
     }
 
-    /**
-     * Clear the role cache.
-     *
-     * @return void
-     */
+    
     public function clearCache(): void
     {
         $this->roleCache = [];
     }
 
-    /**
-     * Get role with permissions from cache or repository.
-     *
-     * @param string $roleName
-     * @return Role|null
-     */
+    
     private function getRoleWithPermissions(string $roleName): ?Role
     {
         if (!isset($this->roleCache[$roleName])) {

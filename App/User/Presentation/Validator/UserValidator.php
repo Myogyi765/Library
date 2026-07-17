@@ -20,7 +20,7 @@ class UserValidator
             if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
                 $this->errors['email'] = 'Please enter a valid email address';
             }
-        } else { // phone
+        } else {
             $phone = $data['phone'] ?? '';
             if (empty($phone) || $phone === '+95') {
                 $this->errors['phone'] = 'Please enter a valid phone number';

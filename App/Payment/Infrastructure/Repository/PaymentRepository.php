@@ -151,9 +151,6 @@ class PaymentRepository implements PaymentRepositoryInterface
         return $payments;
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // ✅ NEW METHODS WITH LIMIT/OFFSET (for memory optimization)
-    // ──────────────────────────────────────────────────────────────
 
     public function findAllWithDetails(int $offset = 0, int $limit = 100): array
     {
@@ -171,7 +168,6 @@ class PaymentRepository implements PaymentRepositoryInterface
             LIMIT :limit OFFSET :offset
         ";
         $stmt = $this->db->prepare($sql);
-        // ✅ FIXED: Use PDO::PARAM_INT (no leading backslash)
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -195,7 +191,6 @@ class PaymentRepository implements PaymentRepositoryInterface
             LIMIT :limit OFFSET :offset
         ";
         $stmt = $this->db->prepare($sql);
-        // ✅ FIXED: Use PDO::PARAM_INT (no leading backslash)
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -220,7 +215,6 @@ class PaymentRepository implements PaymentRepositoryInterface
         ";
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':status', $status);
-        // ✅ FIXED: Use PDO::PARAM_INT (no leading backslash)
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();

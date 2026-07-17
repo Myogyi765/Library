@@ -7,43 +7,38 @@ ini_set('log_errors', 1);
 
 define('BASE_PATH', dirname(__DIR__));
 
-// ---------- BASE_URL ----------
+
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $scriptName = $_SERVER['SCRIPT_NAME'] ?? '/index.php';
 $scriptDir = rtrim(dirname($scriptName), '/');
 define('BASE_URL', $protocol . '://' . $host . $scriptDir);
 
-// ---------- Log directory ----------
+
 $logDir = BASE_PATH . '/storage/logs';
 if (!is_dir($logDir)) {
     mkdir($logDir, 0777, true);
 }
 ini_set('error_log', $logDir . '/error.log');
 
-// ---------- Autoloader ----------
 require_once BASE_PATH . '/vendor/autoload.php';
 
 use App\Shared\Core\ErrorHandler;
 ErrorHandler::initialize();
 
 try {
-    // ---------- Container ----------
+    
     $container = require BASE_PATH . '/config/bootstrap.php';
    
     $GLOBALS['container'] = $container;
 
-    // ---------- Router ----------
     $router = new App\Shared\Core\Router($container);
 
-    // ---------- Load routes (fluent style) ----------
     require BASE_PATH . '/routes/web.php';
 
-    // ---------- Clean request URI ----------
     $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
     $path = parse_url($requestUri, PHP_URL_PATH) ?: '/';
 
-    // Remove base directory if installed in a subfolder
     $scriptName = $_SERVER['SCRIPT_NAME'] ?? '/index.php';
     $baseDir = dirname(dirname($scriptName));
     if ($baseDir !== '/' && $baseDir !== '.') {
@@ -58,7 +53,6 @@ try {
         }
     }
 
-    // Remove '/public' prefix if present
     if (strpos($path, '/public') === 0) {
         $path = substr($path, 7) ?: '/';
         if ($path[0] !== '/') {
@@ -66,7 +60,6 @@ try {
         }
     }
 
-    // ---------- Dispatch ----------
     $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     $router->dispatch($path, $method);
 

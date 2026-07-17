@@ -10,7 +10,6 @@ use App\Book\Presentation\Controller\BookController;
 
 return function ($container) {
 
-    // ── Repositories ──
     $container->singleton(BookRepository::class, function ($c) {
         return new BookRepository($c->get('db'));
     });
@@ -23,7 +22,6 @@ return function ($container) {
     $container->singleton(CategoryRepositoryInterface::class, fn($c) => $c->get(CategoryRepository::class));
     $container->set('category.repository', fn($c) => $c->get(CategoryRepositoryInterface::class));
 
-    // ── UseCases ──
     $container->singleton(GetBook::class, function ($c) {
         return new GetBook($c->get(BookRepositoryInterface::class));
     });
@@ -31,9 +29,7 @@ return function ($container) {
         return new GetBooks($c->get(BookRepositoryInterface::class));
     });
 
-    // ── Controller ──
     $container->singleton(BookController::class, function ($c) {
-        // ✅ Pass the container itself, not GetBook
         return new BookController($c);
     });
 };

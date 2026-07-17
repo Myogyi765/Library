@@ -8,8 +8,7 @@ use App\Shared\Core\Authorization\Authorization;
 class AdminAuthController extends BaseController
 {
     private UserAuthenticator $authenticator;
-    private Authorization $authorization; // ✅ Dependency ကို mandatory ဖြစ်အောင်ထား
-
+    private Authorization $authorization; 
     public function __construct(UserAuthenticator $authenticator, Authorization $authorization)
     {
         $this->authenticator = $authenticator;

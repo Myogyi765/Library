@@ -156,9 +156,7 @@ class LoanController extends BaseController
         $this->redirect('/librarian/loans');
     }
 
-    /**
-     * ✅ Confirm loan – sets borrowed_at and due_date using DateTimeImmutable
-     */
+    
     public function confirm($id): void
     {
         $loan = $this->loanRepo->findById((int)$id);

@@ -32,7 +32,6 @@ class VerificationService implements VerificationServiceInterface
         $mail = new PHPMailer(true);
 
         try {
-            // SMTP Configuration
             $mail->isSMTP();
             $mail->Host       = $_ENV['MAIL_HOST'] ?? 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
@@ -52,11 +51,10 @@ class VerificationService implements VerificationServiceInterface
             $mail->isHTML(true);
             $mail->Subject = 'Verify Your Email';
 
-            // Build verification link
+            
             $baseUrl = rtrim($_ENV['APP_URL'] ?? 'http://localhost', '/');
             $verifyLink = $baseUrl . '/verify-email?token=' . urlencode($token);
 
-            // Try to load the email template – corrected path (4 levels up)
             $viewPath = __DIR__ . '/../../../../view/emails/vertification.php';
             
             if (file_exists($viewPath)) {
@@ -69,7 +67,6 @@ class VerificationService implements VerificationServiceInterface
                 include $viewPath;
                 $mail->Body = ob_get_clean();
             } else {
-                // Fallback inline HTML if template is missing
                 $mail->Body = "
                     <div style='font-family:Arial,sans-serif;padding:20px'>
                         <h2>Library Management System</h2>

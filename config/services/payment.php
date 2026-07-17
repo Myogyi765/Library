@@ -17,7 +17,6 @@ use App\Invoice\Domain\Repository\InvoiceRepositoryInterface;
 
 return function ($container) {
 
-    // ── Payment Repository ──
     $container->singleton(PaymentMapper::class, fn() => new PaymentMapper());
     $container->singleton(PaymentRepository::class, function ($c) {
         return new PaymentRepository($c->get('db'), $c->get(PaymentMapper::class));
@@ -25,10 +24,8 @@ return function ($container) {
     $container->singleton(PaymentRepositoryInterface::class, fn($c) => $c->get(PaymentRepository::class));
     $container->set('payment.repository', fn($c) => $c->get(PaymentRepositoryInterface::class));
 
-    // ── File Upload ──
     $container->singleton(FileUploadService::class, fn() => new FileUploadService());
 
-    // ── Handlers ──
     $container->singleton(SubmitPaymentHandler::class, function ($c) {
         return new SubmitPaymentHandler(
             $c->get(PaymentRepositoryInterface::class),
@@ -37,13 +34,12 @@ return function ($container) {
         );
     });
 
-    // ✅ Updated: Inject InvoiceRepositoryInterface
     $container->singleton(ApprovePaymentHandler::class, function ($c) {
         return new ApprovePaymentHandler(
             $c->get(PaymentRepositoryInterface::class),
             $c->get(LoanRepositoryInterface::class),
             $c->get(BookRepositoryInterface::class),
-            $c->get(InvoiceRepositoryInterface::class)   // ✅ added
+            $c->get(InvoiceRepositoryInterface::class) 
         );
     });
 
@@ -54,7 +50,6 @@ return function ($container) {
         );
     });
 
-    // ── Controllers ──
     $container->singleton(PaymentController::class, function ($c) {
         return new PaymentController(
             $c->get(SubmitPaymentHandler::class),

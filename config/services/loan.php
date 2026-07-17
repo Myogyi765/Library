@@ -6,7 +6,7 @@ use App\Circulation\Infrastructure\Mapper\LoanMapper;
 use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Circulation\Application\Handler\BorrowBookHandler;
 use App\Book\Domain\Repository\BookRepositoryInterface;
-use App\Admin\Application\Service\SettingsService;   // ✅ added
+use App\Admin\Application\Service\SettingsService;  
 
 $container->singleton(LoanMapper::class, function($c) {
     return new LoanMapper();
@@ -26,7 +26,7 @@ $container->singleton(BorrowBookHandler::class, function($c) {
     return new BorrowBookHandler(
         $c->get(LoanRepositoryInterface::class),
         $c->get(BookRepositoryInterface::class),
-        $c->get(SettingsService::class)              // ✅ added third argument
+        $c->get(SettingsService::class)            
     );
 });
 

@@ -12,17 +12,13 @@ use DateTime;
 
 class UserMapper
 {
-    /**
-     * Convert an array (from DB) to a User entity.
-     * The constructor accepts exactly 8 parameters.
-     */
+    
     public static function toEntity(array $data): User
     {
         $status = isset($data['status']) 
             ? UserStatus::fromString($data['status']) 
             : UserStatus::pending();
 
-        // Only 8 arguments – no timestamps here
         $user = new User(
             $data['id'] ?? null,
             $data['name'],
@@ -34,22 +30,17 @@ class UserMapper
             (bool)($data['phone_verified'] ?? false)
         );
 
-        // If the User entity has setters for timestamps, set them after creation.
         if (isset($data['created_at']) && method_exists($user, 'setCreatedAt')) {
             $user->setCreatedAt(new DateTime($data['created_at']));
         }
         if (isset($data['updated_at']) && method_exists($user, 'setUpdatedAt')) {
             $user->setUpdatedAt(new DateTime($data['updated_at']));
         }
-        // last_login_at, verification fields can be set similarly if needed.
 
         return $user;
     }
 
-    /**
-     * Convert a User entity to an array (for DB storage).
-     * Only use getters that are guaranteed to exist.
-     */
+    
     public static function toArray(User $user): array
     {
         $data = [
@@ -63,7 +54,6 @@ class UserMapper
             'phone_verified' => $user->isPhoneVerified() ? 1 : 0,
         ];
 
-        // Add optional fields only if the getters exist
         if (method_exists($user, 'getCreatedAt')) {
             $data['created_at'] = $user->getCreatedAt()?->format('Y-m-d H:i:s');
         }
@@ -76,15 +66,11 @@ class UserMapper
         if (method_exists($user, 'getVerificationToken')) {
             $data['verification_token'] = $user->getVerificationToken();
         }
-        // etc.
 
         return $data;
     }
 
-    /**
-     * Convert a User entity to a UserDTO (for API/View).
-     * Only use getters that exist – for missing ones, provide defaults.
-     */
+    
     public function toDTO(User $user): UserDTO
 {
     return new UserDTO(
@@ -98,9 +84,7 @@ class UserMapper
         $user->isPhoneVerified()
     );
 }
-    /**
-     * Convert an array of User entities to an array of UserDTOs.
-     */
+    
     public function toDTOArray(array $users): array
     {
         return array_map([$this, 'toDTO'], $users);

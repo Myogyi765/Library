@@ -53,9 +53,7 @@ class LibrarianPaymentController extends BaseController
         $this->setViewBasePath(BASE_PATH . '/view/');
     }
 
-    /**
-     * Display payment records with filtering.
-     */
+    
     public function index(): void
     {
         $statusFilter = $_GET['status'] ?? 'all';
@@ -65,7 +63,7 @@ class LibrarianPaymentController extends BaseController
                 $payments = $this->paymentRepo->findPendingApprovalsWithDetails();
                 break;
             case 'approved':
-                // ✅ Use 'completed' because that's what the DB stores for approved
+               
                 $payments = $this->paymentRepo->findByStatusWithDetails('completed');
                 break;
             case 'rejected':
@@ -86,9 +84,7 @@ class LibrarianPaymentController extends BaseController
         include BASE_PATH . '/view/librarian-dashboard.php';
     }
 
-    /**
-     * Show single payment details.
-     */
+    
     public function show($id): void
     {
         $id = (int) $id;
@@ -100,9 +96,7 @@ class LibrarianPaymentController extends BaseController
         $this->view('payment/librarian/show', ['payment' => $payment]);
     }
 
-    /**
-     * Approve a payment and redirect to invoice.
-     */
+    
     public function approve($id): void
     {
         $id = (int) $id;
@@ -130,9 +124,7 @@ class LibrarianPaymentController extends BaseController
         }
     }
 
-    /**
-     * Show invoice for a payment.
-     */
+    
     public function viewInvoice($id): void
     {
         $id = (int) $id;
@@ -208,7 +200,6 @@ class LibrarianPaymentController extends BaseController
         }
     }
 
-    // ---------- Refund Methods ----------
     public function showRefundForm($id): void
     {
         $settings = $this->settingsService->getSettings();
@@ -228,7 +219,7 @@ class LibrarianPaymentController extends BaseController
         $refundStatus = $payment->getRefundStatus() ?? 'none';
         $status = $payment->getStatus()->getValue();
 
-        // ✅ Allow refund only if status is 'completed' OR 'approved' AND not already refunded
+     
         if ($refundStatus !== 'none' || !in_array($status, ['completed', 'approved'])) {
             $_SESSION['error_message'] = 'This payment cannot be refunded.';
             $this->redirect(BASE_URL . '/librarian/payments');
@@ -257,7 +248,6 @@ class LibrarianPaymentController extends BaseController
         $refundStatus = $payment->getRefundStatus() ?? 'none';
         $status = $payment->getStatus()->getValue();
 
-        // ✅ Allow refund only if status is 'completed' OR 'approved' AND not already refunded
         if ($refundStatus !== 'none' || !in_array($status, ['completed', 'approved'])) {
             $_SESSION['error_message'] = 'Invalid refund request.';
             $this->redirect(BASE_URL . '/librarian/payments');

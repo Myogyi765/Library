@@ -145,7 +145,6 @@ class LoanRepository implements LoanRepositoryInterface
     public function findRecent(int $limit): array
     {
         $stmt = $this->db->prepare("SELECT * FROM loans ORDER BY created_at DESC LIMIT :limit");
-        // ✅ FIXED: Use PDO::PARAM_INT (no leading backslash)
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);

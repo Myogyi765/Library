@@ -18,9 +18,7 @@ if (!function_exists('view')) {
 }
 
 if (!function_exists('redirect')) {
-    /**
-     * Redirect to a URL
-     */
+    
     function redirect(string $url): void
     {
         if (!str_starts_with($url, 'http')) {
@@ -32,9 +30,7 @@ if (!function_exists('redirect')) {
 }
 
 if (!function_exists('urlencode')) {
-    /**
-     * Alias for PHP's urlencode
-     */
+    
     function urlencode(string $string): string
     {
         return \urlencode($string);

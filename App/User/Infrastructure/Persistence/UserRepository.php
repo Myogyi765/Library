@@ -64,7 +64,7 @@ class UserRepository implements UserRepositoryInterface
             ':verification_code_expires_at' => $user->getVerificationExpiresAt(),
             ':email_verified_at' => $user->getEmailVerifiedAt()?->format('Y-m-d H:i:s'),
             ':phone_verified_at' => $user->getPhoneVerifiedAt()?->format('Y-m-d H:i:s'),
-            ':profile_image' => $user->getProfileImage(), // ✅ Added
+            ':profile_image' => $user->getProfileImage(),
             ':created_at' => $user->getCreatedAt()->format('Y-m-d H:i:s'),
             ':updated_at' => $user->getUpdatedAt()->format('Y-m-d H:i:s'),
         ];
@@ -356,11 +356,7 @@ class UserRepository implements UserRepositoryInterface
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
-    /**
-     * Hydrate a User object from database row
-     * 
-     * @throws Exception If hydration fails
-     */
+    
     private function hydrate(array $data): User
     {
         $createdAt = !empty($data['created_at']) ? new DateTime($data['created_at']) : new DateTime();
@@ -373,7 +369,6 @@ class UserRepository implements UserRepositoryInterface
         $roleName = $data['role'] ?? 'user';
         $roleId = $data['role_id'] ?? null;
         
-        // ✅ Safe status creation
         try {
             $status = UserStatus::fromString($data['status'] ?? 'pending');
         } catch (Exception $e) {
@@ -381,10 +376,8 @@ class UserRepository implements UserRepositoryInterface
             $status = UserStatus::pending();
         }
         
-        // ✅ Safe email creation (email should always exist)
         $email = new Email($data['email']);
         
-        // ✅ Safe phone creation – handle null values
         $phone = null;
         if (!empty($data['phone'])) {
             try {
@@ -394,7 +387,6 @@ class UserRepository implements UserRepositoryInterface
             }
         }
         
-        // ✅ Password is already hashed
         $password = new Password($data['password_hash'], true);
         
         return new User(
@@ -418,7 +410,7 @@ class UserRepository implements UserRepositoryInterface
             $verificationExpiresAt,
             $emailVerifiedAt,
             $phoneVerifiedAt,
-            $data['profile_image'] ?? null // ✅ Added profile_image
+            $data['profile_image'] ?? null 
         );
     }
 

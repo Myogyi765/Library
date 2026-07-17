@@ -12,7 +12,6 @@ class NotificationController extends BaseController
     private UserAuthenticator $authenticator;
     private Authorization $authorization;
 
-    // ✅ Constructor ကို ပြင်ပါ – Service များကို တိုက်ရိုက်လက်ခံပါ
     public function __construct(
         NotificationService $notificationService,
         UserAuthenticator $authenticator,
@@ -78,7 +77,6 @@ class NotificationController extends BaseController
             return;
         }
 
-        $input = json_decode(file_get_contents('php://input'), true);
         $id = $input['id'] ?? null;
 
         if ($id) {

@@ -53,14 +53,12 @@ class InvoiceMapper
             'transaction_reference' => $invoice->getTransactionReference(),
             'borrowed_at' => $invoice->getBorrowedAt()->format('Y-m-d H:i:s'),
             'due_date' => $invoice->getDueDate()->format('Y-m-d H:i:s'),
-            'issued_at' => $invoice->getIssuedAt()->format('Y-m-d H:i:s'), // ✅ Included
+            'issued_at' => $invoice->getIssuedAt()->format('Y-m-d H:i:s'), 
             'status' => $invoice->getStatus()->getValue(),
         ];
     }
 
-    /**
-     * PHP 7.4 compatible – no match expression.
-     */
+    
     private function getStatusFromString(string $status): InvoiceStatus
     {
         $status = strtolower($status);

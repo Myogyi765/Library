@@ -37,14 +37,12 @@ class LoginController extends BaseController
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
 
-        // Validation
         if (empty($email) || empty($password)) {
             $_SESSION['login_errors']['general'] = 'Email and password are required.';
             $this->redirect(BASE_URL . '/login');
             return;
         }
 
-        // ✅ No role parameter – authenticate only with credentials
         $success = $this->userAuth->authenticate($email, $password);
 
         if ($success) {

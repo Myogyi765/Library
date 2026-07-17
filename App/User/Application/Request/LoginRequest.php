@@ -15,7 +15,6 @@ class LoginRequest
     
     public static function fromArray(array $data): self
     {
-        // Validate email or phone
         $method = $data['login_method'] ?? 'email';
         
         if ($method === 'email') {
@@ -37,10 +36,8 @@ class LoginRequest
             throw new \InvalidArgumentException('Password is required');
         }
         
-        // Set remember me (convert to bool)
         $data['remember'] = isset($data['remember']) && $data['remember'] === 'on';
         
-        // Set method (ensure it's valid)
         $data['method'] = $method;
         
         return new self($data);

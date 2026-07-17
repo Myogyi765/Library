@@ -33,10 +33,7 @@ class PaymentController extends BaseController
         $this->settingsService = $settingsService;
     }
 
-    /**
-     * Show the payment submission form.
-     * Only allows access if the loan is in 'awaiting_payment' status.
-     */
+    
     public function showSubmitForm(int $loanId): void
     {
         $loan = $this->loanRepo->findById($loanId);
@@ -53,10 +50,8 @@ class PaymentController extends BaseController
             return;
         }
 
-        // ✅ Critical: Only allow payment if loan status is 'awaiting_payment'
         $status = $loan->getStatus()->getValue();
         if ($status !== 'awaiting_payment') {
-            // Map status to a user-friendly message
             $statusMessages = [
                 'pending'   => 'Your borrow request is still pending approval by the librarian.',
                 'active'    => 'You have already borrowed this book.',
@@ -66,7 +61,6 @@ class PaymentController extends BaseController
             $message = $statusMessages[$status] ?? 'This loan is not awaiting payment.';
             
             $_SESSION['error_message'] = $message;
-            // Redirect back to the book details page
             $this->redirect(BASE_URL . '/books/' . $loan->getBookId());
             return;
         }
@@ -81,9 +75,7 @@ class PaymentController extends BaseController
         ]);
     }
 
-    /**
-     * Handle payment submission.
-     */
+    
     public function submit(): void
     {
         try {
@@ -135,17 +127,13 @@ class PaymentController extends BaseController
         }
     }
 
-    /**
-     * Payment success page.
-     */
+    
     public function success(): void
     {
         $this->view('payment/success');
     }
 
-    /**
-     * Generate a UUID v4 (simple version).
-     */
+    
     private function generateUuid(): string
     {
         $data = random_bytes(16);

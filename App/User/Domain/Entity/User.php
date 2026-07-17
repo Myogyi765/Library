@@ -78,7 +78,6 @@ class User
         $this->profileImage = $profileImage;
     }
 
-    // ─── Getters ────────────────────────────────────────────────────────
     public function getId(): ?int { return $this->id; }
     public function getName(): string { return $this->name; }
     public function getEmail(): Email { return $this->email; }
@@ -104,13 +103,11 @@ class User
     public function getEmailVerifiedAt(): ?DateTime { return $this->emailVerifiedAt; }
     public function getPhoneVerifiedAt(): ?DateTime { return $this->phoneVerifiedAt; }
     
-    // ✅ Profile Image Getter
     public function getProfileImage(): ?string
     {
         return $this->profileImage;
     }
 
-    // ─── Setters ────────────────────────────────────────────────────────
     public function setName(string $name): self { $this->name = $name; return $this; }
     public function setEmail(Email $email): self { $this->email = $email; return $this; }
     public function setPhone(?Phone $phone): self { $this->phone = $phone; return $this; }
@@ -130,14 +127,12 @@ class User
     public function setEmailVerifiedAt(?DateTime $verifiedAt): self { $this->emailVerifiedAt = $verifiedAt; return $this; }
     public function setPhoneVerifiedAt(?DateTime $verifiedAt): self { $this->phoneVerifiedAt = $verifiedAt; return $this; }
     
-    // ✅ Profile Image Setter
     public function setProfileImage(?string $profileImage): self
     {
         $this->profileImage = $profileImage;
         return $this;
     }
 
-    // ─── Helper Methods ────────────────────────────────────────────────
     public function isVerified(): bool { return $this->emailVerified || $this->phoneVerified; }
     public function isActive(): bool { return $this->status->getValue() === 'active'; }
     public function canLogin(): bool { return $this->isActive(); }

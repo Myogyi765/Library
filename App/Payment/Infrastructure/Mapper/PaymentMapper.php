@@ -32,7 +32,6 @@ class PaymentMapper
             $payment->setRejectedAt(new \DateTimeImmutable($data['rejected_at']));
         }
 
-        // ============ ✅ Refund Fields Mapping ============
         if (isset($data['refund_status'])) {
             $payment->setRefundStatus($data['refund_status']);
         }
@@ -63,7 +62,6 @@ class PaymentMapper
             'rejected_at' => $payment->getRejectedAt()?->format('Y-m-d H:i:s'),
             'idempotency_key' => $payment->getIdempotencyKey(),
 
-            // ============ ✅ Refund Fields for Persistence ============
             'refund_status' => $payment->getRefundStatus(),
             'refunded_at' => $payment->getRefundedAt()?->format('Y-m-d H:i:s'),
             'refund_reason' => $payment->getRefundReason(),

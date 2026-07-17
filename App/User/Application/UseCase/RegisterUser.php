@@ -41,9 +41,6 @@ class RegisterUser
         $emailObj = null;
         $phoneObj = null;
 
-        // ===========================
-        // Validation
-        // ===========================
         if ($method === 'email') {
 
             if (empty($email)) {
@@ -74,17 +71,11 @@ class RegisterUser
 
         $passwordObj = new Password($password);
 
-        // ===========================
-        // Get default role ID for 'user'
-        // ===========================
         $roleId = $this->repository->getRoleIdByName('user');
         if (!$roleId) {
             throw new \RuntimeException('Default role "user" not found in database.');
         }
 
-        // ===========================
-        // Temporary User (for generating token)
-        // ===========================
         $tempUser = new User(
             null,
             $name,
@@ -92,8 +83,8 @@ class RegisterUser
             $phoneObj ?? new Phone('+95000000000'),
             $passwordObj,
             UserStatus::pending(),
-            $roleId,                // ✅ roleId (int)
-            'user',                 // ✅ roleName (string)
+            $roleId,
+            'user',              
             false,
             false,
             $method,
@@ -108,9 +99,6 @@ class RegisterUser
             null
         );
 
-        // ===========================
-        // Generate Verification
-        // ===========================
         $token = $this->verificationService
             ->generateVerificationToken($tempUser);
 
@@ -120,9 +108,6 @@ class RegisterUser
         $expiresAt = (new DateTime('+15 minutes'))
             ->format('Y-m-d H:i:s');
 
-        // ===========================
-        // Create Final User
-        // ===========================
         $user = new User(
             null,
             $name,
@@ -130,8 +115,8 @@ class RegisterUser
             $phoneObj ,
             $passwordObj,
             UserStatus::pending(),
-            $roleId,                // ✅ roleId (int)
-            'user',                 // ✅ roleName (string)
+            $roleId,                
+            'user',                 
             false,
             false,
             $method,
@@ -146,14 +131,8 @@ class RegisterUser
             null
         );
 
-        // ===========================
-        // Save User
-        // ===========================
         $savedUser = $this->repository->save($user);
 
-        // ===========================
-        // Send Verification
-        // ===========================
         if ($method === 'email') {
 
             $this->verificationService->sendVerificationEmail(
@@ -171,9 +150,6 @@ class RegisterUser
 
         }
 
-        // ===========================
-        // Return DTO
-        // ===========================
         return UserDTO::fromEntity($savedUser);
     }
 }

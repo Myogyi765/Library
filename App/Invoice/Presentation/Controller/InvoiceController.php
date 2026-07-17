@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\User\Presentation\Controller;
+namespace App\Invoice\Presentation\Controller;
 
 use App\Shared\Base\BaseController;
 use App\Invoice\Domain\Repository\InvoiceRepositoryInterface;
@@ -11,7 +11,7 @@ use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\User\Domain\Repository\UserRepositoryInterface;
 use App\Book\Domain\Repository\BookRepositoryInterface;
 
-// QR Code Library
+
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\SvgWriter;
 use Endroid\QrCode\Encoding\Encoding;
@@ -84,7 +84,7 @@ class InvoiceController extends BaseController
             );
 
             $qrResult = Builder::create()
-                ->writer(new SvgWriter()) // SVG (GD မလိုပါ)
+                ->writer(new SvgWriter()) 
                 ->data($qrData)
                 ->encoding(new Encoding('UTF-8'))
                 ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())

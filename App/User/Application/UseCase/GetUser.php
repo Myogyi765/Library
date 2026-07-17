@@ -31,8 +31,6 @@ class GetUser
 
     public function getAllUsers(int $limit = 100, int $offset = 0): array
     {
-        // Implement or use your repository method if available
-        // For now, return empty array (you can implement later)
         return [];
     }
 

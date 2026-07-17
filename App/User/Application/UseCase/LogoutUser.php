@@ -15,7 +15,6 @@ class LogoutUser
     
     public function execute(): void
     {
-        // Call the authenticator to log out the user
         $this->authenticator->logout();
     }
 }

@@ -13,7 +13,6 @@ interface PaymentRepositoryInterface
     public function findByIdempotencyKey(string $key): ?Payment;
     public function findByUserId(int $userId): array;
 
-    // ✅ FIXED: Only one declaration per method (with default parameters)
     public function findAllWithDetails(int $offset = 0, int $limit = 100): array;
     public function findPendingApprovalsWithDetails(int $offset = 0, int $limit = 100): array;
     public function findByStatusWithDetails(string $status, int $offset = 0, int $limit = 100): array;

@@ -16,7 +16,6 @@ class LibrarianPaymentActionRequest
 
     public function authorize(): bool
     {
-        // Check if user is logged in and has librarian role.
         return isset($this->session['user_id']) && isset($this->session['role']) && $this->session['role'] === 'librarian';
     }
 
@@ -25,12 +24,9 @@ class LibrarianPaymentActionRequest
         return (int) ($this->data['payment_id'] ?? 0);
     }
 
-    // Additional getters if needed
 
     private function validate(): void
     {
-        // No validation needed for this simple request, but if you need, add here.
-        // For example, ensure payment_id exists.
         if (!$this->authorize()) {
             throw new \RuntimeException('Unauthorized: Librarian access required.');
         }

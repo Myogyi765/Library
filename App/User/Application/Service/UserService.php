@@ -5,7 +5,7 @@ namespace App\User\Application\Service;
 use App\User\Application\DTO\LoginDTO;
 use App\User\Application\DTO\RegisterDTO;
 use App\User\Application\DTO\UserDTO;
-use App\User\Application\Mapper\UserMapper;
+use App\User\Infrastructure\Mapper\UserMapper;
 use App\User\Application\Request\RegisterRequest;
 use App\User\Application\Response\LoginResponse;
 use App\User\Application\Response\UserResponse;
@@ -46,7 +46,7 @@ class UserService
                 $dto->getPhone(),
                 $dto->getPassword(),
                 $dto->getMethod(),
-                $dto->getConfirmPassword()
+              
             );
 
             $userDTO = $this->registerUser->execute($request);
@@ -62,9 +62,7 @@ class UserService
     public function login(LoginDTO $dto): LoginResponse
     {
         try {
-            // LoginUser returns a UserDTO
             $userDTO = $this->loginUser->execute($dto);
-            // Extract the user ID for the response
             $userId = $userDTO->id ?? null;
 
             return new LoginResponse(true, 'Login successful!', $userId);

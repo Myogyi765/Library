@@ -6,7 +6,7 @@ use App\User\Application\DTO\LoginDTO;
 use App\User\Application\DTO\UserDTO;
 use App\User\Domain\Repository\UserRepositoryInterface;
 use App\User\Exception\UserNotFoundException;
-use App\User\Infrastructure\Security\UserAuthenticator; // ✅ Add this line
+use App\User\Infrastructure\Security\UserAuthenticator;
 
 class LoginUser
 {

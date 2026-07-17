@@ -8,7 +8,6 @@ class DatabaseConnection
     public static function getConnection(): PDO
     {
         if (self::$instance === null) {
-            // Load database config
             $config = require __DIR__ . '/database.php';
             self::$config = $config;
             
