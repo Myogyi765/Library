@@ -1,7 +1,23 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
-$pageTitle = 'Books Catalog';
+$pageTitle = 'Book Collection';
 include BASE_PATH . '/view/layout/header.php';
+
+// Dynamic Category Icon Map
+$categoryIconMap = [
+    'all'         => '✨',
+    'art'         => '🎨',
+    'business'    => '💼',
+    'cooking'     => '🍳',
+    'health'      => '🩺',
+    'history'     => '📜',
+    'networking'  => '🌐',
+    'programming' => '💻',
+    'science'     => '🔬',
+    'travel'      => '🧳',
+    'others'      => '📦',
+    'general'     => '📚'
+];
 
 $categoryMap = [];
 foreach ($categories as $cat) {
@@ -10,44 +26,34 @@ foreach ($categories as $cat) {
 ?>
 
 <!-- ================================================================ -->
-<!-- PREMIUM STYLES – Editorial Layout & Modern Glassmorphism       -->
+<!-- COMPACT 4‑COLUMN GRID WITH GENEROUS SIDE MARGINS                 -->
 <!-- ================================================================ -->
 <style>
     :root {
-        --primary: #4f46e5;          /* Premium Indigo */
-        --primary-hover: #4338ca;    
-        --primary-light: rgba(79, 70, 229, 0.1);
-        --radius-card: 1rem;         /* Modern smooth curves */
-        --radius-pill: 9999px;
-        --bg-light: #f8fafc;         
-        --bg-dark: #090d16;          
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --primary-light: rgba(37, 99, 235, 0.05);
+        --accent-cartoon: #ffb938;
+        --radius-card: 0.65rem;          /* smaller radius */
+        --bg-light: #f8fafc;
+        --bg-dark: #0f172a;
         --card-light: #ffffff;
-        --card-dark: #121826;
-        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.02);
-        --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.03);
-        --shadow-hover: 0 20px 40px rgba(79, 70, 229, 0.12);
+        --card-dark: #1e293b;
+        --shadow-sm: 0 1px 4px rgba(0,0,0,0.04);
+        --shadow-md: 0 4px 16px rgba(15,23,42,0.04);
+        --shadow-hover: 0 8px 24px rgba(37,99,235,0.10);
         --border-light: #e2e8f0;
-        --border-dark: rgba(255, 255, 255, 0.06);
+        --border-dark: rgba(255,255,255,0.06);
     }
 
-    /* Premium Mesh Background */
     .book-catalog {
         background-color: var(--bg-light);
-        background-image: 
-            radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.06) 0px, transparent 50%),
-            radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.05) 0px, transparent 50%),
-            radial-gradient(at 50% 100%, rgba(79, 70, 229, 0.03) 0px, transparent 50%);
+        background-image: radial-gradient(at 50% 0%, rgba(37,99,235,0.04) 0px, transparent 60%);
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        position: relative;
-        overflow: hidden;
     }
-    
     .dark .book-catalog {
         background-color: var(--bg-dark);
-        background-image: 
-            radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.12) 0px, transparent 50%),
-            radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.08) 0px, transparent 50%),
-            radial-gradient(at 50% 100%, rgba(79, 70, 229, 0.05) 0px, transparent 50%);
+        background-image: radial-gradient(at 50% 0%, rgba(37,99,235,0.08) 0px, transparent 50%);
     }
 
     .catalog-container {
@@ -55,203 +61,184 @@ foreach ($categories as $cat) {
         z-index: 10;
     }
 
-    /* Floating Glass Header */
+    /* Header – slightly tighter */
     .glass-header {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        background: var(--card-light);
         border: 1px solid var(--border-light);
-        border-radius: 1.25rem;
-        padding: 1.25rem 1.75rem;
-        box-shadow: var(--shadow-md);
-        transition: all 0.3s ease;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1.25rem;
+        box-shadow: var(--shadow-sm);
     }
     .dark .glass-header {
-        background: rgba(18, 24, 38, 0.7);
+        background: var(--card-dark);
         border-color: var(--border-dark);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
-    /* Refined Search Bar Deck */
     .search-filter-wrapper {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        background: #ffffff;
-        border: 1px solid var(--border-light);
-        border-radius: 0.85rem;
-        padding: 0.45rem 0.75rem;
-        box-shadow: var(--shadow-sm);
+        gap: 0.4rem;
+        background: #f1f5f9;
+        border: 1px solid transparent;
+        border-radius: 0.6rem;
+        padding: 0.2rem 0.6rem;
         transition: all 0.2s ease;
     }
     .dark .search-filter-wrapper {
-        background: #151c2c;
+        background: #0f172a;
         border-color: var(--border-dark);
     }
     .search-filter-wrapper:focus-within {
         border-color: var(--primary);
-        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        background: var(--card-light);
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+    }
+    .dark .search-filter-wrapper:focus-within {
+        background: var(--card-dark);
     }
 
     .search-filter-wrapper input {
         background: transparent !important;
         border: none !important;
         outline: none !important;
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         font-weight: 500;
         color: #0f172a;
-        width: 140px;
-        transition: width 0.3s ease;
+        width: 130px;
+        padding: 0.15rem 0;
     }
-    .search-filter-wrapper input:focus {
-        width: 180px;
-    }
-    .dark .search-filter-wrapper input { color: #f8fafc; }
+    .dark .search-filter-wrapper input { color: #f1f5f9; }
 
+    .category-select-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 130px;
+    }
     .search-filter-wrapper select {
         background: transparent !important;
         border: none !important;
         outline: none !important;
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         font-weight: 600;
-        padding-right: 1.5rem;
+        width: 100%;
+        padding-right: 1.25rem;
+        padding-left: 0.25rem;
         appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right center;
-        background-size: 0.9rem;
-        color: #64748b;
+        color: #475569;
         cursor: pointer;
+        text-align: center;
+        text-align-last: center;
     }
-    .dark .search-filter-wrapper select { color: #94a3b8; }
+    .dark .search-filter-wrapper select { color: #cbd5e1; }
+    .search-filter-wrapper select option { text-align: left; }
 
-    /* Modern Fluid Responsive Grid */
+    /* Grid – 4 columns on large screens */
     .book-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 1.25rem;
+        gap: 1rem;
+        margin-top: 1.5rem;
     }
     @media (min-width: 640px) {
-        .book-grid { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+        .book-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    }
+    @media (min-width: 768px) {
+        .book-grid { grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
     }
     @media (min-width: 1024px) {
-        .book-grid { grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+        .book-grid { grid-template-columns: repeat(4, 1fr); gap: 1.25rem; } /* exactly 4 */
     }
 
-    /* Exquisite Premium Cards */
+    /* Smaller cards */
     .book-card {
         background: var(--card-light);
         border: 1px solid var(--border-light);
         border-radius: var(--radius-card);
-        box-shadow: var(--shadow-md);
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: var(--shadow-sm);
+        transition: all 0.25s ease;
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        position: relative;
     }
     .dark .book-card {
         background: var(--card-dark);
         border-color: var(--border-dark);
     }
-    
     .book-card:hover {
-        transform: translateY(-6px);
+        transform: translateY(-2px);
         box-shadow: var(--shadow-hover);
-        border-color: rgba(79, 70, 229, 0.3);
-    }
-    .dark .book-card:hover {
-        background: #161e30;
-        border-color: rgba(79, 70, 229, 0.4);
+        border-color: var(--primary);
     }
 
-    /* Cover Wrapper with Hover Scale */
     .book-cover-wrapper {
         position: relative;
         overflow: hidden;
         background: #f1f5f9;
-        aspect-ratio: 3/4; 
+        aspect-ratio: 3/4;
         display: block;
     }
-    .dark .book-cover-wrapper { background: #0c101a; }
-    
+    .dark .book-cover-wrapper { background: #0f172a; }
     .book-cover-wrapper img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: transform 0.2s ease;
     }
     .book-card:hover .book-cover-wrapper img {
-        transform: scale(1.05);
+        transform: scale(1.02);
     }
 
-    /* Glowing Elegant Micro-Badges */
     .stock-badge {
         position: absolute;
-        top: 0.75rem;
-        right: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.375rem;
-        font-size: 0.65rem;
-        font-weight: 700;
+        top: 0.3rem;
+        right: 0.3rem;
+        padding: 0.1rem 0.35rem;
+        border-radius: 0.25rem;
+        font-size: 0.5rem;
+        font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        z-index: 10;
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        letter-spacing: 0.02em;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        color: #16a34a;
     }
-    .stock-badge.in { 
-        background: rgba(220, 252, 231, 0.9); 
-        color: #166534; 
-        border: 1px solid rgba(74, 222, 128, 0.3);
+    .dark .stock-badge {
+        background: #0f172a;
+        border-color: rgba(255,255,255,0.08);
+        color: #4ade80;
     }
-    .dark .stock-badge.in { 
-        background: rgba(20, 83, 45, 0.85); 
-        color: #4ade80; 
-        border: 1px solid rgba(74, 222, 128, 0.2);
+    .stock-badge.out {
+        color: #dc2626;
+        border-color: #fecaca;
     }
-    .stock-badge.out { 
-        background: rgba(254, 226, 226, 0.9); 
-        color: #991b1b; 
-        border: 1px solid rgba(248, 113, 113, 0.3);
-    }
-    .dark .stock-badge.out { 
-        background: rgba(127, 29, 29, 0.85); 
-        color: #f87171; 
-        border: 1px solid rgba(248, 113, 113, 0.2);
-    }
+    .dark .stock-badge.out { color: #f87171; border-color: rgba(255,255,255,0.08); }
 
-    /* Polished Info Panel & Clean Typography */
+    /* Compact info area */
     .book-info {
-        padding: 1rem;
+        padding: 0.4rem 0.5rem 0.5rem;
         display: flex;
         flex-direction: column;
-        gap: 0.35rem;
+        gap: 0.15rem;
         flex-grow: 1;
     }
-    
+
     .book-title {
-        font-size: 0.875rem; /* Clean text-sm standard */
+        font-size: 0.7rem;
         font-weight: 700;
-        line-height: 1.3;
+        line-height: 1.2;
         color: #0f172a;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
-        min-height: 2.25rem;
-        transition: color 0.2s ease;
+        min-height: 1.7rem;
     }
     .dark .book-title { color: #f1f5f9; }
-    .book-card:hover .book-title {
-        color: var(--primary);
-    }
-    .dark .book-card:hover .book-title {
-        color: #818cf8;
-    }
 
     .book-author {
-        font-size: 0.75rem;
+        font-size: 0.6rem;
         font-weight: 500;
         color: #64748b;
         white-space: nowrap;
@@ -265,213 +252,216 @@ foreach ($categories as $cat) {
         align-items: center;
         justify-content: space-between;
         margin-top: auto;
-        padding-top: 0.5rem;
+        padding-top: 0.2rem;
+        border-top: 1px solid #f1f5f9;
+        font-size: 0.55rem;
     }
+    .dark .book-meta { border-color: rgba(255,255,255,0.05); }
 
     .book-category-tag {
-        padding: 0.2rem 0.5rem;
-        border-radius: 0.375rem;
-        font-size: 0.65rem;
-        font-weight: 600;
-        background: var(--primary-light);
+        font-weight: 700;
         color: var(--primary);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 90px;
     }
-    .dark .book-category-tag {
-        background: rgba(129, 140, 248, 0.1);
-        color: #a5b4fc;
-    }
+    .dark .book-category-tag { color: #60a5fa; }
 
     .book-qty {
-        font-size: 0.7rem;
         font-weight: 600;
-        color: #64748b;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
+        color: #94a3b8;
     }
-    .dark .book-qty { color: #94a3b8; }
 
-    /* High-End Micro Action Button */
     .btn-view {
-        margin-top: 0.75rem;
-        padding: 0.5rem;
-        border-radius: 0.5rem;
-        font-size: 0.75rem;
-        font-weight: 600;
+        margin-top: 0.2rem;
+        padding: 0.2rem 0.1rem;
+        border-radius: 0.25rem;
+        font-size: 0.6rem;
+        font-weight: 700;
         text-align: center;
-        background: var(--primary);
-        color: white !important;
-        transition: all 0.2s ease;
+        background: #f1f5f9;
+        color: #475569 !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.25rem;
+        gap: 0.2rem;
+        transition: all 0.15s ease;
     }
-    .btn-view:hover { 
-        background: var(--primary-hover); 
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    .btn-view:hover {
+        background: var(--primary);
+        color: white !important;
     }
-    .dark .btn-view { background: #4f46e5; }
-    .dark .btn-view:hover { background: #6366f1; }
+    .dark .btn-view { background: #0f172a; color: #94a3b8 !important; }
+    .dark .btn-view:hover { background: #2563eb; color: white !important; }
 
-    /* Smooth Entrance Animations */
-    .book-card {
-        opacity: 0;
-        animation: premiumFadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    .cartoon-float {
+        animation: subtleFloat 4s ease-in-out infinite;
     }
-    @keyframes premiumFadeUp {
-        0% { opacity: 0; transform: translateY(12px); }
-        100% { opacity: 1; transform: translateY(0); }
+    @keyframes subtleFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-2px); }
     }
 
-    /* Minimalist Empty State Card */
     .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        background: rgba(255, 255, 255, 0.5);
-        border-radius: 1.25rem;
+        background: var(--card-light);
         border: 1px dashed var(--border-light);
-        backdrop-filter: blur(10px);
+        border-radius: 0.75rem;
+        padding: 2rem;
+        text-align: center;
     }
     .dark .empty-state {
-        background: rgba(18, 24, 38, 0.5);
+        background: var(--card-dark);
         border-color: var(--border-dark);
     }
 </style>
 
 <!-- ================================================================ -->
-<!-- MAIN CONTENT                                                     -->
+<!-- CONTAINER WITH EXTRA SIDE SPACE (wider padding, narrower max)    -->
 <!-- ================================================================ -->
-<div class="book-catalog min-h-screen py-10 transition-colors duration-300">
-    <div class="container mx-auto px-4 max-w-5xl catalog-container">
+<div class="book-catalog min-h-screen py-8 transition-colors duration-300">
+    <!-- max-w-5xl + extra px-8 md:px-16 to create generous side margins -->
+    <div class="container mx-auto px-8 md:px-16 max-w-5xl catalog-container">
 
-        <!-- Glass Header Banner -->
-        <div class="glass-header mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- Header Controls (unchanged logic) -->
+        <div class="glass-header mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-                <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-md">
-                    <i class="fas fa-book-open text-white text-xs"></i>
+                <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 to-blue-600 shadow-sm border border-blue-400/10">
+                    <svg class="w-6 h-6 text-white cartoon-float" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        <circle cx="12" cy="10" r="2" fill="var(--accent-cartoon)" stroke="none"></circle>
+                    </svg>
                 </div>
                 <div>
-                    <h1 class="text-base font-extrabold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
-                        Books Catalog
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
+                    <h1 class="text-base font-black text-slate-700 dark:text-white tracking-tight flex items-center gap-2">
+                        <?= htmlspecialchars($pageTitle) ?>
+                        <span id="headerCounter" class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                             <?= count($books) ?>
                         </span>
                     </h1>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                    <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
                         Explore our curation of exquisite editions
                     </p>
                 </div>
             </div>
 
-            <!-- Custom Refined Controls Box -->
-            <div class="search-filter-wrapper self-start md:self-auto">
+            <div class="search-filter-wrapper self-start md:self-auto shadow-sm">
                 <div class="relative flex items-center">
-                    <i class="fas fa-search text-gray-400 dark:text-gray-500 text-[11px] ml-1"></i>
-                    <input type="text" id="searchInput" placeholder="Search title or author..." class="pl-2 pr-1 py-1 rounded-full bg-transparent border-0 focus:ring-0 focus:outline-none dark:text-white text-xs">
+                    <svg class="w-3 h-3 text-slate-400 mr-1" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Search title or author..." class="py-0.5 bg-transparent border-0 focus:ring-0 focus:outline-none dark:text-white text-xs font-medium">
                 </div>
-                <span class="w-[1px] h-4 bg-gray-200 dark:bg-slate-700"></span>
-                <div class="relative flex items-center">
-                    <select id="categoryFilter" class="bg-transparent border-0 py-1 focus:ring-0 focus:outline-none dark:text-white appearance-none cursor-pointer text-xs">
-                        <option value="">All Categories</option>
-                        <?php foreach ($categories as $cat): ?>
-                            <option value="<?= $cat->getId() ?>"><?= htmlspecialchars($cat->getName()) ?></option>
+                
+                <span class="w-[1px] h-4 bg-slate-200 dark:bg-slate-700"></span>
+                
+                <div class="category-select-container">
+                    <select id="categoryFilter" class="bg-transparent border-0 focus:ring-0 focus:outline-none dark:text-white appearance-none cursor-pointer text-xs font-bold tracking-wide">
+                        <option value=""><?= $categoryIconMap['all'] ?> All Categories</option>
+                        <?php 
+                        $othersCategory = null;
+                        foreach ($categories as $cat): 
+                            $cleanName = strtolower(trim($cat->getName()));
+                            if ($cleanName === 'others') {
+                                $othersCategory = $cat;
+                                continue;
+                            }
+                            $emoji = $categoryIconMap[$cleanName] ?? $categoryIconMap['general'];
+                        ?>
+                            <option value="<?= $cat->getId() ?>">
+                                <?= $emoji ?> <?= htmlspecialchars($cat->getName()) ?>
+                            </option>
                         <?php endforeach; ?>
+                        <?php if ($othersCategory): 
+                            $cleanOthersName = strtolower(trim($othersCategory->getName()));
+                            $othersEmoji = $categoryIconMap[$cleanOthersName] ?? $categoryIconMap['others'];
+                        ?>
+                            <option value="<?= $othersCategory->getId() ?>">
+                                <?= $othersEmoji ?> <?= htmlspecialchars($othersCategory->getName()) ?>
+                            </option>
+                        <?php endif; ?>
                     </select>
+                    <div class="absolute right-0 pointer-events-none text-slate-400 flex items-center justify-center">
+                        <svg class="w-2.5 h-2.5 stroke-[3.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <?php if (empty($books)): ?>
-            <div class="empty-state">
-                <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-search text-gray-400 dark:text-gray-600 text-sm"></i>
-                </div>
-                <h3 class="text-sm font-bold text-gray-800 dark:text-slate-200">No items match criteria</h3>
-                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Try relaxing your search terms or category selections.</p>
+        <!-- Grid -->
+        <div class="relative">
+            <div id="catalogEmptyState" class="empty-state <?= empty($books) ? '' : 'hidden' ?> mb-6">
+                <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">No matching books discovered</h3>
             </div>
-        <?php else: ?>
-            <div class="book-grid" id="bookGrid">
-                <?php foreach ($books as $index => $book): 
-                    $inStock = $book->getAvailableQuantity() > 0;
-                    $coverImage = $book->getCoverImage();
-                    if ($coverImage) {
-                        if (strpos($coverImage, 'http://') === 0 || strpos($coverImage, 'https://') === 0) {
-                            $coverUrl = $coverImage;
-                        } else {
-                            $coverUrl = BASE_URL . $coverImage;
-                        }
-                    } else {
-                        $coverUrl = '';
-                    }
-                ?>
-                <div class="book-card" data-category="<?= $book->getCategoryId() ?>" style="animation-delay: <?= $index * 0.015 ?>s;">
-                    <!-- Cover Container -->
-                    <a href="<?= BASE_URL ?>/books/<?= $book->getId() ?>" class="book-cover-wrapper">
-                        <?php if ($coverUrl): ?>
-                            <img src="<?= $coverUrl ?>" 
-                                 alt="<?= htmlspecialchars($book->getTitle()) ?>" 
-                                 loading="lazy"
-                                 onerror="this.style.display='none'; this.parentElement.querySelector('.fallback-icon').style.display='flex';">
-                            <div class="fallback-icon absolute inset-0 flex items-center justify-center text-gray-300 dark:text-gray-600 bg-slate-100 dark:bg-slate-900" style="display:none;">
-                                <i class="fas fa-book text-2xl opacity-20"></i>
-                            </div>
-                        <?php else: ?>
-                            <div class="w-full h-full flex items-center justify-center text-gray-300 dark:text-gray-600 bg-slate-100 dark:bg-slate-900">
-                                <i class="fas fa-book text-2xl opacity-20"></i>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <span class="stock-badge <?= $inStock ? 'in' : 'out' ?>">
-                            <?= $inStock ? 'In Stock' : 'Out' ?>
-                        </span>
-                    </a>
 
-                    <!-- Details Box -->
-                    <div class="book-info">
-                        <h3 class="book-title" title="<?= htmlspecialchars($book->getTitle()) ?>">
-                            <?= htmlspecialchars($book->getTitle()) ?>
-                        </h3>
-                        <p class="book-author"><?= htmlspecialchars($book->getAuthor()) ?></p>
-                        
-                        <div class="book-meta">
-                            <span class="book-category-tag">
-                                <?= htmlspecialchars($categoryMap[$book->getCategoryId()] ?? 'General') ?>
+            <?php if (!empty($books)): ?>
+                <div class="book-grid" id="bookGrid">
+                    <?php foreach ($books as $index => $book): 
+                        $inStock = $book->getAvailableQuantity() > 0;
+                        $coverImage = $book->getCoverImage();
+                        $coverUrl = $coverImage ? ((strpos($coverImage, 'http') === 0) ? $coverImage : BASE_URL . $coverImage) : '';
+                        $cleanCatName = isset($categoryMap[$book->getCategoryId()]) ? strtolower(trim($categoryMap[$book->getCategoryId()])) : 'general';
+                        $catEmoji = $categoryIconMap[$cleanCatName] ?? $categoryIconMap['general'];
+                    ?>
+                    <div class="book-card" data-category="<?= $book->getCategoryId() ?>">
+                        <a href="<?= BASE_URL ?>/books/<?= $book->getId() ?>" class="book-cover-wrapper">
+                            <?php if ($coverUrl): ?>
+                                <img src="<?= $coverUrl ?>" alt="<?= htmlspecialchars($book->getTitle()) ?>" loading="lazy" onerror="this.style.display='none'; this.parentElement.querySelector('.fallback-icon').style.display='flex';">
+                                <div class="fallback-icon absolute inset-0 flex items-center justify-center text-slate-300 dark:text-slate-600 bg-slate-50 dark:bg-slate-900" style="display:none;">
+                                    <i class="fas fa-book text-base opacity-20"></i>
+                                </div>
+                            <?php else: ?>
+                                <div class="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600 bg-slate-50 dark:bg-slate-900">
+                                    <i class="fas fa-book text-base opacity-20"></i>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <span class="stock-badge <?= $inStock ? 'in' : 'out' ?>">
+                                <?= $inStock ? 'In' : 'Out' ?>
                             </span>
-                            <span class="book-qty">
-                                <i class="fas fa-layer-group text-[8px] opacity-40"></i>
-                                <?= $book->getAvailableQuantity() ?> Available
-                            </span>
-                        </div>
-                        
-                        <a href="<?= BASE_URL ?>/books/<?= $book->getId() ?>" class="btn-view">
-                            <span>View Details</span>
-                            <i class="fas fa-arrow-right text-[8px]"></i>
                         </a>
+
+                        <div class="book-info">
+                            <h3 class="book-title" title="<?= htmlspecialchars($book->getTitle()) ?>">
+                                <?= htmlspecialchars($book->getTitle()) ?>
+                            </h3>
+                            <p class="book-author"><?= htmlspecialchars($book->getAuthor()) ?></p>
+                            
+                            <div class="book-meta">
+                                <span class="book-category-tag" title="<?= htmlspecialchars($categoryMap[$book->getCategoryId()] ?? 'General') ?>">
+                                    <?= $catEmoji ?> <?= htmlspecialchars($categoryMap[$book->getCategoryId()] ?? 'General') ?>
+                                </span>
+                                <span class="book-qty">
+                                    <?= $book->getAvailableQuantity() ?> Qty
+                                </span>
+                            </div>
+                            
+                            <a href="<?= BASE_URL ?>/books/<?= $book->getId() ?>" class="btn-view">
+                                <span>Details</span>
+                                <i class="fas fa-arrow-right text-[6px]"></i>
+                            </a>
+                        </div>
                     </div>
+                    <?php endforeach; ?>
                 </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 
-<!-- ================================================================ -->
-<!-- JAVASCRIPT – Smooth Reactive Filtering                           -->
-<!-- ================================================================ -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const categoryFilter = document.getElementById('categoryFilter');
     const searchInput = document.getElementById('searchInput');
+    const bookGrid = document.getElementById('bookGrid');
+    const emptyState = document.getElementById('catalogEmptyState');
+    const headerCounter = document.getElementById('headerCounter');
     const bookCards = document.querySelectorAll('.book-card');
 
     function filterBooks() {
         const query = searchInput.value.toLowerCase().trim();
         const cat = categoryFilter.value;
+        let matchCount = 0;
 
         bookCards.forEach((card) => {
             const title = card.querySelector('.book-title')?.textContent?.toLowerCase() || '';
@@ -483,14 +473,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (matchSearch && matchCategory) {
                 card.style.display = '';
+                matchCount++;
             } else {
                 card.style.display = 'none';
             }
         });
+
+        if (headerCounter) headerCounter.textContent = matchCount;
+
+        if (matchCount === 0) {
+            if (bookGrid) bookGrid.style.display = 'none';
+            if (emptyState) emptyState.classList.remove('hidden');
+        } else {
+            if (bookGrid) bookGrid.style.display = '';
+            if (emptyState) emptyState.classList.add('hidden');
+        }
     }
 
-    searchInput.addEventListener('input', filterBooks);
-    categoryFilter.addEventListener('change', filterBooks);
+    if (searchInput) searchInput.addEventListener('input', filterBooks);
+    if (categoryFilter) categoryFilter.addEventListener('change', filterBooks);
     filterBooks();
 });
 </script>

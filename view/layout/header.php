@@ -360,7 +360,8 @@ if (isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] ==
                                 <div class="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">No notifications</div>
                             </div>
                             <div class="p-3 border-t border-gray-200 dark:border-gray-700 text-center bg-gray-50 dark:bg-gray-900">
-                                <a href="#" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">View all</a>
+                                <!-- ✅ FIXED: "View all" link now points to a proper route -->
+                                <a href="<?php echo BASE_URL; ?>/notifications" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">View all</a>
                             </div>
                         </div>
                     </div>

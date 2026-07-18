@@ -53,15 +53,15 @@
             <!-- ===== SIMPLE HEADER ===== -->
             <thead class="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">#</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">User</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Loan</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Amount</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Method</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Refund Status</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Refund Reason</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Refunded At</th>
-                    <th class="px-3 py-3 text-center text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Actions</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">#</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">User</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Loan</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Amount</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Method</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Refund Status</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Refund Reason</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Refunded At</th>
+                    <th class="px-3 py-3 text-center text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Actions</th>
                 </tr>
             </thead>
             <tbody>

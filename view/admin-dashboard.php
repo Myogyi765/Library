@@ -113,8 +113,8 @@ if (!isset($stats) || !is_array($stats)) {
         <div class="border-t border-gray-200 dark:border-gray-700 p-4">
             <div class="flex items-center gap-3 px-2 py-2">
                 <div
-                    class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                    <i class="fas fa-user-shield text-purple-600 dark:text-purple-400"></i>
+                    class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <i class="fas fa-user-shield text-blue-600 dark:text-blue-400"></i>
                 </div>
                 <div>
                     <p class="text-sm font-medium text-gray-800 dark:text-white">

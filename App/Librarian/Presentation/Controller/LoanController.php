@@ -101,7 +101,7 @@ class LoanController extends BaseController
                 'loan_created',
                 'Loan request created',
                 'A librarian has created a loan request for you.',
-                '/user-dashboard'
+                '/user-dashboard' 
             );
 
             $_SESSION['success_message'] = 'Loan request created successfully.';
@@ -157,6 +157,7 @@ class LoanController extends BaseController
         $this->redirect('/librarian/loans');
     }
 
+    
     public function confirm($id): void
     {
         $loan = $this->loanRepo->findById((int)$id);
@@ -179,6 +180,8 @@ class LoanController extends BaseController
 
             $this->db->commit();
 
+            // ✅ Send notification with a link to the book details page
+            $bookId = $loan->getBookId();
             $userId = $loan->getUserId();
             $this->createNotification(
                 $userId,
@@ -186,7 +189,7 @@ class LoanController extends BaseController
                 'loan_confirmed',
                 'Loan confirmed',
                 'Your loan request has been confirmed. Please complete payment.',
-                '/user-dashboard'
+                BASE_URL .'/books/' . $bookId  
             );
 
             $_SESSION['success_message'] = 'Loan confirmed. User must pay now.';

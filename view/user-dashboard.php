@@ -171,7 +171,7 @@ try {
 
         <!-- ===== MY PROFILE – Full width (Quick Actions removed) ===== -->
         <?php if ($hasViewProfile || $hasEditProfile): ?>
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 mb-8 max-w-3xl mx-auto">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 mb-8  mx-auto">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
                     <i class="fas fa-user-circle text-blue-600 dark:text-blue-400 mr-2"></i>
                     My Profile

@@ -37,13 +37,13 @@
         <table class="w-full text-sm">
             <thead class="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">#</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">User</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Book</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Borrowed</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Due Date</th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">#</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">User</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Book</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Borrowed</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Due Date</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Status</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -78,6 +78,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right">
+                                 <div class="flex items-center justify-end gap-1 flex-nowrap">
                                 <?php if ($status === 'pending'): ?>
                                     <form action="<?= BASE_URL ?>/librarian/loans/confirm/<?= $loan->getId() ?>" method="POST" class="inline">
                                         <button type="submit" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 mr-2" title="Confirm">
@@ -114,6 +115,7 @@
                             </td>
                         </tr>
                     <?php endforeach; ?>
+                    </div>
                 <?php else: ?>
                     <tr>
                         <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">No loans recorded.</td>

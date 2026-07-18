@@ -4,17 +4,17 @@ namespace App\Notification\Domain\Entity;
 class Notification
 {
     private ?int $id;
-    private ?int $userId;         
+    private ?int $userId;
     private string $role;
     private string $type;
     private string $title;
     private string $message;
-    private ?string $link;
+    private ?string $link; // Only declared once
     private bool $isRead;
     private \DateTime $createdAt;
 
     public function __construct(
-        ?int $userId,            
+        ?int $userId,
         string $role,
         string $type,
         string $title,
@@ -35,15 +35,59 @@ class Notification
         $this->createdAt = $createdAt ?? new \DateTime();
     }
 
-    public function getId(): ?int { return $this->id; }
-    public function getUserId(): ?int { return $this->userId; }  
-    public function getRole(): string { return $this->role; }
-    public function getType(): string { return $this->type; }
-    public function getTitle(): string { return $this->title; }
-    public function getMessage(): string { return $this->message; }
-    public function getLink(): ?string { return $this->link; }
-    public function isRead(): bool { return $this->isRead; }
-    public function getCreatedAt(): \DateTime { return $this->createdAt; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
 
-    public function markAsRead(): void { $this->isRead = true; }
+    public function getUserId(): ?int
+    {
+        return $this->userId;
+    }
+
+    public function getRole(): string
+    {
+        return $this->role;
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+
+    public function getMessage(): string
+    {
+        return $this->message;
+    }
+
+    public function getLink(): ?string
+    {
+        return $this->link;
+    }
+
+    public function setLink(?string $link): self
+    {
+        $this->link = $link;
+        return $this;
+    }
+
+    public function isRead(): bool
+    {
+        return $this->isRead;
+    }
+
+    public function markAsRead(): void
+    {
+        $this->isRead = true;
+    }
+
+    public function getCreatedAt(): \DateTime
+    {
+        return $this->createdAt;
+    }
 }

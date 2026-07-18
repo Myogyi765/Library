@@ -23,12 +23,12 @@ $filteredUsers = array_values($filteredUsers);
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 dark:bg-gray-900/50">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Name</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Email</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Phone</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Role</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Name</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Email</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Phone</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Role</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Status</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">

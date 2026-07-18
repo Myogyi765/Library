@@ -47,9 +47,9 @@ if (file_exists($headerPath)) {
 <!-- ✅ MAIN CONTENT WRAPPER – FIXED DARK MODE BACKGROUND            -->
 <!-- ================================================================ -->
 <div class="bg-slate-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
-    
+
     <!-- ================================================================ -->
-    <!-- ===================== SUCCESS / ERROR MESSAGES ================= -->
+    <!-- ===================== TOAST NOTIFICATION ======================= -->
     <!-- ================================================================ -->
 
     <?php 
@@ -64,90 +64,146 @@ if (file_exists($headerPath)) {
     ?>
 
     <?php if ($hasMessages): ?>
-    <div class="max-w-4xl mx-auto px-4 pt-3 space-y-2">
-        <?php if (isset($_SESSION['register_success'])): ?>
-            <div class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 text-green-800 dark:text-green-300 p-3 rounded-lg flex items-start gap-2 text-sm" role="alert">
-                <i class="fas fa-check-circle text-green-500 text-lg mt-0.5"></i>
-                <div>
-                    <p class="font-semibold"><?php echo htmlspecialchars($_SESSION['register_success']); ?></p>
-                    <?php if (isset($_SESSION['verification_message'])): ?>
-                        <p class="text-xs mt-0.5 opacity-90"><?php echo htmlspecialchars($_SESSION['verification_message']); ?></p>
-                    <?php endif; ?>
+    <div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 pointer-events-none">
+        <div class="space-y-2 pointer-events-auto">
+            
+            <?php if (isset($_SESSION['register_success'])): ?>
+                <div class="bg-white dark:bg-gray-800 border border-green-200 dark:border-green-800 shadow-xl rounded-xl p-4 flex items-start gap-3 animate-slideDown">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white"><?php echo htmlspecialchars($_SESSION['register_success']); ?></p>
+                        <?php if (isset($_SESSION['verification_message'])): ?>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1"><?php echo htmlspecialchars($_SESSION['verification_message']); ?></p>
+                        <?php endif; ?>
+                    </div>
+                    <button onclick="this.closest('div.animate-slideDown').remove()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-            </div>
-            <?php unset($_SESSION['register_success'], $_SESSION['verification_message']); ?>
-        <?php endif; ?>
+                <?php unset($_SESSION['register_success'], $_SESSION['verification_message']); ?>
+            <?php endif; ?>
 
-        <?php if (isset($_SESSION['login_success'])): ?>
-            <div class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 text-green-800 dark:text-green-300 p-3 rounded-lg flex items-start gap-2 text-sm" role="alert">
-                <i class="fas fa-check-circle text-green-500 text-lg mt-0.5"></i>
-                <p class="font-semibold"><?php echo htmlspecialchars($_SESSION['login_success']); ?></p>
-            </div>
-            <?php unset($_SESSION['login_success']); ?>
-        <?php endif; ?>
-
-        <?php if (isset($_SESSION['warning_message'])): ?>
-            <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-300 p-3 rounded-lg flex items-start gap-2 text-sm" role="alert">
-                <i class="fas fa-exclamation-triangle text-yellow-500 text-lg mt-0.5"></i>
-                <div>
-                    <p><?php echo htmlspecialchars($_SESSION['warning_message']); ?></p>
-                    <?php if (isset($_SESSION['warning_action'])): ?>
-                        <a href="<?php echo htmlspecialchars($_SESSION['warning_action']); ?>" class="inline-block mt-1 px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg transition-colors text-xs">
-                            <?php echo htmlspecialchars($_SESSION['warning_action_text'] ?? 'Resend Verification'); ?>
-                        </a>
-                    <?php endif; ?>
+            <?php if (isset($_SESSION['login_success'])): ?>
+                <div class="bg-white dark:bg-gray-800 border border-green-200 dark:border-green-800 shadow-xl rounded-xl p-4 flex items-start gap-3 animate-slideDown">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white"><?php echo htmlspecialchars($_SESSION['login_success']); ?></p>
+                    </div>
+                    <button onclick="this.closest('div.animate-slideDown').remove()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-            </div>
-            <?php unset($_SESSION['warning_message'], $_SESSION['warning_action'], $_SESSION['warning_action_text']); ?>
-        <?php endif; ?>
+                <?php unset($_SESSION['login_success']); ?>
+            <?php endif; ?>
 
-        <?php if (isset($_SESSION['login_errors']) && !empty($_SESSION['login_errors'])): ?>
-            <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-800 dark:text-red-300 p-3 rounded-lg flex items-start gap-2 text-sm" role="alert">
-                <i class="fas fa-exclamation-circle text-red-500 text-lg mt-0.5"></i>
-                <ul class="list-disc list-inside space-y-0.5">
-                    <?php foreach ($_SESSION['login_errors'] as $error): ?>
-                        <li><?php echo htmlspecialchars($error); ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-            <?php unset($_SESSION['login_errors']); ?>
-        <?php endif; ?>
+            <?php if (isset($_SESSION['success_message'])): ?>
+                <div class="bg-white dark:bg-gray-800 border border-green-200 dark:border-green-800 shadow-xl rounded-xl p-4 flex items-start gap-3 animate-slideDown">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white"><?php echo htmlspecialchars($_SESSION['success_message']); ?></p>
+                    </div>
+                    <button onclick="this.closest('div.animate-slideDown').remove()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <?php unset($_SESSION['success_message']); ?>
+            <?php endif; ?>
 
-        <?php if (isset($_SESSION['register_errors']) && !empty($_SESSION['register_errors'])): ?>
-            <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-800 dark:text-red-300 p-3 rounded-lg flex items-start gap-2 text-sm" role="alert">
-                <i class="fas fa-exclamation-circle text-red-500 text-lg mt-0.5"></i>
-                <ul class="list-disc list-inside space-y-0.5">
-                    <?php foreach ($_SESSION['register_errors'] as $error): ?>
-                        <li><?php echo htmlspecialchars($error); ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-            <?php unset($_SESSION['register_errors']); ?>
-        <?php endif; ?>
+            <?php if (isset($_SESSION['error_message'])): ?>
+                <div class="bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 shadow-xl rounded-xl p-4 flex items-start gap-3 animate-slideDown">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                        <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white"><?php echo htmlspecialchars($_SESSION['error_message']); ?></p>
+                    </div>
+                    <button onclick="this.closest('div.animate-slideDown').remove()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <?php unset($_SESSION['error_message']); ?>
+            <?php endif; ?>
 
-        <?php if (isset($_SESSION['logout_success'])): ?>
-            <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 text-blue-800 dark:text-blue-300 p-3 rounded-lg flex items-start gap-2 text-sm" role="alert">
-                <i class="fas fa-info-circle text-blue-500 text-lg mt-0.5"></i>
-                <p><?php echo htmlspecialchars($_SESSION['logout_success']); ?></p>
-            </div>
-            <?php unset($_SESSION['logout_success']); ?>
-        <?php endif; ?>
+            <?php if (isset($_SESSION['warning_message'])): ?>
+                <div class="bg-white dark:bg-gray-800 border border-yellow-200 dark:border-yellow-800 shadow-xl rounded-xl p-4 flex items-start gap-3 animate-slideDown">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white"><?php echo htmlspecialchars($_SESSION['warning_message']); ?></p>
+                        <?php if (isset($_SESSION['warning_action'])): ?>
+                            <a href="<?php echo htmlspecialchars($_SESSION['warning_action']); ?>" class="inline-block mt-2 text-xs font-semibold text-yellow-700 dark:text-yellow-300 hover:underline">
+                                <?php echo htmlspecialchars($_SESSION['warning_action_text'] ?? 'Resend Verification'); ?>
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                    <button onclick="this.closest('div.animate-slideDown').remove()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <?php unset($_SESSION['warning_message'], $_SESSION['warning_action'], $_SESSION['warning_action_text']); ?>
+            <?php endif; ?>
 
-        <?php if (isset($_SESSION['success_message'])): ?>
-            <div class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 text-green-800 dark:text-green-300 p-3 rounded-lg flex items-start gap-2 text-sm" role="alert">
-                <i class="fas fa-check-circle text-green-500 text-lg mt-0.5"></i>
-                <p><?php echo htmlspecialchars($_SESSION['success_message']); ?></p>
-            </div>
-            <?php unset($_SESSION['success_message']); ?>
-        <?php endif; ?>
+            <?php if (isset($_SESSION['login_errors']) && !empty($_SESSION['login_errors'])): ?>
+                <div class="bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 shadow-xl rounded-xl p-4 flex items-start gap-3 animate-slideDown">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                        <i class="fas fa-times-circle text-red-600 dark:text-red-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <ul class="list-disc list-inside text-sm text-gray-900 dark:text-white">
+                            <?php foreach ($_SESSION['login_errors'] as $error): ?>
+                                <li><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                    <button onclick="this.closest('div.animate-slideDown').remove()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <?php unset($_SESSION['login_errors']); ?>
+            <?php endif; ?>
 
-        <?php if (isset($_SESSION['error_message'])): ?>
-            <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-800 dark:text-red-300 p-3 rounded-lg flex items-start gap-2 text-sm" role="alert">
-                <i class="fas fa-exclamation-circle text-red-500 text-lg mt-0.5"></i>
-                <p><?php echo htmlspecialchars($_SESSION['error_message']); ?></p>
-            </div>
-            <?php unset($_SESSION['error_message']); ?>
-        <?php endif; ?>
+            <?php if (isset($_SESSION['register_errors']) && !empty($_SESSION['register_errors'])): ?>
+                <div class="bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 shadow-xl rounded-xl p-4 flex items-start gap-3 animate-slideDown">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                        <i class="fas fa-times-circle text-red-600 dark:text-red-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <ul class="list-disc list-inside text-sm text-gray-900 dark:text-white">
+                            <?php foreach ($_SESSION['register_errors'] as $error): ?>
+                                <li><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                    <button onclick="this.closest('div.animate-slideDown').remove()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <?php unset($_SESSION['register_errors']); ?>
+            <?php endif; ?>
+
+            <?php if (isset($_SESSION['logout_success'])): ?>
+                <div class="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 shadow-xl rounded-xl p-4 flex items-start gap-3 animate-slideDown">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <i class="fas fa-info-circle text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white"><?php echo htmlspecialchars($_SESSION['logout_success']); ?></p>
+                    </div>
+                    <button onclick="this.closest('div.animate-slideDown').remove()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <?php unset($_SESSION['logout_success']); ?>
+            <?php endif; ?>
+
+        </div>
     </div>
     <?php endif; ?>
 
@@ -290,7 +346,7 @@ if (file_exists($headerPath)) {
         </div>
     </section>
 
-    <!-- Inline Style for Book Animation -->
+    <!-- Inline Style for Book Animation + Toast -->
     <style>
         @keyframes float {
             0% { transform: translateY(0px) rotate(0deg); }
@@ -299,6 +355,15 @@ if (file_exists($headerPath)) {
         }
         .animate-float {
             animation: float 4.5s ease-in-out infinite;
+        }
+
+        /* Toast slide-down animation */
+        @keyframes slideDown {
+            0% { transform: translateY(-20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slideDown {
+            animation: slideDown 0.3s ease-out;
         }
     </style>
 

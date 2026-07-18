@@ -246,6 +246,7 @@ console.log('🌓 Current theme:', document.documentElement.classList.contains('
             }
         }
 
+        // ✅ FIXED: linkUrl variable properly defined
         function renderNotifications(notifications) {
             if (!list) return;
             if (notifications.length === 0) {
@@ -255,8 +256,12 @@ console.log('🌓 Current theme:', document.documentElement.classList.contains('
             let html = '';
             notifications.forEach(n => {
                 const isRead = n.is_read ? '' : 'bg-blue-50 dark:bg-blue-900/20';
+                const linkUrl = n.link || '#'; // ← FIX: linkUrl ကို ဒီမှာ သတ်မှတ်ပါ
+                
                 html += `
-                    <div class="p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition cursor-pointer notification-item ${isRead}" data-id="${escapeHtml(String(n.id))}">
+                    <a href="${escapeHtml(linkUrl)}" 
+                       class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition notification-item ${isRead}" 
+                       data-id="${escapeHtml(String(n.id))}">
                         <div class="flex items-start gap-3">
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-900 dark:text-white">${escapeHtml(n.title)}</p>
@@ -265,13 +270,13 @@ console.log('🌓 Current theme:', document.documentElement.classList.contains('
                             </div>
                             ${!n.is_read ? `<span class="w-2 h-2 bg-blue-500 rounded-full mt-1 flex-shrink-0"></span>` : ''}
                         </div>
-                    </div>
+                    </a>
                 `;
             });
             list.innerHTML = html;
 
             list.querySelectorAll('[data-id]').forEach(el => {
-                el.addEventListener('click', function() {
+                el.addEventListener('click', function(e) {
                     const id = this.dataset.id;
                     markAsRead(id);
                 });
@@ -285,32 +290,37 @@ console.log('🌓 Current theme:', document.documentElement.classList.contains('
         }
 
         // ================================================================
-        // ✅ OPTIMISTIC UI – Instant mark as read with rollback
+        // ✅ OPTIMISTIC UI – Instant removal of notification
         // ================================================================
         function markAsRead(id) {
             console.log('📌 Marking as read (optimistic):', id);
 
-            // ---------- 1. Update UI instantly (Optimistic) ----------
+            // ---------- 1. Update badge instantly ----------
             const oldCount = parseInt(badge?.textContent) || 0;
             const newCount = Math.max(0, oldCount - 1);
             updateBadge(newCount);
 
-            let targetItem = null;
+            // ---------- 2. Remove the notification item from DOM ----------
             if (list) {
                 const items = list.querySelectorAll('[data-id]');
+                let removed = false;
                 items.forEach(el => {
                     if (el.dataset.id == id) {
-                        // Remove unread styling
-                        el.classList.remove('bg-blue-50', 'dark:bg-blue-900/20');
-                        const dot = el.querySelector('.w-2.h-2.bg-blue-500');
-                        if (dot) dot.remove();
-                        targetItem = el; // save for rollback
-                        console.log('🎨 UI instantly updated for notification:', id);
+                        el.remove();
+                        removed = true;
+                        console.log('🎨 UI instantly removed notification:', id);
                     }
                 });
+                // If list is now empty, show empty message
+                if (removed) {
+                    const remaining = list.querySelectorAll('[data-id]');
+                    if (remaining.length === 0) {
+                        list.innerHTML = '<div class="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">No notifications</div>';
+                    }
+                }
             }
 
-            // ---------- 2. Send request in background ----------
+            // ---------- 3. Send request to server ----------
             fetchJSON(BASE_URL + '/api/notifications/read', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -319,34 +329,24 @@ console.log('🌓 Current theme:', document.documentElement.classList.contains('
             .then(data => {
                 if (data.success) {
                     console.log('✅ Server confirmed mark as read.');
-                    // Optional: sync with server data (already consistent)
                 } else {
                     console.warn('⚠️ Server failed to mark as read. Rolling back...');
-                    rollbackMarkAsRead(id, targetItem, oldCount);
+                    rollbackMarkAsRead(id, oldCount);
                 }
             })
             .catch(err => {
                 console.error('❌ Error marking as read:', err.message);
-                rollbackMarkAsRead(id, targetItem, oldCount);
+                rollbackMarkAsRead(id, oldCount);
             });
         }
 
-        // ---------- Rollback function ----------
-        function rollbackMarkAsRead(id, targetItem, oldCount) {
-            // Restore badge
+        // ---------- Rollback function: re-fetch and re-render ----------
+        function rollbackMarkAsRead(id, oldCount) {
+            // Restore badge count
             updateBadge(oldCount);
-            // Restore list item
-            if (targetItem) {
-                targetItem.classList.add('bg-blue-50', 'dark:bg-blue-900/20');
-                // Re-add the blue dot
-                const flexDiv = targetItem.querySelector('.flex-1');
-                if (flexDiv) {
-                    const dot = document.createElement('span');
-                    dot.className = 'w-2 h-2 bg-blue-500 rounded-full mt-1 flex-shrink-0';
-                    flexDiv.parentElement.appendChild(dot);
-                }
-                console.log('🔄 UI rolled back for notification:', id);
-            }
+            // Re-fetch notifications to restore the item (if still unread)
+            fetchNotifications();
+            console.log('🔄 Re-fetched notifications to rollback for id:', id);
         }
 
         // ── Bell click ──

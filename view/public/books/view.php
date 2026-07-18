@@ -5,12 +5,12 @@ include BASE_PATH . '/view/layout/header.php';
 
 $book = $book ?? null;
 if (!$book) {
-    echo '<div class="container mx-auto px-4 py-8"><div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-6 rounded-xl text-center">Book not found.</div></div>';
+    echo '<div class="container mx-auto px-6 py-12 max-w-5xl"><div class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 p-6 rounded-2xl text-center font-semibold">Book profile could not be found in the system archives.</div></div>';
     include BASE_PATH . '/view/layout/footer.php';
     return;
 }
 
-// Build category map if categories are passed
+// Build category map
 $categoryMap = [];
 if (isset($categories)) {
     foreach ($categories as $cat) {
@@ -18,7 +18,7 @@ if (isset($categories)) {
     }
 }
 
-// ---- Get user's loan status for this book ----
+// ---- Get user's loan status ----
 $userLoanStatus = $userLoanStatus ?? null;
 $userLoanId = $userLoanId ?? null;
 
@@ -38,9 +38,7 @@ if ($userLoanStatus === null && isset($_SESSION['user_authenticated']) && $_SESS
     }
 }
 
-// ================================================================
-// ✅ FIX: Handle cover image correctly (full URL or local path)
-// ================================================================
+// Cover image
 $coverImage = $book->getCoverImage();
 if ($coverImage) {
     if (strpos($coverImage, 'http://') === 0 || strpos($coverImage, 'https://') === 0) {
@@ -54,162 +52,197 @@ if ($coverImage) {
 ?>
 
 <!-- ================================================================ -->
-<!-- PREMIUM STYLES (Match Catalog Design)                           -->
+<!-- MINIMAL REFRESH – Same layout, refined details                   -->
 <!-- ================================================================ -->
 <style>
-    .book-detail-card {
-        background: rgba(255,255,255,0.6);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255,255,255,0.3);
-        border-radius: 1.5rem;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
-        overflow: hidden;
+    .book-card {
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03);
+        transition: box-shadow 0.2s ease;
     }
-    .dark .book-detail-card {
-        background: rgba(15,23,42,0.5);
-        border-color: rgba(255,255,255,0.06);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    .dark .book-card {
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
     }
-    .book-detail-cover {
-        background: rgba(255,255,255,0.3);
-        backdrop-filter: blur(4px);
-        border-radius: 1rem;
-        transition: transform 0.3s ease;
+    .book-card:hover {
+        box-shadow: 0 8px 30px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.04);
     }
-    .dark .book-detail-cover {
-        background: rgba(15,23,42,0.3);
+    .dark .book-card:hover {
+        box-shadow: 0 8px 30px rgba(0,0,0,0.3);
     }
-    .book-detail-cover img {
+
+    .cover-shadow {
+        box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .cover-shadow:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+    }
+    .dark .cover-shadow {
+        box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+    }
+    .dark .cover-shadow:hover {
+        box-shadow: 0 12px 28px rgba(0,0,0,0.6);
+    }
+
+    .stat-box {
+        background: #f9fafb;
+        border: 1px solid #f1f3f5;
         border-radius: 0.75rem;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-        transition: transform 0.3s ease;
-        max-height: 480px;
-        object-fit: contain;
-        width: 100%;
+        padding: 0.5rem 0.75rem;
     }
-    .dark .book-detail-cover img {
-        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    .dark .stat-box {
+        background: #1e293b;
+        border-color: #2d3a4f;
     }
-    .book-detail-cover img:hover {
-        transform: scale(1.02);
+
+    .action-btn {
+        background: #4f46e5;
+        transition: all 0.15s ease;
     }
-    .btn-outline {
-        transition: all 0.2s ease;
+    .action-btn:hover {
+        background: #4338ca;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(79,70,229,0.25);
     }
-    .btn-outline:hover {
-        transform: translateY(-2px);
+    .dark .action-btn:hover {
+        box-shadow: 0 4px 12px rgba(79,70,229,0.4);
     }
 </style>
 
-<div class="container mx-auto px-4 py-8 max-w-5xl">
-    <!-- Back to Catalog -->
-    <nav class="text-sm mb-6">
-        <a href="<?= BASE_URL ?>/books" class="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">
-            <i class="fas fa-arrow-left text-xs"></i> Back to Catalog
-        </a>
-    </nav>
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950 py-8 transition-colors duration-300">
+    <div class="container mx-auto px-4 max-w-5xl">
 
-    <!-- Main Card -->
-    <div class="book-detail-card md:flex">
-        <!-- Cover Image Section (Fixed) -->
-        <div class="md:w-2/5 p-6 flex items-center justify-center bg-gray-50/50 dark:bg-gray-900/30 book-detail-cover">
-            <?php if ($coverUrl): ?>
-                <img src="<?= $coverUrl ?>" 
-                     alt="<?= htmlspecialchars($book->getTitle()) ?>" 
-                     class="w-full max-w-xs rounded-lg shadow-md object-cover"
-                     loading="lazy"
-                     onerror="this.style.display='none'; this.parentElement.querySelector('.fallback-icon').style.display='flex';">
-                <div class="fallback-icon w-full max-w-xs aspect-[3/4] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-lg flex items-center justify-center text-gray-400 dark:text-gray-500" style="display:none;">
-                    <i class="fas fa-book text-6xl opacity-40"></i>
-                </div>
-            <?php else: ?>
-                <div class="w-full max-w-xs aspect-[3/4] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-lg flex items-center justify-center text-gray-400 dark:text-gray-500">
-                    <i class="fas fa-book text-6xl opacity-40"></i>
-                </div>
-            <?php endif; ?>
-        </div>
+        <!-- Breadcrumb -->
+        <nav class="mb-5">
+            <a href="<?= BASE_URL ?>/books" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                <i class="fas fa-arrow-left text-xs"></i> Back to collection
+            </a>
+        </nav>
 
-        <!-- Book Details -->
-        <div class="md:w-3/5 p-6 md:p-8">
-            <div class="flex items-start justify-between gap-4">
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white"><?= htmlspecialchars($book->getTitle()) ?></h1>
-                <?php if ($book->getAvailableQuantity() > 0): ?>
-                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 whitespace-nowrap">
-                        <i class="fas fa-check-circle mr-1"></i> Available
-                    </span>
-                <?php else: ?>
-                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400 whitespace-nowrap">
-                        <i class="fas fa-times-circle mr-1"></i> Out of Stock
-                    </span>
-                <?php endif; ?>
-            </div>
+        <!-- Main card – two‑column, compact -->
+        <div class="book-card bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/70 overflow-hidden md:flex transition-colors">
 
-            <p class="text-lg text-gray-600 dark:text-gray-300 mt-1">by <?= htmlspecialchars($book->getAuthor()) ?></p>
-
-            <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div>
-                    <span class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">ISBN</span>
-                    <p class="font-medium text-gray-900 dark:text-white"><?= $book->getIsbn() ?? 'N/A' ?></p>
-                </div>
-                <div>
-                    <span class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">Category</span>
-                    <p class="font-medium text-gray-900 dark:text-white"><?= htmlspecialchars($categoryMap[$book->getCategoryId()] ?? 'Unknown') ?></p>
-                </div>
-                <div>
-                    <span class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">Total Copies</span>
-                    <p class="font-medium text-gray-900 dark:text-white"><?= $book->getQuantity() ?></p>
-                </div>
-                <div>
-                    <span class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">Available</span>
-                    <p class="font-medium text-gray-900 dark:text-white"><?= $book->getAvailableQuantity() ?></p>
-                </div>
-            </div>
-
-            <?php if ($book->getDescription()): ?>
-                <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</h3>
-                    <p class="mt-2 text-gray-700 dark:text-gray-300 leading-relaxed text-sm"><?= nl2br(htmlspecialchars($book->getDescription())) ?></p>
-                </div>
-            <?php endif; ?>
-
-            <!-- Action Buttons (Improved) -->
-            <div class="mt-8 flex flex-wrap gap-3">
-                <?php if ($book->getAvailableQuantity() > 0 && isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] === true): ?>
-                    <?php if ($userLoanStatus === 'pending'): ?>
-                        <span class="bg-amber-100 text-amber-800 px-5 py-2.5 rounded-xl inline-flex items-center gap-2 border border-amber-300 shadow-sm text-sm font-medium">
-                            <i class="fas fa-clock animate-pulse"></i> Request Pending
-                        </span>
-                    <?php elseif ($userLoanStatus === 'awaiting_payment'): ?>
-                        <a href="<?= BASE_URL ?>/payment/submit/<?= $userLoanId ?>" 
-                           class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl transition flex items-center gap-2 shadow-md hover:shadow-lg text-sm font-medium">
-                            <i class="fas fa-credit-card"></i> Pay Now
-                        </a>
-                    <?php elseif ($userLoanStatus === 'active'): ?>
-                        <span class="bg-blue-100 text-blue-800 px-5 py-2.5 rounded-xl inline-flex items-center gap-2 text-sm font-medium">
-                            <i class="fas fa-check-circle"></i> Already Borrowed
-                        </span>
+            <!-- Cover (left, 35%) -->
+            <div class="md:w-[35%] p-6 flex items-center justify-center bg-slate-50/50 dark:bg-slate-800/30 border-b md:border-b-0 md:border-r border-slate-200/70 dark:border-slate-800/70">
+                <div class="w-full max-w-[200px]">
+                    <?php if ($coverUrl): ?>
+                        <img src="<?= $coverUrl ?>"
+                             alt="<?= htmlspecialchars($book->getTitle()) ?>"
+                             class="w-full h-auto object-cover rounded-lg cover-shadow"
+                             loading="lazy"
+                             onerror="this.style.display='none'; this.parentElement.querySelector('.fallback-icon').style.display='flex';">
+                        <div class="fallback-icon w-full aspect-[3/4] bg-slate-200 dark:bg-slate-700 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500" style="display:none;">
+                            <i class="fas fa-book-open text-5xl opacity-30"></i>
+                        </div>
                     <?php else: ?>
-                        <form action="<?= BASE_URL ?>/books/borrow/<?= $book->getId() ?>" method="POST" class="inline">
-                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl transition flex items-center gap-2 shadow-md hover:shadow-lg text-sm font-medium">
-                                <i class="fas fa-hand-holding"></i> Borrow Book
-                            </button>
-                        </form>
+                        <div class="w-full aspect-[3/4] bg-slate-200 dark:bg-slate-700 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500">
+                            <i class="fas fa-book-open text-5xl opacity-30"></i>
+                        </div>
                     <?php endif; ?>
-                <?php elseif ($book->getAvailableQuantity() > 0): ?>
-                    <a href="<?= BASE_URL ?>/login" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl transition flex items-center gap-2 shadow-md hover:shadow-lg text-sm font-medium">
-                        <i class="fas fa-sign-in-alt"></i> Login to Borrow
-                    </a>
-                <?php else: ?>
-                    <span class="bg-rose-600 text-white px-5 py-2.5 rounded-xl inline-flex items-center gap-2 shadow-md border border-rose-700 hover:bg-rose-700 transition cursor-not-allowed text-sm font-medium">
-                        <i class="fas fa-times-circle"></i> Out of Stock
-                    </span>
+                </div>
+            </div>
+
+            <!-- Metadata (right, 65%) -->
+            <div class="md:w-[65%] p-6 flex flex-col justify-between">
+
+                <!-- Title + availability row -->
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white leading-tight">
+                            <?= htmlspecialchars($book->getTitle()) ?>
+                        </h1>
+                        <p class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+                            <?= htmlspecialchars($book->getAuthor()) ?>
+                        </p>
+                    </div>
+                    <div class="shrink-0 mt-1">
+                        <?php if ($book->getAvailableQuantity() > 0): ?>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/40">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Available
+                            </span>
+                        <?php else: ?>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Unavailable
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Stats – smaller, in a 2x2 grid -->
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <div class="stat-box">
+                        <span class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Category</span>
+                        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                            <i class="fas fa-tag text-indigo-400 text-xs"></i>
+                            <?= htmlspecialchars($categoryMap[$book->getCategoryId()] ?? 'General') ?>
+                        </span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">ISBN</span>
+                        <span class="text-sm font-mono font-semibold text-slate-800 dark:text-slate-200">
+                            <?= $book->getIsbn() ?: '—' ?>
+                        </span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Total</span>
+                        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            <?= $book->getQuantity() ?>
+                        </span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Available</span>
+                        <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            <?= $book->getAvailableQuantity() ?>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Synopsis (compact) -->
+                <?php if ($book->getDescription()): ?>
+                    <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800/60">
+                        <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3">
+                            <?= nl2br(htmlspecialchars($book->getDescription())) ?>
+                        </p>
+                    </div>
                 <?php endif; ?>
 
-                <a href="<?= BASE_URL ?>/books" 
-                   class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-all flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 text-sm font-medium">
-                    <i class="fas fa-arrow-left"></i> Back
-                </a>
+                <!-- Actions (smaller buttons) -->
+                <div class="mt-5 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex flex-wrap items-center gap-3">
+                    <?php if ($book->getAvailableQuantity() > 0 && isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] === true): ?>
+                        <?php if ($userLoanStatus === 'pending'): ?>
+                            <div class="bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-400 px-4 py-2 rounded-lg text-xs font-bold border border-amber-200 dark:border-amber-900/50 flex items-center gap-2">
+                                <i class="fas fa-spinner fa-spin"></i> Pending
+                            </div>
+                        <?php elseif ($userLoanStatus === 'awaiting_payment'): ?>
+                            <a href="<?= BASE_URL ?>/payment/submit/<?= $userLoanId ?>"
+                               class="action-btn text-white px-5 py-2 rounded-lg text-xs font-bold shadow-sm flex items-center gap-2">
+                                <i class="fas fa-wallet"></i> Pay now
+                            </a>
+                        <?php elseif ($userLoanStatus === 'active'): ?>
+                            <div class="bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 px-4 py-2 rounded-lg text-xs font-bold border border-blue-200 dark:border-blue-900/50 flex items-center gap-2">
+                                <i class="fas fa-check-circle"></i> Active loan
+                            </div>
+                        <?php else: ?>
+                            <form action="<?= BASE_URL ?>/books/borrow/<?= $book->getId() ?>" method="POST" class="inline">
+                                <button type="submit" class="action-btn text-white px-5 py-2 rounded-lg text-xs font-bold shadow-sm flex items-center gap-2">
+                                    <i class="fas fa-hand-holding"></i> Borrow
+                                </button>
+                            </form>
+                        <?php endif; ?>
+                    <?php elseif ($book->getAvailableQuantity() > 0): ?>
+                        <a href="<?= BASE_URL ?>/login" class="action-btn text-white px-5 py-2 rounded-lg text-xs font-bold shadow-sm flex items-center gap-2">
+                            <i class="fas fa-sign-in-alt"></i> Login to borrow
+                        </a>
+                    <?php else: ?>
+                        <div class="bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 px-4 py-2 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-700/60 cursor-not-allowed flex items-center gap-2">
+                            <i class="fas fa-ban"></i> Out of stock
+                        </div>
+                    <?php endif; ?>
+                    <a href="<?= BASE_URL ?>/books" class="text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors ml-auto">
+                        Close <i class="fas fa-chevron-right ml-1 text-[10px]"></i>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
