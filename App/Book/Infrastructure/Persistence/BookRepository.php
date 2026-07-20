@@ -14,6 +14,7 @@ class BookRepository implements BookRepositoryInterface
         $this->db = $db;
     }
 
+
     public function save(Book $book): Book
     {
         if ($book->getId() === null) {
@@ -210,26 +211,22 @@ class BookRepository implements BookRepositoryInterface
         $params = [];
 
         if (!empty($search)) {
-            $sql .= " AND (title LIKE :search OR author LIKE :search)";
-            $params[':search'] = '%' . $search . '%';
+            $sql .= " AND (title LIKE ? OR author LIKE ?)";
+            $params[] = '%' . $search . '%';
+            $params[] = '%' . $search . '%';
         }
 
         if ($categoryId && $categoryId > 0) {
-            $sql .= " AND category_id = :category_id";
-            $params[':category_id'] = $categoryId;
+            $sql .= " AND category_id = ?";
+            $params[] = $categoryId;
         }
 
-        $sql .= " ORDER BY created_at DESC LIMIT :offset, :limit";
-        
+        $sql .= " ORDER BY created_at DESC LIMIT ?, ?";
+        $params[] = $offset;
+        $params[] = $limit;
+
         $stmt = $this->db->prepare($sql);
-        
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt->execute($params);
         
         $books = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -245,22 +242,18 @@ class BookRepository implements BookRepositoryInterface
         $params = [];
 
         if (!empty($search)) {
-            $sql .= " AND (title LIKE :search OR author LIKE :search)";
-            $params[':search'] = '%' . $search . '%';
+            $sql .= " AND (title LIKE ? OR author LIKE ?)";
+            $params[] = '%' . $search . '%';
+            $params[] = '%' . $search . '%';
         }
 
         if ($categoryId && $categoryId > 0) {
-            $sql .= " AND category_id = :category_id";
-            $params[':category_id'] = $categoryId;
+            $sql .= " AND category_id = ?";
+            $params[] = $categoryId;
         }
 
         $stmt = $this->db->prepare($sql);
-        
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        
-        $stmt->execute();
+        $stmt->execute($params);
         return (int) $stmt->fetchColumn();
     }
 }

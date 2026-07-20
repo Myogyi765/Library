@@ -8,6 +8,7 @@ use App\Librarian\Presentation\Controller\LoanController;
 use App\Librarian\Presentation\Controller\UserController;
 use App\Librarian\Presentation\Controller\ScanController;
 use App\Librarian\Presentation\Controller\LibrarianAuthController;
+use App\Librarian\Presentation\Controller\RefundController; 
 use App\User\Infrastructure\Security\UserAuthenticator;
 use App\Book\Domain\Repository\BookRepositoryInterface;
 use App\Book\Domain\Repository\CategoryRepositoryInterface;
@@ -52,12 +53,12 @@ return function ($container) {
 
     $container->singleton(LoanController::class, function ($c) {
         return new LoanController(
-            $c->get(LoanRepositoryInterface::class),   // Argument #1
-            $c->get(BookRepositoryInterface::class),   // Argument #2
-            $c->get(UserRepositoryInterface::class),   // Argument #3
-            $c->get(BorrowBookHandler::class),         // Argument #4
-            $c->get(SettingsService::class),           // Argument #5
-            $c->get('db')                              // Argument #6 (PDO)
+            $c->get(LoanRepositoryInterface::class),
+            $c->get(BookRepositoryInterface::class),
+            $c->get(UserRepositoryInterface::class),
+            $c->get(BorrowBookHandler::class),
+            $c->get(SettingsService::class),
+            $c->get('db')
         );
     });
 
@@ -70,16 +71,24 @@ return function ($container) {
 
     $container->singleton(ScanController::class, function ($c) {
         return new ScanController(
-            $c->get(LoanRepositoryInterface::class),   
+            $c->get(LoanRepositoryInterface::class),
             $c->get(BookRepositoryInterface::class),
-            $c->get(UserRepositoryInterface::class),   
-            $c->get(UserAuthenticator::class)         
+            $c->get(UserRepositoryInterface::class),
+            $c->get(UserAuthenticator::class)
         );
     });
 
     $container->singleton(LibrarianAuthController::class, function ($c) {
         return new LibrarianAuthController(
             $c->get(UserAuthenticator::class)
+        );
+    });
+
+        $container->singleton(RefundController::class, function ($c) {
+        return new RefundController(
+            $c->get(UserAuthenticator::class),
+            $c->get(PaymentRepositoryInterface::class),
+            $c->get(Authorization::class)
         );
     });
 };

@@ -1,10 +1,9 @@
 <?php
-// This is a partial view – it expects $users (array of User entities)
-// It will be rendered inside the main layout. No header/footer here.
+
 ?>
 
 <style>
-    /* ===== Clean & Modern Design – Blue Accent ===== */
+    
     .user-table {
         width: 100%;
         border-collapse: collapse;
@@ -16,41 +15,24 @@
         font-weight: 600;
         padding: 12px 16px;
         border-bottom: 2px solid #e2e8f0;
-        text-align: left;
+        text-align: center;          
+        vertical-align: middle;      
     }
     .dark .user-table thead th {
         background: #1e293b;
         color: #e2e8f0;
         border-bottom-color: #334155;
     }
-    /* Action header – center aligned */
-    .user-table thead th.actions-header {
-        text-align: center;
-    }
-    .user-table tbody tr {
-        border-bottom: 1px solid #f1f5f9;
-        transition: background 0.15s;
-    }
-    .dark .user-table tbody tr {
-        border-bottom-color: #1e293b;
-    }
-    .user-table tbody tr:hover {
-        background: #f1f5f9;
-    }
-    .dark .user-table tbody tr:hover {
-        background: #1e293b;
-    }
     .user-table tbody td {
         padding: 12px 16px;
-        vertical-align: middle;
+        vertical-align: middle;      
+        text-align: center;          
     }
-    /* Action cell – center aligned with minimal padding */
     .user-table tbody td.actions-cell {
         text-align: center;
         padding: 2px 2px;
     }
 
-    /* Avatar */
     .user-avatar {
         width: 36px;
         height: 36px;
@@ -69,7 +51,7 @@
         background: #3b82f6;
     }
 
-    /* Status Badge */
+    
     .status-badge {
         display: inline-flex;
         align-items: center;
@@ -81,22 +63,43 @@
         border: none;
     }
     .status-badge i { font-size: 0.6rem; }
-    .status-badge.active { background: #dcfce7; color: #166534; }
-    .dark .status-badge.active { background: #14532d; color: #86efac; }
-    .status-badge.inactive { background: #f1f5f9; color: #475569; }
-    .dark .status-badge.inactive { background: #334155; color: #94a3b8; }
-    .status-badge.suspended { background: #fef3c7; color: #92400e; }
-    .dark .status-badge.suspended { background: #78350f; color: #fcd34d; }
-    .status-badge.banned { background: #fee2e2; color: #991b1b; }
-    .dark .status-badge.banned { background: #7f1d1d; color: #fca5a5; }
+    
+    
+    .status-badge.active { 
+        background: #dcfce7; 
+        color: #166534; 
+    }
+    .dark .status-badge.active { 
+        background: #14532d; 
+        color: #86efac; 
+    }
+    
+    
+    .status-badge.inactive { 
+        background: #f1f5f9; 
+        color: #475569; 
+    }
+    .dark .status-badge.inactive { 
+        background: #334155; 
+        color: #94a3b8; 
+    }
+    
+    
+    .status-badge.pending { 
+        background: #fef3c7; 
+        color: #92400e; 
+    }
+    .dark .status-badge.pending { 
+        background: #78350f; 
+        color: #fcd34d; 
+    }
 
-    /* ===== ACTION BUTTONS – All Colors, Tighter Spacing ===== */
     .action-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 23px;
-        height: 10px;
+        width: 25px;
+        height: 25px;
         border-radius: 6px;
         transition: all 0.15s;
         background: transparent;
@@ -104,7 +107,7 @@
         cursor: pointer;
         text-decoration: none;
         font-size: 0.9rem;
-        margin: 0; /* No margin between buttons */
+        margin: 0;
     }
     .action-btn:hover {
         transform: scale(1.15);
@@ -113,37 +116,31 @@
     .dark .action-btn:hover {
         background: rgba(255,255,255,0.08);
     }
-    /* View - Blue */
     .action-btn.view { color: #3b82f6; }
     .action-btn.view:hover { background: #eff6ff; color: #2563eb; }
     .dark .action-btn.view { color: #60a5fa; }
     .dark .action-btn.view:hover { background: #1e293b; color: #93c5fd; }
     
-    /* Edit - Amber */
     .action-btn.edit { color: #f59e0b; }
     .action-btn.edit:hover { background: #fffbeb; color: #d97706; }
     .dark .action-btn.edit { color: #fbbf24; }
     .dark .action-btn.edit:hover { background: #1e293b; color: #fcd34d; }
     
-    /* Suspend - Purple */
-    .action-btn.suspend { color: #8b5cf6; }
-    .action-btn.suspend:hover { background: #f5f3ff; color: #7c3aed; }
-    .dark .action-btn.suspend { color: #a78bfa; }
-    .dark .action-btn.suspend:hover { background: #1e293b; color: #c4b5fd; }
+    .action-btn.deactivate { color: #8b5cf6; }
+    .action-btn.deactivate:hover { background: #f5f3ff; color: #7c3aed; }
+    .dark .action-btn.deactivate { color: #a78bfa; }
+    .dark .action-btn.deactivate:hover { background: #1e293b; color: #c4b5fd; }
     
-    /* Activate - Green */
     .action-btn.activate { color: #22c55e; }
     .action-btn.activate:hover { background: #f0fdf4; color: #16a34a; }
     .dark .action-btn.activate { color: #4ade80; }
     .dark .action-btn.activate:hover { background: #1e293b; color: #86efac; }
     
-    /* Delete - Red */
     .action-btn.delete { color: #ef4444; }
     .action-btn.delete:hover { background: #fef2f2; color: #dc2626; }
     .dark .action-btn.delete { color: #f87171; }
     .dark .action-btn.delete:hover { background: #1e293b; color: #fca5a5; }
 
-    /* Search Input – clean */
     .search-input {
         padding: 0.5rem 1rem 0.5rem 2.5rem;
         border: 1px solid #e2e8f0;
@@ -165,14 +162,12 @@
         width: 260px;
     }
 
-    /* Empty State */
     .empty-state-icon {
         opacity: 0.5;
         transition: opacity 0.3s;
     }
     .empty-state-icon:hover { opacity: 0.8; }
 
-    /* Serial number column */
     .serial-number {
         text-align: center;
         font-weight: 500;
@@ -183,7 +178,6 @@
         color: #9ca3af;
     }
 
-    /* Pagination – simple */
     .pagination-btn {
         padding: 0.3rem 0.8rem;
         border: 1px solid #e2e8f0;
@@ -215,7 +209,6 @@
         color: white;
     }
 
-    /* Responsive */
     @media (max-width: 640px) {
         .user-table thead th, .user-table tbody td {
             padding: 8px 10px;
@@ -245,14 +238,14 @@
             </span>
         </div>
         <div class="flex items-center gap-3 mt-3 md:mt-0">
-            <a href="<?= BASE_URL ?>/admin/users/create" 
-               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition">
-                <i class="fas fa-plus"></i> Add User
-            </a>
             <div class="relative">
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
                 <input type="text" placeholder="Search users..." class="search-input">
             </div>
+            <a href="<?= BASE_URL ?>/admin/users/create" 
+               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition">
+                <i class="fas fa-plus"></i> Add User
+            </a>
         </div>
     </div>
 
@@ -295,19 +288,30 @@
                             <tr>
                                 <td class="serial-number"><?= $counter++ ?></td>
                                 <td>
-                                    <div class="flex items-center">
+                                    <div class="flex items-center justify-center">
                                         <span class="user-avatar">
                                             <?= strtoupper(substr($user->getName(), 0, 1)) ?>
                                         </span>
                                         <span class="font-medium text-gray-900 dark:text-white"><?= htmlspecialchars($user->getName()) ?></span>
                                     </div>
                                 </td>
-                                <td class="text-gray-600 dark:text-gray-300"><?= htmlspecialchars($user->getEmail()->getValue()) ?></td>
-                                <td class="text-gray-600 dark:text-gray-300">
+                                <!-- ✅ Email Column – Truncated if longer than 30 characters -->
+                                <td title="<?= htmlspecialchars($user->getEmail()->getValue()) ?>">
+                                    <?php 
+                                    $email = $user->getEmail()->getValue();
+                                    if (strlen($email) > 30) {
+                                        echo htmlspecialchars(substr($email, 0, 28)) . '...';
+                                    } else {
+                                        echo htmlspecialchars($email);
+                                    }
+                                    ?>
+                                </td>
+                                <td>
                                     <?= $user->getPhone() ? htmlspecialchars($user->getPhone()->getValue()) : '<span class="text-gray-400">—</span>' ?>
                                 </td>
                                 <td>
                                     <?php
+                                    // ✅ Database supports: 'pending', 'active', 'inactive'
                                     $status = $user->getStatus()->getValue();
                                     $statusClass = strtolower($status);
                                     ?>
@@ -315,16 +319,13 @@
                                         <i class="fas <?= match($status) {
                                             'active'   => 'fa-check-circle',
                                             'inactive' => 'fa-circle',
-                                            'suspended'=> 'fa-exclamation-triangle',
-                                            'banned'   => 'fa-ban',
+                                            'pending'  => 'fa-clock',
                                             default    => 'fa-circle'
                                         } ?>"></i>
                                         <?= ucfirst($status) ?>
                                     </span>
                                 </td>
-                                <td class="text-gray-500 dark:text-gray-400 text-sm">
-                                    <?= $user->getCreatedAt()->format('M d, Y') ?>
-                                </td>
+                                <td><?= $user->getCreatedAt()->format('M d, Y') ?></td>
                                 <td class="actions-cell">
                                     <div class="flex items-center justify-center gap-0.5 flex-nowrap">
                                         <!-- 👁️ View -->
@@ -339,24 +340,34 @@
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         
-                                        <!-- ⏸️ Suspend / ▶️ Activate -->
+                                        <!-- 🔄 Deactivate / Activate (Toggles: active ↔ inactive) -->
                                         <?php
+                                        // ✅ Database supports: active, inactive, pending
+                                        // Toggle between active and inactive
                                         $isActive = $user->getStatus()->getValue() === 'active';
-                                        $actionClass = $isActive ? 'suspend' : 'activate';
+                                        $actionClass = $isActive ? 'deactivate' : 'activate';
                                         $actionIcon = $isActive ? 'fa-pause-circle' : 'fa-play-circle';
-                                        $actionTitle = $isActive ? 'Suspend User' : 'Activate User';
+                                        $actionTitle = $isActive ? 'Deactivate User (set to inactive)' : 'Activate User (set to active)';
+                                        $actionText = $isActive ? 'deactivate' : 'activate';
                                         ?>
-                                        <button onclick="toggleStatus(<?= $user->getId() ?>, '<?= $user->getStatus()->getValue() ?>')"
-                                                class="action-btn <?= $actionClass ?>" 
-                                                title="<?= $actionTitle ?>">
-                                            <i class="fas <?= $actionIcon ?>"></i>
-                                        </button>
+                                        <form action="<?= BASE_URL ?>/admin/users/toggle/<?= $user->getId() ?>" method="POST" class="inline">
+                                            <button type="submit" 
+                                                    class="action-btn <?= $actionClass ?>" 
+                                                    title="<?= $actionTitle ?>"
+                                                    onclick="return confirm('Are you sure you want to <?= $actionText ?> user #<?= $user->getId() ?>?')">
+                                                <i class="fas <?= $actionIcon ?>"></i>
+                                            </button>
+                                        </form>
                                         
                                         <!-- 🗑️ Delete -->
-                                        <button onclick="confirmDelete(<?= $user->getId() ?>)"
-                                                class="action-btn delete" title="Delete User">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        <form action="<?= BASE_URL ?>/admin/users/delete/<?= $user->getId() ?>" method="POST" class="inline">
+                                            <button type="submit" 
+                                                    class="action-btn delete" 
+                                                    title="Delete User"
+                                                    onclick="return confirm('Are you sure you want to delete user #<?= $user->getId() ?>? This action cannot be undone.')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -387,22 +398,5 @@
                 <button class="pagination-btn" disabled>Next</button>
             </div>
         </div>
-    </div>
+    </div> 
 </div>
-
-<!-- Action Scripts -->
-<script>
-function confirmDelete(id) {
-    if (confirm('Are you sure you want to delete user #' + id + '? This action cannot be undone.')) {
-        window.location.href = '<?= BASE_URL ?>/admin/users/delete/' + id;
-    }
-}
-
-function toggleStatus(id, currentStatus) {
-    var action = currentStatus === 'active' ? 'suspend' : 'activate';
-    var message = currentStatus === 'active' ? 'suspend' : 'activate';
-    if (confirm('Are you sure you want to ' + message + ' user #' + id + '?')) {
-        window.location.href = '<?= BASE_URL ?>/admin/users/toggle/' + id;
-    }
-}
-</script>

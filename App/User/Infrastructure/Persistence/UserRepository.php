@@ -296,20 +296,14 @@ class UserRepository implements UserRepositoryInterface
         $stmt = $this->db->query($sql);
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        error_log("📚 [UserRepository] findAll() fetched " . count($results) . " rows from DB");
-        
         $users = [];
         foreach ($results as $data) {
             try {
-                $user = $this->hydrate($data);
-                $users[] = $user;
-                error_log("✅ Hydrated user ID: " . $user->getId() . " - " . $user->getName());
+                $users[] = $this->hydrate($data);
             } catch (Exception $e) {
                 error_log("❌ Hydration failed for user ID " . ($data['id'] ?? 'unknown') . ": " . $e->getMessage());
             }
         }
-        
-        error_log("📚 [UserRepository] Successfully hydrated " . count($users) . " users");
         return $users;
     }
     
@@ -356,7 +350,81 @@ class UserRepository implements UserRepositoryInterface
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
-    
+
+    public function findByRolePaginated(string $role, int $offset, int $limit): array
+    {
+        $sql = "SELECT u.* FROM users u 
+                INNER JOIN roles r ON u.role_id = r.id 
+                WHERE r.name = :role 
+                ORDER BY u.id DESC 
+                LIMIT :offset, :limit";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':role', $role, PDO::PARAM_STR);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $users = [];
+        foreach ($rows as $row) {
+            try {
+                $users[] = $this->hydrate($row);
+            } catch (Exception $e) {
+                error_log("❌ Hydration failed in findByRolePaginated: " . $e->getMessage());
+            }
+        }
+        return $users;
+    }
+
+    public function countByRole(string $role): int
+    {
+        $sql = "SELECT COUNT(u.id) FROM users u 
+                INNER JOIN roles r ON u.role_id = r.id 
+                WHERE r.name = :role";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':role' => $role]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function findByRoleWithSearchPaginated(string $role, string $search, int $offset, int $limit): array
+    {
+        $sql = "SELECT u.* FROM users u 
+                INNER JOIN roles r ON u.role_id = r.id 
+                WHERE r.name = :role 
+                AND (u.name LIKE :search OR u.email LIKE :search)
+                ORDER BY u.id DESC 
+                LIMIT :offset, :limit";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':role', $role, PDO::PARAM_STR);
+        $stmt->bindValue(':search', '%' . $search . '%', PDO::PARAM_STR);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $users = [];
+        foreach ($rows as $row) {
+            try {
+                $users[] = $this->hydrate($row);
+            } catch (Exception $e) {
+                error_log("❌ Hydration failed in findByRoleWithSearchPaginated: " . $e->getMessage());
+            }
+        }
+        return $users;
+    }
+
+    public function countByRoleWithSearch(string $role, string $search): int
+    {
+        $sql = "SELECT COUNT(u.id) FROM users u 
+                INNER JOIN roles r ON u.role_id = r.id 
+                WHERE r.name = :role 
+                AND (u.name LIKE :search OR u.email LIKE :search)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':role', $role, PDO::PARAM_STR);
+        $stmt->bindValue(':search', '%' . $search . '%', PDO::PARAM_STR);
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+    }
+
+
     private function hydrate(array $data): User
     {
         $createdAt = !empty($data['created_at']) ? new DateTime($data['created_at']) : new DateTime();
@@ -414,17 +482,9 @@ class UserRepository implements UserRepositoryInterface
         );
     }
 
-
     public function count(): int
     {
         $stmt = $this->db->query("SELECT COUNT(*) FROM users");
-        return (int)$stmt->fetchColumn();
-    }
-
-    public function countByRole(string $role): int
-    {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM users WHERE role = :role");
-        $stmt->execute([':role' => $role]);
         return (int)$stmt->fetchColumn();
     }
 }

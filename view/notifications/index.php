@@ -35,7 +35,8 @@
                 <?php foreach ($notifications as $notif): ?>
                     <li class="notification-item p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition cursor-pointer <?= $notif->isRead() ? 'read' : 'unread' ?>"
                         data-id="<?= $notif->getId() ?>"
-                        data-read="<?= $notif->isRead() ? 'true' : 'false' ?>">
+                        data-read="<?= $notif->isRead() ? 'true' : 'false' ?>"
+                        data-link="<?= $notif->getLink() ? htmlspecialchars($notif->getLink()) : '' ?>">
                         <div class="flex items-start justify-between gap-3">
                             <div class="flex-1">
                                 <p class="font-medium text-gray-800 dark:text-white">
@@ -61,7 +62,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // ✅ BASE_URL ကို window ကနေ ယူပါ
     const BASE_URL = window.BASE_URL || '<?= BASE_URL ?>';
     console.log('🔔 Notifications page using BASE_URL:', BASE_URL);
 
@@ -71,35 +71,37 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    // ✅ Use event delegation (ONE event listener for all items)
-    // ဒီနည်းက ထပ်နေတဲ့ event listener ကို ရှောင်ပါတယ်။
     list.addEventListener('click', function(e) {
-        // Find the closest li with data-id
         const item = e.target.closest('.notification-item');
         if (!item) {
-            console.log('ℹ️ Clicked outside notification item');
-            return;
-        }
-
-        // If already read, do nothing
-        if (item.dataset.read === 'true') {
-            console.log('ℹ️ Notification already read:', item.dataset.id);
             return;
         }
 
         const id = item.dataset.id;
         if (!id) {
-            console.warn('⚠️ No data-id found');
             return;
         }
 
-        console.log('📌 Clicked notification ID:', id);
+        // ✅ If there's a link, navigate to it (for unread or read)
+        const link = item.dataset.link;
+        if (link && link.trim() !== '') {
+            console.log('🔗 Navigating to:', link);
+            window.location.href = link;
+            return;
+        }
 
-        // ✅ Optimistic UI Update – instantly remove the blue dot
+        // If already read, do nothing (no link)
+        if (item.dataset.read === 'true') {
+            console.log('ℹ️ Notification already read and no link:', id);
+            return;
+        }
+
+        console.log('📌 Marking notification as read:', id);
+
+        // Optimistic UI Update
         const dot = item.querySelector('.unread-dot');
         if (dot) {
             dot.remove();
-            // Add a small animation to show it's been clicked
             item.style.transition = 'background 0.2s ease';
             item.style.background = 'rgba(59, 130, 246, 0.1)';
             setTimeout(() => {
@@ -117,7 +119,6 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({ id: parseInt(id) })
         })
         .then(response => {
-            console.log('📡 Server response status:', response.status);
             if (!response.ok) {
                 return response.json().then(err => {
                     throw new Error(err.error || 'Server error (HTTP ' + response.status + ')');
@@ -126,20 +127,16 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            console.log('📡 Server response data:', data);
             if (data.success) {
-                // Update UI: mark as read
                 item.dataset.read = 'true';
                 item.classList.remove('unread');
                 item.classList.add('read');
 
-                // Decrease unread count
                 const countSpan = document.getElementById('unread-count');
                 if (countSpan) {
                     let current = parseInt(countSpan.textContent);
                     if (current > 0) {
                         countSpan.textContent = current - 1;
-                        // If zero, hide the message
                         if (current - 1 === 0) {
                             const msg = document.getElementById('unread-message');
                             if (msg) msg.style.display = 'none';
@@ -147,7 +144,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
-                // ✅ Update header badge too
                 const badge = document.getElementById('notification-badge');
                 if (badge) {
                     let badgeCount = parseInt(badge.textContent) || 0;
@@ -161,22 +157,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
-                console.log('✅ Notification #' + id + ' marked as read successfully');
+                console.log('✅ Notification #' + id + ' marked as read');
             } else {
-                // Rollback – re-add the dot
+                // Rollback
                 const dotContainer = item.querySelector('.flex.items-start.justify-between.gap-3');
                 if (dotContainer && !item.querySelector('.unread-dot')) {
                     const newDot = document.createElement('span');
                     newDot.className = 'w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1 unread-dot';
                     dotContainer.appendChild(newDot);
                 }
-                console.error('❌ Server returned error:', data);
                 showToast('Failed to mark as read', 'error');
             }
         })
         .catch(err => {
-            console.error('❌ Error marking as read:', err.message);
-            // Rollback – re-add the dot
+            console.error('❌ Error:', err.message);
             const dotContainer = item.querySelector('.flex.items-start.justify-between.gap-3');
             if (dotContainer && !item.querySelector('.unread-dot')) {
                 const newDot = document.createElement('span');
@@ -187,7 +181,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Toast notification helper
     function showToast(message, type = 'info') {
         const colors = {
             info: 'bg-blue-500',
@@ -205,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
 
-    console.log('✅ Notification page event listener ready');
+    console.log('✅ Notification page ready');
 });
 </script>
 

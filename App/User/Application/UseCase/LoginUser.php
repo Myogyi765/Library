@@ -33,6 +33,11 @@ class LoginUser
             throw new \RuntimeException('Invalid credentials');
         }
 
+        if (!$this->authenticator->canLogin($user)) {
+            $error = $this->authenticator->getLoginError($user);
+            throw new \RuntimeException($error ?? 'Your account is not active.');
+        }
+
         $this->authenticator->login($user);
         
         return UserDTO::fromEntity($user);

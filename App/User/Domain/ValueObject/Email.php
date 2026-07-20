@@ -10,6 +10,11 @@ class Email
 
     public function __construct(string $value)
     {
+        if (str_ends_with($value, '@phone.local')) {
+            $this->value = $value;
+            return;
+        }
+
         if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
             throw new InvalidEmailException("Invalid email format: {$value}");
         }

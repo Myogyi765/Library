@@ -108,6 +108,56 @@ if ($coverImage) {
     .dark .action-btn:hover {
         box-shadow: 0 4px 12px rgba(79,70,229,0.4);
     }
+
+    /* ✅ Flash message styles */
+    .flash-message {
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+    }
+    .flash-success {
+        background: #ecfdf5;
+        border-color: #6ee7b7;
+        color: #065f46;
+    }
+    .dark .flash-success {
+        background: #022c22;
+        border-color: #047857;
+        color: #6ee7b7;
+    }
+    .flash-error {
+        background: #fef2f2;
+        border-color: #fca5a5;
+        color: #991b1b;
+    }
+    .dark .flash-error {
+        background: #450a0a;
+        border-color: #dc2626;
+        color: #fca5a5;
+    }
+    .flash-message i {
+        font-size: 1.1rem;
+        width: 1.5rem;
+        text-align: center;
+    }
+    .flash-close {
+        margin-left: auto;
+        cursor: pointer;
+        opacity: 0.6;
+        transition: opacity 0.15s;
+        background: none;
+        border: none;
+        font-size: 1rem;
+    }
+    .flash-close:hover {
+        opacity: 1;
+    }
 </style>
 
 <div class="min-h-screen bg-slate-50 dark:bg-slate-950 py-8 transition-colors duration-300">
@@ -119,6 +169,25 @@ if ($coverImage) {
                 <i class="fas fa-arrow-left text-xs"></i> Back to collection
             </a>
         </nav>
+
+        <!-- ✅ Flash Messages (Success / Error) -->
+        <?php if (isset($_SESSION['success_message'])): ?>
+            <div class="flash-message flash-success" id="flashMessage">
+                <i class="fas fa-check-circle"></i>
+                <span><?= htmlspecialchars($_SESSION['success_message']) ?></span>
+                <button class="flash-close" onclick="this.parentElement.style.display='none'">&times;</button>
+            </div>
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error_message'])): ?>
+            <div class="flash-message flash-error" id="flashMessage">
+                <i class="fas fa-exclamation-circle"></i>
+                <span><?= htmlspecialchars($_SESSION['error_message']) ?></span>
+                <button class="flash-close" onclick="this.parentElement.style.display='none'">&times;</button>
+            </div>
+            <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
 
         <!-- Main card – two‑column, compact -->
         <div class="book-card bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/70 overflow-hidden md:flex transition-colors">

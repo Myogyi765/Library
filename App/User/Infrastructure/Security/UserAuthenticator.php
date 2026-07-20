@@ -22,21 +22,69 @@ class UserAuthenticator
     }
 
     
+    public function canLogin(User $user): bool
+    {
+        $status = $user->getStatus()->getValue();
+        return $status === 'active';
+    }
+
+    
+    public function getLoginError(User $user): ?string
+    {
+        $status = $user->getStatus()->getValue();
+        
+        return match($status) {
+            'pending'   => 'Your account is pending verification. Please check your email or verify your phone.',
+            'inactive'  => 'Your account has been deactivated. Please contact the administrator.',
+            'banned'    => 'Your account has been banned. Please contact the administrator for support.',
+            'suspended' => 'Your account has been suspended. Please contact the administrator.',
+            'active'    => null,
+            default     => 'Your account is not active. Please contact support.'
+        };
+    }
+
+    
     public function authenticate(string $identifier, string $password): bool
     {
-        $user = $this->userRepository->findByEmail(new Email($identifier));
+        $user = null;
 
-        if (!$user && $this->isPhoneNumber($identifier)) {
+        // 1️⃣ Check if identifier is a valid email
+        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            try {
+                $user = $this->userRepository->findByEmail(new Email($identifier));
+            } catch (\Exception $e) {
+                $user = null;
+            }
+        }
+        // 2️⃣ Otherwise, check if it looks like a phone number
+        elseif ($this->isPhoneNumber($identifier)) {
             try {
                 $user = $this->userRepository->findByPhone(new Phone($identifier));
             } catch (\Exception $e) {
                 $user = null;
             }
         }
-        if (!$user || !$user->getPassword()->verify($password)) {
+
+        // If no user found with either identifier, return false
+        if (!$user) {
             $_SESSION['login_errors']['general'] = 'Invalid email/phone or password.';
             return false;
         }
+
+        // 3️⃣ Verify password
+        if (!$user->getPassword()->verify($password)) {
+            $_SESSION['login_errors']['general'] = 'Invalid email/phone or password.';
+            return false;
+        }
+
+        // 4️⃣ Check if user can login (status = active)
+        if (!$this->canLogin($user)) {
+            $error = $this->getLoginError($user);
+            $_SESSION['login_errors']['general'] = $error ?? 'Your account is not active.';
+            return false;
+        }
+
+        // 5️⃣ Login successful
         $this->login($user);
         return true;
     }
@@ -44,7 +92,7 @@ class UserAuthenticator
     
     private function isPhoneNumber(string $value): bool
     {
-        return preg_match('/^\+?[0-9]{7,15}$/', $value) === 1;
+        return preg_match('/^(09|\+95)[0-9]{7,10}$/', $value) === 1;
     }
 
     public function login(User $user): void
@@ -52,6 +100,7 @@ class UserAuthenticator
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+
         unset(
             $_SESSION['admin_logged_in'],
             $_SESSION['librarian_logged_in'],
@@ -61,18 +110,19 @@ class UserAuthenticator
             $_SESSION['librarian_name'],
             $_SESSION['librarian_department']
         );
+
         $_SESSION['user_id'] = $user->getId();
         $_SESSION['user_name'] = $user->getName();
         $_SESSION['user_email'] = $user->getEmail()->getValue();
         $_SESSION['user_phone'] = $user->getPhone()?->getValue();
         $_SESSION['user_role'] = $user->getRole() ?? 'user';
-        $_SESSION['user_status'] = $user->getStatus()?->getValue() ?? 'active';
+        $_SESSION['user_status'] = $user->getStatus()->getValue();
         $_SESSION['user_login_method'] = $user->getLoginMethod() ?? 'email';
         $_SESSION['user_identifier'] = $user->getIdentifier() ?? $user->getEmail()->getValue();
         $_SESSION['user_authenticated'] = true;
         $_SESSION['logged_in'] = true;
-        $this->authorization->loadUserPermissions($user->getId());
 
+        $this->authorization->loadUserPermissions($user->getId());
         session_regenerate_id(true);
     }
 
@@ -142,7 +192,7 @@ class UserAuthenticator
     public function loginWithRememberToken(string $token): ?User
     {
         $user = $this->userRepository->findByRememberToken($token);
-        if ($user && $user->canLogin()) {
+        if ($user && $this->canLogin($user)) {
             $this->login($user);
             return $user;
         }

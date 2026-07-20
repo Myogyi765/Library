@@ -31,24 +31,36 @@ class BorrowBookHandler
             throw new \DomainException('You already have a pending or active loan for this book.');
         }
 
-        $loan = new Loan($cmd->userId, $cmd->bookId);
+        $maxLimit = $this->settingsService->getMaxBorrowLimit();
+        
+        $userActiveLoans = $this->loanRepo->findActiveByUserId($cmd->userId);
+        $currentLoanCount = count($userActiveLoans);
+        
+        error_log("📚 [BorrowBookHandler] User {$cmd->userId} has {$currentLoanCount} active loans. Max limit: {$maxLimit}");
+        
+        if ($currentLoanCount >= $maxLimit) {
+            throw new \DomainException("You have reached the maximum borrowing limit of {$maxLimit} books. Please return some books before borrowing more.");
+        }
 
         $maxDays = $this->settingsService->getMaxBorrowDays();
         $borrowingFee = $this->settingsService->getBorrowingFee();
-        
+
+        error_log("🔥🔥🔥 [BorrowBookHandler] maxDays = " . $maxDays);
+        error_log("🔥🔥🔥 [BorrowBookHandler] borrowingFee = " . $borrowingFee);
+
         $now = new \DateTimeImmutable();
         $dueDate = $now->modify("+{$maxDays} days");
-        
-        if (method_exists($loan, 'setBorrowedAt')) {
-            $loan->setBorrowedAt($now);
-        }
-        if (method_exists($loan, 'setDueDate')) {
-            $loan->setDueDate($dueDate);
-        }
-        if (method_exists($loan, 'setBorrowingFee')) {
-            $loan->setBorrowingFee($borrowingFee);
-        }
+
+        $loan = new Loan($cmd->userId, $cmd->bookId);
+
+        $loan->setBorrowedAt($now);
+        $loan->setDueDate($dueDate);
+        $loan->setBorrowingFee($borrowingFee);
+
+        error_log("🔥🔥🔥 [BorrowBookHandler] dueDate = " . $dueDate->format('Y-m-d H:i:s'));
 
         $this->loanRepo->save($loan);
+
+        error_log("🔥🔥🔥 [BorrowBookHandler] Loan saved successfully. ID = " . $loan->getId());
     }
 }

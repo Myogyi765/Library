@@ -6,6 +6,7 @@ class UserStatus
 {
     public const PENDING = 'pending';
     public const ACTIVE = 'active';
+    public const INACTIVE = 'inactive';  
     public const SUSPENDED = 'suspended';
     public const BANNED = 'banned';
 
@@ -13,7 +14,8 @@ class UserStatus
 
     public function __construct(string $value)
     {
-        if (!in_array($value, [self::PENDING, self::ACTIVE, self::SUSPENDED, self::BANNED])) {
+        // ✅ Include INACTIVE in allowed values
+        if (!in_array($value, [self::PENDING, self::ACTIVE, self::INACTIVE, self::SUSPENDED, self::BANNED])) {
             throw new \InvalidArgumentException("Invalid user status: $value");
         }
         $this->value = $value;
@@ -27,6 +29,11 @@ class UserStatus
     public static function active(): self
     {
         return new self(self::ACTIVE);
+    }
+
+    public static function inactive(): self  
+    {
+        return new self(self::INACTIVE);
     }
 
     public static function suspended(): self
@@ -58,7 +65,4 @@ class UserStatus
     {
         return $this->value;
     }
-
-
-    
 }

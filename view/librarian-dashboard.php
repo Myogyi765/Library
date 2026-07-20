@@ -19,7 +19,7 @@ if (($_SESSION['user_role'] ?? '') !== 'librarian') {
     exit;
 }
 
-// ✅ Only set $page from GET if not already set by controller
+// ✅ Set $page from GET if not already set by controller
 if (!isset($page)) {
     $page = $_GET['page'] ?? 'dashboard';
 }

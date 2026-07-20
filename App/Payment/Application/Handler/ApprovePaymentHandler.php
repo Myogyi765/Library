@@ -10,6 +10,7 @@ use App\Invoice\Domain\Entity\Invoice;
 use App\Circulation\Domain\ValueObject\LoanStatus;
 use App\Payment\Application\Command\ApprovePaymentCommand;
 use App\Payment\Domain\Exception\PaymentDomainException;
+use App\Admin\Application\Service\SettingsService;  
 
 class ApprovePaymentHandler
 {
@@ -17,7 +18,8 @@ class ApprovePaymentHandler
         private PaymentRepositoryInterface $paymentRepo,
         private LoanRepositoryInterface $loanRepo,
         private BookRepositoryInterface $bookRepo,
-        private InvoiceRepositoryInterface $invoiceRepo
+        private InvoiceRepositoryInterface $invoiceRepo,
+        private SettingsService $settingsService  
     ) {}
 
     public function handle(ApprovePaymentCommand $cmd): void
@@ -38,16 +40,22 @@ class ApprovePaymentHandler
             if (!$loan) {
                 throw new PaymentDomainException('Loan not found.');
             }
-            $loan->setBorrowedAt(new \DateTimeImmutable());
-            $loan->setDueDate((new \DateTimeImmutable())->modify('+14 days'));
+
+            $maxDays = $this->settingsService->getMaxBorrowDays();
+            error_log("📅 [ApprovePaymentHandler] maxDays = " . $maxDays);
+
+            $now = new \DateTimeImmutable();
+            $dueDate = $now->modify("+{$maxDays} days");
+
+            $loan->setBorrowedAt($now);
+            $loan->setDueDate($dueDate);  
             $loan->setStatus(LoanStatus::ACTIVE());
             $this->loanRepo->save($loan);
-            error_log("✅ Loan updated to ACTIVE.");
+            error_log("✅ Loan updated to ACTIVE with due_date = " . $dueDate->format('Y-m-d H:i:s'));
 
             $this->bookRepo->decrementQuantity($loan->getBookId(), 1);
             error_log("✅ Book quantity decreased.");
 
-            // Create Invoice
             $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad($payment->getId(), 6, '0', STR_PAD_LEFT);
             $invoice = new Invoice(
                 $invoiceNumber,
@@ -59,8 +67,8 @@ class ApprovePaymentHandler
                 'MMK',
                 $payment->getPaymentMethod(),
                 $payment->getTransactionReference(),
-                $loan->getBorrowedAt() ?? new \DateTimeImmutable(),
-                $loan->getDueDate()
+                $now,
+                $dueDate  
             );
 
             $this->invoiceRepo->save($invoice);

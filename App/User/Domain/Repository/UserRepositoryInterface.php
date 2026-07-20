@@ -24,13 +24,13 @@ interface UserRepositoryInterface
     public function updateLastLogin(int $userId): void;
 
     public function getAllRoles(): array;
-
     public function getRoleIdByName(string $roleName): ?int;
-
     public function findByRole(string $roleName): array;
 
-      public function count(): int;
+    public function count(): int;
     public function countByRole(string $role): int;
 
-
+    public function findByRolePaginated(string $role, int $offset, int $limit): array;
+    public function findByRoleWithSearchPaginated(string $role, string $search, int $offset, int $limit): array;
+    public function countByRoleWithSearch(string $role, string $search): int;
 }

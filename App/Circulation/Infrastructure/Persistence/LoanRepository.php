@@ -104,7 +104,6 @@ class LoanRepository implements LoanRepositoryInterface
         return array_map([$this->mapper, 'toDomain'], $rows);
     }
 
-    
     public function findActiveByUserId(int $userId): array
     {
         $sql = "SELECT * FROM loans 
@@ -155,16 +154,14 @@ class LoanRepository implements LoanRepositoryInterface
         return array_map([$this->mapper, 'toDomain'], $rows);
     }
 
+    
     public function findByUserId(int $userId): array
-{
-    $sql = "SELECT * FROM loans WHERE user_id = :user_id ORDER BY id DESC";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute(['user_id' => $userId]);
-    $rows = $stmt->fetchAll();
-    $loans = [];
-    foreach ($rows as $row) {
-        $loans[] = $this->mapper->toEntity($row);
+    {
+        $sql = "SELECT * FROM loans WHERE user_id = :user_id ORDER BY id DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        return array_map([$this->mapper, 'toDomain'], $rows);
     }
-    return $loans;
-}
 }

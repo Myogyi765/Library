@@ -21,24 +21,44 @@ class UserManagementService
     public function createUser(array $data): User
     {
         $name = $data['name'] ?? '';
-        $email = $data['email'] ?? '';
-        $phone = $data['phone'] ?? null;
+        $email = trim($data['email'] ?? '');
+        $phone = trim($data['phone'] ?? '');
         $password = $data['password'] ?? '';
         $status = $data['status'] ?? 'active';
+        $loginMethod = $data['login_method'] ?? 'email';
 
-        if (empty($name) || empty($email) || empty($password)) {
-            throw new \InvalidArgumentException('Name, email, and password are required.');
+        if (empty($name) || empty($password)) {
+            throw new \InvalidArgumentException('Name and password are required.');
         }
 
-        $emailVO = new Email($email);
-        
-        if ($this->userRepository->findByEmail($emailVO)) {
-            throw new \RuntimeException('Email already registered.');
+        if (empty($email) && empty($phone)) {
+            throw new \InvalidArgumentException('Either email OR phone is required.');
         }
 
-        $phoneVO = $phone ? new Phone($phone) : null;
-        if ($phoneVO && $this->userRepository->findByPhone($phoneVO)) {
-            throw new \RuntimeException('Phone number already registered.');
+        $emailVO = null;
+        $phoneVO = null;
+
+        if (!empty($email)) {
+            $emailVO = new Email($email);
+            if ($this->userRepository->findByEmail($emailVO)) {
+                throw new \RuntimeException('Email already registered.');
+            }
+        }
+
+        if (!empty($phone)) {
+            $phoneVO = new Phone($phone);
+            if ($this->userRepository->findByPhone($phoneVO)) {
+                throw new \RuntimeException('Phone number already registered.');
+            }
+        }
+
+        $finalLoginMethod = (!empty($email)) ? 'email' : 'phone';
+
+        if (empty($email) && !empty($phone)) {
+            $uniqueId = time() . '_' . bin2hex(random_bytes(3));
+            $generatedEmail = 'u_' . $uniqueId . '@p.local';
+            $emailVO = new Email($generatedEmail);
+            $finalLoginMethod = 'phone';
         }
 
         $passwordVO = new Password($password);
@@ -49,11 +69,30 @@ class UserManagementService
             throw new \RuntimeException('Default role "user" not found in database.');
         }
 
+        $emailVerified = ($status === 'active' && !empty($email));
+        $phoneVerified = ($status === 'active' && !empty($phone));
+
         $user = new User(
-            null, $name, $emailVO, $phoneVO, $passwordVO, $statusVO,
-            $roleId, 'user', false, false, 'email',
-            null, new DateTime(), new DateTime(), null,
-            null, null, null, null, null
+            null,
+            $name,
+            $emailVO,
+            $phoneVO,
+            $passwordVO,
+            $statusVO,
+            $roleId,
+            'user',
+            $emailVerified,
+            $phoneVerified,
+            $finalLoginMethod,
+            null,
+            new DateTime(),
+            new DateTime(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
         );
 
         $this->userRepository->save($user);
@@ -68,8 +107,8 @@ class UserManagementService
         }
 
         $name = $data['name'] ?? $user->getName();
-        $email = $data['email'] ?? $user->getEmail()->getValue();
-        $phone = $data['phone'] ?? ($user->getPhone() ? $user->getPhone()->getValue() : null);
+        $email = trim($data['email'] ?? $user->getEmail()->getValue());
+        $phone = trim($data['phone'] ?? ($user->getPhone() ? $user->getPhone()->getValue() : ''));
         $status = $data['status'] ?? $user->getStatus()->getValue();
         $password = $data['password'] ?? null;
 
@@ -81,9 +120,9 @@ class UserManagementService
             $user->setEmail($emailVO);
         }
 
-        $currentPhone = $user->getPhone() ? $user->getPhone()->getValue() : null;
+        $currentPhone = $user->getPhone() ? $user->getPhone()->getValue() : '';
         if ($phone !== $currentPhone) {
-            $phoneVO = $phone ? new Phone($phone) : null;
+            $phoneVO = !empty($phone) ? new Phone($phone) : null;
             if ($phoneVO && $this->userRepository->findByPhone($phoneVO)) {
                 throw new \RuntimeException('Phone already taken.');
             }

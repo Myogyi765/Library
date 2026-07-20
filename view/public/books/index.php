@@ -33,6 +33,7 @@ $search = $search ?? '';
 $categoryId = $categoryId ?? null;
 ?>
 
+<!-- ===== CSS STYLES (unchanged) ===== -->
 <style>
     :root {
         --primary: #2563eb;
@@ -382,7 +383,7 @@ $categoryId = $categoryId ?? null;
                     <h1 class="text-base font-black text-slate-700 dark:text-white tracking-tight flex items-center gap-2">
                         <?= htmlspecialchars($pageTitle) ?>
                         <span id="headerCounter" class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                            <?= count($books) ?>
+                            <?= number_format($totalBooks) ?>
                         </span>
                     </h1>
                     <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
@@ -570,70 +571,50 @@ $categoryId = $categoryId ?? null;
     </div>
 </div>
 
+<!-- ================================================================ -->
+<!-- ✅ FIXED: Server-side Search (Reload page, search all books)    -->
+<!-- ================================================================ -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const categoryFilter = document.getElementById('categoryFilter');
     const searchInput = document.getElementById('searchInput');
-    const bookGrid = document.getElementById('bookGrid');
-    const emptyState = document.getElementById('catalogEmptyState');
-    const headerCounter = document.getElementById('headerCounter');
-    const bookCards = document.querySelectorAll('.book-card');
+    const currentPage = <?= $currentPage ?? 1 ?>;
+    const currentSearch = '<?= addslashes($search) ?>';
 
-    function filterBooks() {
-        const query = searchInput.value.toLowerCase().trim();
-        const cat = categoryFilter.value;
-        let matchCount = 0;
-
-        bookCards.forEach((card) => {
-            const title = card.querySelector('.book-title')?.textContent?.toLowerCase() || '';
-            const author = card.querySelector('.book-author')?.textContent?.toLowerCase() || '';
-            const category = card.dataset.category || '';
-
-            const matchSearch = title.includes(query) || author.includes(query);
-            const matchCategory = cat === '' || category === cat;
-
-            if (matchSearch && matchCategory) {
-                card.style.display = '';
-                matchCount++;
-            } else {
-                card.style.display = 'none';
-            }
-        });
-
-        if (headerCounter) headerCounter.textContent = matchCount;
-
-        if (matchCount === 0) {
-            if (bookGrid) bookGrid.style.display = 'none';
-            if (emptyState) emptyState.classList.remove('hidden');
-        } else {
-            if (bookGrid) bookGrid.style.display = '';
-            if (emptyState) emptyState.classList.add('hidden');
-        }
+    // Build URL with search & category params
+    function buildUrl(page, searchVal, catVal) {
+        let url = window.location.pathname + '?page=' + page;
+        if (searchVal) url += '&search=' + encodeURIComponent(searchVal);
+        if (catVal) url += '&category=' + catVal;
+        return url;
     }
 
-    // Debounce search for better performance
-    let searchTimeout;
+    // ─── Category Filter: Redirect to Page 1 ──────────────────────
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', function() {
+            const searchVal = searchInput.value.trim();
+            const catVal = categoryFilter.value;
+            window.location.href = buildUrl(1, searchVal, catVal);
+        });
+    }
+
+    // ─── Search Input: Redirect to Page 1 with debounce ──────────
     if (searchInput) {
+        let searchTimeout;
         searchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(function() {
-                filterBooks();
-            }, 300);
+                const searchVal = searchInput.value.trim();
+                const catVal = categoryFilter ? categoryFilter.value : '';
+                
+            
+                window.location.href = buildUrl(1, searchVal, catVal);
+            }, 400); 
         });
     }
-    
-    if (categoryFilter) categoryFilter.addEventListener('change', function() {
-        // Reload page with filter parameters
-        const searchVal = searchInput.value.trim();
-        const catVal = categoryFilter.value;
-        let url = window.location.pathname + '?page=1';
-        if (searchVal) url += '&search=' + encodeURIComponent(searchVal);
-        if (catVal) url += '&category=' + catVal;
-        window.location.href = url;
-    });
 
-    // Initial filter
-    filterBooks();
+    // ─── Preserve search value on page load (if coming back) ─────
+    // The input already has `value="<?= htmlspecialchars($search) ?>"` set from PHP.
 });
 </script>
 

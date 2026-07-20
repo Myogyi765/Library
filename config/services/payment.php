@@ -11,13 +11,14 @@ use App\Payment\Presentation\Controller\PaymentController;
 use App\Payment\Presentation\Controller\LibrarianPaymentController;
 use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Book\Domain\Repository\BookRepositoryInterface;
-use App\Admin\Application\Service\SettingsService;
+use App\Admin\Application\Service\SettingsService;  
 use App\User\Domain\Repository\UserRepositoryInterface;
 use App\Invoice\Domain\Repository\InvoiceRepositoryInterface;
 
 return function ($container) {
 
     $container->singleton(PaymentMapper::class, fn() => new PaymentMapper());
+
     $container->singleton(PaymentRepository::class, function ($c) {
         return new PaymentRepository($c->get('db'), $c->get(PaymentMapper::class));
     });
@@ -39,7 +40,8 @@ return function ($container) {
             $c->get(PaymentRepositoryInterface::class),
             $c->get(LoanRepositoryInterface::class),
             $c->get(BookRepositoryInterface::class),
-            $c->get(InvoiceRepositoryInterface::class) 
+            $c->get(InvoiceRepositoryInterface::class),
+            $c->get(SettingsService::class)  
         );
     });
 
@@ -68,7 +70,7 @@ return function ($container) {
             $c->get(UserRepositoryInterface::class),
             $c->get(BookRepositoryInterface::class),
             $c->get(InvoiceRepositoryInterface::class),
-                   $c->get(SettingsService::class)
+            $c->get(SettingsService::class)
         );
     });
 };

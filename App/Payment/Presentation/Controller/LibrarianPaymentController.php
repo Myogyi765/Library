@@ -75,7 +75,7 @@ class LibrarianPaymentController extends BaseController
         }
 
         $pageTitle = 'Payments';
-        $content = BASE_PATH . '/view/payment/librarian/index.php';
+      $content = BASE_PATH . '/view/librarian/payments/index.php';
         $data = [
             'payments' => $payments,
             'currentFilter' => $statusFilter,

@@ -61,17 +61,34 @@ include __DIR__ . '/../layout/header.php';
 
             <form action="<?= BASE_URL ?>/login" method="POST" class="auth-form" autocomplete="on">
 
-               
+                <!-- ===== Login Method Tabs ===== -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-sign-in-alt"></i> Login Method
+                    </label>
+                    <div class="tab-bar" role="tablist">
+                        <button type="button" class="tab-btn active" data-tab="email" role="tab">
+                            <i class="fas fa-envelope"></i> Email
+                        </button>
+                        <button type="button" class="tab-btn" data-tab="phone" role="tab">
+                            <i class="fas fa-phone"></i> Phone
+                        </button>
+                    </div>
+                </div>
 
-                <!-- Email -->
+                <!-- Identifier Field (Email or Phone) -->
                 <div class="form-group <?= isset($_SESSION['login_errors']['email']) ? 'has-error' : '' ?>">
-                    <label for="login-email" class="form-label"><i class="fas fa-envelope"></i> Email Address</label>
+                    <label for="login-identifier" class="form-label" id="identifier-label">
+                        <i class="fas fa-envelope" id="identifier-icon"></i> Email Address
+                    </label>
                     <div class="input-wrapper">
-                        <i class="fas fa-user input-icon"></i>
-                        <input type="email" name="email" id="login-email" placeholder="your@email.com"
+                        <i class="fas fa-user input-icon" id="identifier-input-icon"></i>
+                        <input type="text" name="email" id="login-identifier"
+                               placeholder="your@email.com"
                                class="field-input" autocomplete="email"
                                value="<?= htmlspecialchars($_SESSION['login_old']['email'] ?? '') ?>">
                     </div>
+                    <div class="helper-text" id="identifier-hint">Enter your registered email address</div>
                     <?php if (isset($_SESSION['login_errors']['email'])): ?>
                         <div class="field-error"><?= htmlspecialchars($_SESSION['login_errors']['email']) ?></div>
                         <?php unset($_SESSION['login_errors']['email']); ?>
@@ -103,6 +120,9 @@ include __DIR__ . '/../layout/header.php';
                     <a href="<?= BASE_URL ?>/forgot-password" class="auth-link">Forgot password?</a>
                 </div>
 
+                <!-- Hidden field to pass selected method -->
+                <input type="hidden" name="login_method" id="loginMethod" value="email">
+
                 <button type="submit" class="submit-btn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
 
                 <p class="auth-footer">
@@ -116,7 +136,7 @@ include __DIR__ . '/../layout/header.php';
 </div>
 
 <style>
-   
+    /* ─── Existing styles (unchanged) ─── */
     :root {
         --bg-body: #eef4ff;
         --bg-card: rgba(255,255,255,0.95);
@@ -218,6 +238,7 @@ include __DIR__ . '/../layout/header.php';
     .dark .benefit-icon {
         color: #4ade80;
     }
+
     .glass-card {
         background: var(--bg-card);
         backdrop-filter: blur(12px);
@@ -256,6 +277,52 @@ include __DIR__ . '/../layout/header.php';
         flex-direction: column;
         gap: 0.9rem;
     }
+
+    /* ─── Tab Bar ─── */
+    .tab-bar {
+        display: flex;
+        gap: 0.25rem;
+        background: #f1f5f9;
+        padding: 0.25rem;
+        border-radius: 0.75rem;
+        margin-bottom: 0.25rem;
+    }
+    .dark .tab-bar {
+        background: #1e293b;
+    }
+    .tab-btn {
+        flex: 1;
+        padding: 0.4rem 0.8rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: transparent;
+        color: #475569;
+    }
+    .dark .tab-btn {
+        color: #94a3b8;
+    }
+    .tab-btn:hover {
+        background: rgba(255,255,255,0.5);
+    }
+    .tab-btn.active {
+        background: #ffffff;
+        color: #1e293b;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .dark .tab-btn.active {
+        background: #334155;
+        color: #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .tab-btn i {
+        margin-right: 0.3rem;
+    }
+
+    /* ─── Form elements ─── */
     .form-group {
         display: flex;
         flex-direction: column;
@@ -301,41 +368,6 @@ include __DIR__ . '/../layout/header.php';
     }
     .field-input::placeholder {
         color: var(--text-muted);
-    }
-    .select-wrapper {
-        position: relative;
-    }
-    .select-custom {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 0.8rem 2.5rem 0.8rem 0.9rem;
-        border: 1.5px solid var(--border-input);
-        border-radius: 0.8rem;
-        background: var(--bg-input);
-        color: var(--text-primary);
-        appearance: none;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        transition: border-color 0.2s, background 0.2s, color 0.2s;
-        cursor: pointer;
-    }
-    .select-custom:disabled {
-        background: var(--disabled-bg);
-        color: var(--disabled-text);
-        cursor: not-allowed;
-        opacity: 0.7;
-    }
-    .select-arrow {
-        position: absolute;
-        right: 0.9rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-muted);
-        pointer-events: none;
-        transition: color 0.2s;
-    }
-    .select-custom:disabled + .select-arrow {
-        color: var(--disabled-text);
     }
     .helper-text {
         font-size: 0.7rem;
@@ -454,12 +486,18 @@ include __DIR__ . '/../layout/header.php';
         .auth-copy h2 {
             font-size: 1.5rem;
         }
+        .tab-btn {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.5rem;
+        }
     }
 </style>
 
 <script>
     (function() {
         'use strict';
+
+        // ─── Toggle Password Visibility ───
         document.querySelectorAll('.toggle-pwd').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -476,6 +514,68 @@ include __DIR__ . '/../layout/header.php';
                 input.focus();
             });
         });
+
+        // ─── Tab Switching (Email / Phone) ───
+        const tabs = document.querySelectorAll('.tab-btn');
+        const identifierInput = document.getElementById('login-identifier');
+        const identifierLabel = document.getElementById('identifier-label');
+        const identifierIcon = document.getElementById('identifier-icon');
+        const identifierInputIcon = document.getElementById('identifier-input-icon');
+        const identifierHint = document.getElementById('identifier-hint');
+        const loginMethodInput = document.getElementById('loginMethod');
+
+        // Store old values to restore when switching (optional)
+        let lastEmail = '';
+        let lastPhone = '';
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                const tabId = this.dataset.tab;
+                loginMethodInput.value = tabId;
+
+                // Save current value before switching
+                const currentVal = identifierInput.value;
+                if (tabId === 'email') {
+                    lastPhone = currentVal;
+                } else {
+                    lastEmail = currentVal;
+                }
+
+                // Update UI
+                if (tabId === 'email') {
+                    identifierLabel.innerHTML = '<i class="fas fa-envelope" id="identifier-icon"></i> Email Address';
+                    identifierInput.placeholder = 'your@email.com';
+                    identifierInput.autocomplete = 'email';
+                    identifierInputIcon.className = 'fas fa-user input-icon';
+                    identifierHint.textContent = 'Enter your registered email address';
+                    // Restore previously typed email
+                    if (lastEmail) identifierInput.value = lastEmail;
+                } else {
+                    identifierLabel.innerHTML = '<i class="fas fa-phone" id="identifier-icon"></i> Phone Number';
+                    identifierInput.placeholder = '09xxxxxxxxx';
+                    identifierInput.autocomplete = 'tel';
+                    identifierInputIcon.className = 'fas fa-phone input-icon';
+                    identifierHint.textContent = 'Enter your registered phone number (e.g., 09 ---------)';
+                    if (lastPhone) identifierInput.value = lastPhone;
+                }
+
+                // Clear any previous error state on this field
+                identifierInput.classList.remove('is-invalid');
+                const errorEl = identifierInput.closest('.form-group').querySelector('.field-error');
+                if (errorEl) errorEl.style.display = 'none';
+            });
+        });
+
+        // Initial state: email active
+        // Ensure hidden field is set
+        loginMethodInput.value = 'email';
+
+        // On submit, we could add client validation that the field is not empty
+        // The browser already does required? Not set; we rely on backend.
     })();
 </script>
 

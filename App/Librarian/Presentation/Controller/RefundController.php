@@ -39,7 +39,11 @@ class RefundController extends BaseController
 
         $statusFilter = $_GET['status'] ?? 'all';
 
-        $db = $this->container->get('db');
+        $container = $GLOBALS['container'] ?? null;
+        if (!$container) {
+            throw new \RuntimeException('Container not found.');
+        }
+        $db = $container->get('db');
 
         $sql = "
             SELECT 
@@ -67,13 +71,16 @@ class RefundController extends BaseController
 
         $refunds = array_values($refunds);
 
+        $page = 'refunds';
+        $pageTitle = 'Refund Management';
+        $content = BASE_PATH . '/view/librarian/refunds/index.php';
+        
         $viewData = [
             'refunds'       => $refunds,
             'currentFilter' => $statusFilter,
-            'page'          => 'refunds', 
         ];
 
-        $pageTitle = 'Refund Management';
+        extract($viewData);
         include BASE_PATH . '/view/librarian-dashboard.php';
     }
 

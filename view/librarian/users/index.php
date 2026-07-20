@@ -1,9 +1,12 @@
 <?php
-// Filter only users with role = 'user'
-$filteredUsers = array_filter($users ?? [], function($u) {
-    return $u->getRole() === 'user';
-});
-$filteredUsers = array_values($filteredUsers);
+// Variables passed from controller:
+// $users (paginated list), $currentPage, $totalPages, $totalUsers, $perPage, $search
+// Ensure numeric values are integers
+$currentPage = (int) ($currentPage ?? 1);
+$totalPages = (int) ($totalPages ?? 1);
+$totalUsers = (int) ($totalUsers ?? 0);
+$perPage = (int) ($perPage ?? 10);
+$search = $search ?? '';
 ?>
 
 <!-- Users Management -->
@@ -15,9 +18,29 @@ $filteredUsers = array_values($filteredUsers);
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">Manage library members (users only)</p>
         </div>
-      
+        <a href="<?= BASE_URL ?>/librarian/users/create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition shadow-md hover:shadow-lg">
+            <i class="fas fa-plus"></i> Add User
+        </a>
     </div>
 
+    <!-- Search Form -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6">
+        <form action="<?= BASE_URL ?>/librarian/users" method="GET" class="flex flex-wrap items-center gap-3">
+            <div class="flex-1 min-w-[200px]">
+                <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" 
+                       placeholder="Search by name or email..." 
+                       class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm">
+            </div>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                <i class="fas fa-search mr-1"></i> Search
+            </button>
+            <a href="<?= BASE_URL ?>/librarian/users" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 text-sm">
+                <i class="fas fa-times"></i> Clear
+            </a>
+        </form>
+    </div>
+
+    <!-- Users Table -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
@@ -32,12 +55,12 @@ $filteredUsers = array_values($filteredUsers);
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    <?php if (!empty($filteredUsers)): ?>
-                        <?php foreach ($filteredUsers as $user): ?>
+                    <?php if (!empty($users)): ?>
+                        <?php $counter = (($currentPage - 1) * $perPage) + 1; ?>
+                        <?php foreach ($users as $user): ?>
                             <?php
                                 $name  = $user->getName() ?? '';
                                 $email = $user->getEmail() ?? '';
-                                // Phone: if empty, show placeholder
                                 $phone = $user->getPhone() ?? '';
                                 if (empty($phone) || $phone === '+95') {
                                     $phoneDisplay = '+95 -------';
@@ -68,6 +91,7 @@ $filteredUsers = array_values($filteredUsers);
                                     </a>
                                 </td>
                             </tr>
+                            <?php $counter++; ?>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
@@ -79,5 +103,74 @@ $filteredUsers = array_values($filteredUsers);
                 </tbody>
             </table>
         </div>
+
+        <!-- ─── PAGINATION ─── -->
+        <?php if ($totalPages > 1): ?>
+        <div class="px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-b-xl">
+            <span class="text-sm text-gray-600 dark:text-gray-400">
+                Showing <strong><?= count($users) ?></strong> of <strong><?= number_format($totalUsers) ?></strong> users
+                <span class="text-xs text-gray-400 dark:text-gray-500">(Page <?= $currentPage ?> of <?= $totalPages ?>)</span>
+            </span>
+            
+            <div class="flex items-center gap-1.5 flex-wrap">
+                <?php
+                $queryParams = http_build_query([
+                    'search' => $search,
+                ]);
+                ?>
+                
+                <!-- Previous -->
+                <?php if ($currentPage > 1): ?>
+                    <a href="?<?= $queryParams ?>&page_num=<?= $currentPage - 1 ?>" 
+                       class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-sm">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                <?php else: ?>
+                    <button class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 opacity-40 cursor-not-allowed text-sm" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                <?php endif; ?>
+
+                <?php
+                $start = max(1, $currentPage - 2);
+                $end = min($totalPages, $currentPage + 2);
+                ?>
+                
+                <?php if ($start > 1): ?>
+                    <a href="?<?= $queryParams ?>&page_num=1" class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-sm">1</a>
+                    <?php if ($start > 2): ?>
+                        <span class="text-gray-400 dark:text-gray-500 px-1">…</span>
+                    <?php endif; ?>
+                <?php endif; ?>
+
+                <?php for ($i = $start; $i <= $end; $i++): ?>
+                    <?php if ($i == $currentPage): ?>
+                        <span class="px-3 py-1.5 rounded-lg bg-blue-600 text-white border border-blue-600 text-sm font-bold"><?= $i ?></span>
+                    <?php else: ?>
+                        <a href="?<?= $queryParams ?>&page_num=<?= $i ?>" class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-sm"><?= $i ?></a>
+                    <?php endif; ?>
+                <?php endfor; ?>
+
+                <?php if ($end < $totalPages): ?>
+                    <?php if ($end < $totalPages - 1): ?>
+                        <span class="text-gray-400 dark:text-gray-500 px-1">…</span>
+                    <?php endif; ?>
+                    <a href="?<?= $queryParams ?>&page_num=<?= $totalPages ?>" class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-sm"><?= $totalPages ?></a>
+                <?php endif; ?>
+
+                <!-- Next -->
+                <?php if ($currentPage < $totalPages): ?>
+                    <a href="?<?= $queryParams ?>&page_num=<?= $currentPage + 1 ?>" 
+                       class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-sm">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                <?php else: ?>
+                    <button class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 opacity-40 cursor-not-allowed text-sm" disabled>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 </div>

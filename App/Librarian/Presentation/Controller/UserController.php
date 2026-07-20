@@ -11,7 +11,6 @@ class UserController extends BaseController
     private UserAuthenticator $authenticator;
     private UserRepositoryInterface $userRepository;
 
-    
     public function __construct(
         UserAuthenticator $authenticator,
         UserRepositoryInterface $userRepository
@@ -20,7 +19,7 @@ class UserController extends BaseController
         $this->userRepository = $userRepository;
     }
 
-    
+
     public function index(): void
     {
         if (!$this->authenticator->isLoggedIn() || ($_SESSION['user_role'] ?? '') !== 'librarian') {
@@ -28,18 +27,49 @@ class UserController extends BaseController
             exit;
         }
 
-        $allUsers = $this->userRepository->findAll();
-        $users = array_filter($allUsers, function($user) {
-            return $user->getRole() === 'user';
-        });
+        $page = (int) ($_GET['page_num'] ?? 1);
+        if ($page < 1) $page = 1;
+        $perPage = 10;
 
+        $search = trim($_GET['search'] ?? '');
+
+        if (!empty($search)) {
+            $totalUsers = $this->userRepository->countByRoleWithSearch('user', $search);
+        } else {
+            $totalUsers = $this->userRepository->countByRole('user');
+        }
+        $totalPages = (int) ceil($totalUsers / $perPage);
+        
+        if ($page > $totalPages && $totalPages > 0) {
+            $page = $totalPages;
+        }
+
+        $offset = ($page - 1) * $perPage;
+
+        if (!empty($search)) {
+            $users = $this->userRepository->findByRoleWithSearchPaginated('user', $search, $offset, $perPage);
+        } else {
+            $users = $this->userRepository->findByRolePaginated('user', $offset, $perPage);
+        }
+
+        $page = 'users';
         $pageTitle = 'Manage Users';
-        $viewData = ['users' => $users];
+
+        $viewData = [
+            'users'        => $users,
+            'currentPage'  => (int) $page,
+            'totalPages'   => (int) $totalPages,
+            'totalUsers'   => (int) $totalUsers,
+            'perPage'      => (int) $perPage,
+            'search'       => $search,
+        ];
+
         $content = BASE_PATH . '/view/librarian/users/index.php';
+        extract($viewData);
         include BASE_PATH . '/view/librarian-dashboard.php';
     }
 
-    
+
     public function create(): void
     {
         if (!$this->authenticator->isLoggedIn() || ($_SESSION['user_role'] ?? '') !== 'librarian') {
@@ -47,20 +77,21 @@ class UserController extends BaseController
             exit;
         }
 
+        $page = 'users';
         $pageTitle = 'Add User';
         $content = BASE_PATH . '/view/librarian/users/create.php';
         include BASE_PATH . '/view/librarian-dashboard.php';
     }
 
-    
+
     public function store(): void
     {
         $_SESSION['success_message'] = 'User created successfully.';
-        header('Location: ' . BASE_URL . '/librarian/dashboard?page=users');
+        header('Location: ' . BASE_URL . '/librarian/users');
         exit;
     }
 
-    
+
     public function edit(int $id): void
     {
         if (!$this->authenticator->isLoggedIn() || ($_SESSION['user_role'] ?? '') !== 'librarian') {
@@ -71,26 +102,27 @@ class UserController extends BaseController
         $user = $this->userRepository->findById($id);
         if (!$user) {
             $_SESSION['error_message'] = 'User not found.';
-            header('Location: ' . BASE_URL . '/librarian/dashboard?page=users');
+            header('Location: ' . BASE_URL . '/librarian/users');
             exit;
         }
 
+        $page = 'users';
         $pageTitle = 'Edit User';
         $viewData = ['user' => $user];
         $content = BASE_PATH . '/view/librarian/users/edit.php';
+        extract($viewData);
         include BASE_PATH . '/view/librarian-dashboard.php';
     }
 
-    
+
     public function update(int $id): void
     {
-        
         $_SESSION['success_message'] = 'User updated successfully.';
-        header('Location: ' . BASE_URL . '/librarian/dashboard?page=users');
+        header('Location: ' . BASE_URL . '/librarian/users');
         exit;
     }
 
-    
+
     public function delete(int $id): void
     {
         if (!$this->authenticator->isLoggedIn() || ($_SESSION['user_role'] ?? '') !== 'librarian') {
@@ -100,7 +132,7 @@ class UserController extends BaseController
 
         $this->userRepository->delete($id);
         $_SESSION['success_message'] = 'User deleted successfully.';
-        header('Location: ' . BASE_URL . '/librarian/dashboard?page=users');
+        header('Location: ' . BASE_URL . '/librarian/users');
         exit;
     }
 }

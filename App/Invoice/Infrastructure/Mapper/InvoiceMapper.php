@@ -9,6 +9,14 @@ class InvoiceMapper
 {
     public function toDomain(array $data): Invoice
     {
+        $borrowedAt = isset($data['borrowed_at']) && !empty($data['borrowed_at']) 
+            ? new \DateTimeImmutable($data['borrowed_at']) 
+            : new \DateTimeImmutable();
+            
+        $dueDate = isset($data['due_date']) && !empty($data['due_date']) 
+            ? new \DateTimeImmutable($data['due_date']) 
+            : null;  
+
         $invoice = new Invoice(
             $data['invoice_number'],
             (int) $data['payment_id'],
@@ -19,8 +27,8 @@ class InvoiceMapper
             $data['currency'] ?? 'MMK',
             $data['payment_method'],
             $data['transaction_reference'],
-            new \DateTimeImmutable($data['borrowed_at']),
-            new \DateTimeImmutable($data['due_date'])
+            $borrowedAt,
+            $dueDate 
         );
 
         if (isset($data['id'])) {
@@ -31,7 +39,7 @@ class InvoiceMapper
             $invoice->setStatus($this->getStatusFromString($data['status']));
         }
 
-        if (isset($data['issued_at'])) {
+        if (isset($data['issued_at']) && !empty($data['issued_at'])) {
             $invoice->setIssuedAt(new \DateTimeImmutable($data['issued_at']));
         }
 
@@ -51,14 +59,13 @@ class InvoiceMapper
             'currency' => $invoice->getCurrency(),
             'payment_method' => $invoice->getPaymentMethod(),
             'transaction_reference' => $invoice->getTransactionReference(),
-            'borrowed_at' => $invoice->getBorrowedAt()->format('Y-m-d H:i:s'),
-            'due_date' => $invoice->getDueDate()->format('Y-m-d H:i:s'),
-            'issued_at' => $invoice->getIssuedAt()->format('Y-m-d H:i:s'), 
+            'borrowed_at' => $invoice->getBorrowedAt()?->format('Y-m-d H:i:s'),  
+            'due_date' => $invoice->getDueDate()?->format('Y-m-d H:i:s'),        
+            'issued_at' => $invoice->getIssuedAt()?->format('Y-m-d H:i:s'),      
             'status' => $invoice->getStatus()->getValue(),
         ];
     }
 
-    
     private function getStatusFromString(string $status): InvoiceStatus
     {
         $status = strtolower($status);

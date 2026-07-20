@@ -113,7 +113,6 @@ $adminMiddleware = [AuthMiddleware::class, $adminOnly];
 $librarianMiddleware = [AuthMiddleware::class, $librarianOnly];
 $userMiddleware = [AuthMiddleware::class, $userOnly];
 
-
 $router->get('/', function () {
     header('Location: ' . BASE_URL . '/home');
     exit;
@@ -122,7 +121,6 @@ $router->get('/', function () {
 $router->get('/home', [HomeController::class, 'index']);
 $router->get('/register', [AuthController::class, 'showRegister']);
 $router->get('/login', [LoginController::class, 'showLogin']);
-
 
 $router->get('/verify', [VerificationController::class, 'verifyEmail']);
 $router->get('/verify-phone', [VerificationController::class, 'showVerifyPhone']);
@@ -134,21 +132,22 @@ $router->post('/forgot-password/send', [VerificationController::class, 'sendRese
 $router->get('/reset-password', [VerificationController::class, 'showResetForm']);
 $router->post('/reset-password/update', [VerificationController::class, 'updatePassword']);
 
-
 $router->get('/notifications', [NotificationController::class, 'index'], 
     array_merge([AuthMiddleware::class], [$authorizationCheck('view_notifications')])
 );
 
-
 $router->get('/user-dashboard', [AuthController::class, 'userDashboard'], $userMiddleware);
 $router->get('/profile', [ProfileController::class, 'profile'], array_merge($userMiddleware, [$authorizationCheck('view_profile')]));
 $router->get('/profile/edit', [ProfileController::class, 'editProfile'], array_merge($userMiddleware, [$authorizationCheck('edit_profile')]));
+
+// ✅ Added POST route for profile update
+$router->post('/profile/update', [ProfileController::class, 'updateProfile'], array_merge($userMiddleware, [$authorizationCheck('edit_profile')]));
+
 $router->get('/payment/submit/{loan}', [PaymentController::class, 'showSubmitForm'], array_merge($userMiddleware, [$authorizationCheck('view_payments')]));
 $router->get('/payment/success', [PaymentController::class, 'success'], $userMiddleware);
 $router->post('/payment/submit', [PaymentController::class, 'submit'], array_merge($userMiddleware, [$authorizationCheck('create_payments')]));
 $router->post('/books/borrow/{id}', [BorrowController::class, 'borrow'], array_merge($userMiddleware, [$authorizationCheck('borrow_books')]));
 $router->get('/invoice/{id}', [UserInvoiceController::class, 'show'], $userMiddleware);
-
 
 $router->get('/admin/dashboard', [AdminDashboardController::class, 'index'], $adminMiddleware);
 $router->get('/admin/reports', [ReportController::class, 'index'], $adminMiddleware);
@@ -161,7 +160,11 @@ $router->get('/admin/librarian/delete/{id}', [AdminLibrarianController::class, '
 $router->get('/admin/users', [AdminUserController::class, 'index'], $adminMiddleware);
 $router->get('/admin/users/create', [AdminUserController::class, 'create'], $adminMiddleware);
 $router->get('/admin/users/edit/{id}', [AdminUserController::class, 'edit'], $adminMiddleware);
+
+// Delete user – POST method (form uses POST)
+$router->post('/admin/users/delete/{id}', [AdminUserController::class, 'delete'], $adminMiddleware);
 $router->get('/admin/users/delete/{id}', [AdminUserController::class, 'delete'], $adminMiddleware);
+
 $router->get('/admin/settings', [AdminSettingsController::class, 'index'], $adminMiddleware);
 $router->get('/admin/roles', [AdminRoleController::class, 'index'], $adminMiddleware);
 $router->get('/admin/roles/edit/{id}', [AdminRoleController::class, 'edit'], $adminMiddleware);
@@ -179,7 +182,6 @@ $router->post('/admin/users/edit/{id}', [AdminUserController::class, 'update'], 
 $router->post('/admin/settings/update', [AdminSettingsController::class, 'update'], $adminMiddleware);
 $router->post('/admin/roles/update/{id}', [AdminRoleController::class, 'update'], $adminMiddleware);
 $router->post('/admin/fines/update', [AdminFineController::class, 'update'], $adminMiddleware);
-
 
 $router->get('/librarian/dashboard', [LibrarianDashboardController::class, 'index'], $librarianMiddleware);
 
@@ -252,14 +254,11 @@ $router->post('/librarian/loans/reject/{id}', [LoanController::class, 'reject'],
 $router->post('/librarian/users/store', [UserController::class, 'store'], array_merge($librarianMiddleware, [$authorizationCheck('create_users')]));
 $router->post('/librarian/users/update/{id}', [UserController::class, 'update'], array_merge($librarianMiddleware, [$authorizationCheck('edit_users')]));
 
-
 $router->get('/books', [BookController::class, 'publicIndex'], [AuthMiddleware::class, $authorizationCheck('view_books')]);
 $router->get('/books/{id}', [BookController::class, 'show'], [AuthMiddleware::class, $authorizationCheck('view_books')]);
 
-
 $router->get('/api/notifications', [NotificationController::class, 'getNotifications'], [AuthMiddleware::class, $authorizationCheck('view_notifications')]);
 $router->post('/api/notifications/read', [NotificationController::class, 'markRead'], [AuthMiddleware::class, $authorizationCheck('edit_notifications')]);
-
 
 $router->get('/dev/seed-notifications', function () {
     $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
@@ -311,7 +310,6 @@ $router->get('/dev/seed-notifications', function () {
     echo json_encode(['success' => true, 'inserted' => count($samples)]);
 }, [AuthMiddleware::class]);
 
-
 $router->get('/admin/login', function () { header('Location: ' . BASE_URL . '/login'); exit; });
 $router->get('/librarian/login', function () { header('Location: ' . BASE_URL . '/login'); exit; });
 $router->get('/librarian/logout', function () {
@@ -325,16 +323,14 @@ $router->get('/librarian/logout', function () {
     exit;
 });
 
-
 $router->post('/verify-phone', [VerificationController::class, 'verifyPhone']);
 $router->post('/register', [AuthController::class, 'register']);
 $router->post('/verify-email-code', [VerificationController::class, 'verifyEmailWithCode']);
 $router->post('/login', [LoginController::class, 'login']);
 
-
 $router->get('/librarian/scanner', [ScanController::class, 'scanner'], 
     array_merge($librarianMiddleware, [$authorizationCheck('view_loans')])
 );
 
-// ✅ User View Route – Fixed: method name 'showUser' (not 'show')
+// User View Route – Fixed: method name 'showUser' (not 'show')
 $router->get('/admin/users/view/{id}', [AdminUserController::class, 'showUser'], $adminMiddleware);

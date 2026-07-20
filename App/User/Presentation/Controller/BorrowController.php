@@ -41,14 +41,13 @@ class BorrowController extends BaseController
 
             $_SESSION['success_message'] = 'Borrow request submitted successfully. Waiting for librarian approval.';
 
-           
             $this->createNotification(
-                null,                           
-                'librarian',                
+                null,
+                'librarian',
                 'borrow_request',
                 'Borrow request submitted',
                 'A user has requested to borrow a book.',
-                BASE_URL .'/librarian/dashboard?page=loans'
+                BASE_URL . '/librarian/dashboard?page=loans'
             );
 
             $this->redirect(BASE_URL . '/books/' . $id);

@@ -29,7 +29,6 @@ class AdminUserController extends BaseController
         return $this->userAuth->isLoggedIn() && ($_SESSION['user_role'] ?? '') === 'admin';
     }
 
-
     public function index(): void
     {
         if (!$this->isAdmin()) {
@@ -46,7 +45,6 @@ class AdminUserController extends BaseController
         ]);
     }
 
-
     public function create(): void
     {
         if (!$this->isAdmin()) {
@@ -60,7 +58,6 @@ class AdminUserController extends BaseController
         ]);
     }
 
-
     public function store(): void
     {
         if (!$this->isAdmin()) {
@@ -72,13 +69,14 @@ class AdminUserController extends BaseController
 
         try {
             $this->userService->createUser($data);
+            
             $this->createNotification(
                 (int) ($_SESSION['user_id'] ?? 0),
                 'admin',
                 'user_created',
                 'User created',
                 'A new user account was created successfully.',
-                '/admin/users'
+                BASE_URL . '/admin/users'
             );
             $_SESSION['success_message'] = 'User created successfully.';
         } catch (\Exception $e) {
@@ -90,8 +88,6 @@ class AdminUserController extends BaseController
         $this->redirect('/admin/users');
     }
 
-
-    
     public function showUser(int $id): void
     {
         if (!$this->isAdmin()) {
@@ -112,7 +108,6 @@ class AdminUserController extends BaseController
             'user'      => $user
         ]);
     }
-
 
     public function edit(int $id): void
     {
@@ -135,7 +130,6 @@ class AdminUserController extends BaseController
         ]);
     }
 
-
     public function update(int $id): void
     {
         if (!$this->isAdmin()) {
@@ -153,7 +147,7 @@ class AdminUserController extends BaseController
                 'user_updated',
                 'User updated',
                 'A user account was updated successfully.',
-                '/admin/users'
+                BASE_URL . '/admin/users'
             );
             $_SESSION['success_message'] = 'User updated successfully.';
         } catch (\Exception $e) {
@@ -164,7 +158,6 @@ class AdminUserController extends BaseController
 
         $this->redirect('/admin/users');
     }
-
 
     public function delete(int $id): void
     {
@@ -181,7 +174,7 @@ class AdminUserController extends BaseController
                 'user_deleted',
                 'User deleted',
                 'A user account was deleted successfully.',
-                '/admin/users'
+                BASE_URL . '/admin/users'
             );
             $_SESSION['success_message'] = 'User deleted successfully.';
         } catch (\Exception $e) {
@@ -190,7 +183,6 @@ class AdminUserController extends BaseController
 
         $this->redirect('/admin/users');
     }
-
 
     public function toggleStatus(int $id): void
     {
@@ -205,19 +197,31 @@ class AdminUserController extends BaseController
                 throw new \Exception('User not found.');
             }
 
+            if ($id === (int) ($_SESSION['user_id'] ?? 0)) {
+                throw new \Exception('You cannot change your own account status.');
+            }
+
             $currentStatus = $user->getStatus()->getValue();
+            error_log("🔍 Current status for user #{$id}: {$currentStatus}");
 
             if ($currentStatus === 'active') {
-                $newStatusString = 'suspended';
-            } elseif ($currentStatus === 'suspended') {
+                $newStatusString = 'inactive';
+            } elseif ($currentStatus === 'inactive') {
+                $newStatusString = 'active';
+            } elseif ($currentStatus === 'pending') {
                 $newStatusString = 'active';
             } else {
                 $newStatusString = 'active';
             }
 
-            $newStatus = new UserStatus($newStatusString);
+            error_log("🔍 New status for user #{$id}: {$newStatusString}");
+
+            $newStatus = UserStatus::fromString($newStatusString);
             $user->setStatus($newStatus);
             $this->userRepository->save($user);
+
+            $savedUser = $this->userRepository->findById($id);
+            error_log("✅ User #{$id} saved. Status is now: " . ($savedUser ? $savedUser->getStatus()->getValue() : 'NOT FOUND'));
 
             $this->createNotification(
                 (int) ($_SESSION['user_id'] ?? 0),
@@ -225,10 +229,11 @@ class AdminUserController extends BaseController
                 'user_status_toggled',
                 'User status updated',
                 'User account status was changed to ' . ucfirst($newStatusString) . '.',
-                '/admin/users'
+                BASE_URL . '/admin/users'
             );
             $_SESSION['success_message'] = 'User status updated to ' . ucfirst($newStatusString) . '.';
         } catch (\Exception $e) {
+            error_log("❌ Toggle status error: " . $e->getMessage());
             $_SESSION['error_message'] = 'Failed to toggle status: ' . $e->getMessage();
         }
 
