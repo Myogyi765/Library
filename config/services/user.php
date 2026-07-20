@@ -23,6 +23,9 @@ use App\Circulation\Application\Handler\BorrowBookHandler;
 use App\Invoice\Domain\Repository\InvoiceRepositoryInterface;
 use App\Shared\Core\Authorization\Authorization;
 
+use App\Circulation\Domain\Repository\LoanRepositoryInterface;
+use App\Book\Domain\Repository\BookRepositoryInterface;
+
 return function ($container) {
 
     $container->singleton(UserRepository::class, function ($c) {
@@ -75,7 +78,6 @@ return function ($container) {
         );
     });
 
-    // ✅ AuthController – DashboardStatisticsService ကို ဖယ်ရှားပြီး HomeController က ကိုင်တွယ်မယ်
     $container->singleton(AuthController::class, function ($c) {
         return new AuthController(
             $c->get(RegisterUser::class),
@@ -84,14 +86,12 @@ return function ($container) {
             $c->get(UserAuthenticator::class),
             $c->get('loan.repository'),
             $c->get('book.repository')
-            // DashboardStatisticsService မပါတော့ပါ
         );
     });
 
-    // ✅ HomeController အသစ် – ပင်မစာမျက်နှာအတွက်
     $container->singleton(HomeController::class, function ($c) {
         return new HomeController(
-            $c->get('book.repository'),          // BookRepositoryInterface
+            $c->get('book.repository'),
             $c->get(DashboardStatisticsService::class)
         );
     });
@@ -119,11 +119,14 @@ return function ($container) {
         );
     });
 
+    
     $container->singleton(DashboardController::class, function ($c) {
         return new DashboardController(
             $c->get(UserAuthenticator::class),
             $c->get(VerificationService::class),
-            $c->get(UserRepositoryInterface::class)
+            $c->get(UserRepositoryInterface::class),
+            $c->get(LoanRepositoryInterface::class),  
+            $c->get(BookRepositoryInterface::class)   
         );
     });
 

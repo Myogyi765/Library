@@ -13,9 +13,7 @@
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400">Manage all payments</p>
     </div>
-    <a href="<?= BASE_URL ?>/librarian/dashboard?page=refunds" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition shadow-md hover:shadow-lg">
-        <i class="fas fa-undo-alt"></i> Manage Refunds
-    </a>
+   
 </div>
 
 <?php if (isset($_SESSION['flash_success'])): ?>
@@ -56,7 +54,7 @@
             <!-- ===== SIMPLE HEADER ===== -->
             <thead class="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">#</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Id</th>
                     <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">User</th>
                     <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Loan</th>
                     <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Amount</th>
@@ -105,14 +103,14 @@
                             };
                         ?>
                         <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
-                            <td class="px-3 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">#<?= $id ?></td>
+                            <td class="px-3 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap"><?= $id ?></td>
                             <td class="px-3 py-3 text-gray-700 dark:text-gray-300">
                                 <span class="font-medium"><?= htmlspecialchars($userName) ?></span>
                                 <?php if ($userEmail): ?>
                                     <br><span class="text-xs text-gray-400"><?= htmlspecialchars($userEmail) ?></span>
                                 <?php endif; ?>
                             </td>
-                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">#<?= $payment['loan_id'] ?? '?' ?></td>
+                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap"><?= $payment['loan_id'] ?? '?' ?></td>
                             <td class="px-3 py-3 text-gray-700 dark:text-gray-300 font-semibold whitespace-nowrap"><?= number_format($amount, 2) ?> MMK</td>
                             <td class="px-3 py-3">
                                 <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 whitespace-nowrap">

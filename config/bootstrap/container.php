@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Shared\Core\ErrorHandler;
 use App\Shared\Core\Authorization\Authorization;
 
-
 $container = new class {
     private array $services = [];
     private array $singletons = [];
@@ -50,7 +49,7 @@ $container = new class {
     }
 };
 
-
+// ─── Database ───────────────────────────────────────────────
 $container->singleton('db', function () {
     $host = $_ENV['DB_HOST'] ?? 'localhost';
     $dbname = $_ENV['DB_NAME'] ?? 'library';
@@ -68,12 +67,14 @@ $container->singleton('db', function () {
     return new \PDO($dsn, $user, $pass, $options);
 });
 
+// ─── Authorization ──────────────────────────────────────────
 $container->singleton(Authorization::class, function ($c) {
     return new Authorization($c->get('db'));
 });
 $container->set('authorization', fn($c) => $c->get(Authorization::class));
 $container->set('Authorization', fn($c) => $c->get(Authorization::class));
 
+// ─── Admin Service (placeholder) ───────────────────────────
 $container->singleton('admin.service', function ($c) {
     return new class {
         public function __call($name, $args) {
@@ -82,7 +83,7 @@ $container->singleton('admin.service', function ($c) {
     };
 });
 
-
+// ─── Load Module Services ──────────────────────────────────
 $moduleFiles = [
     __DIR__ . '/../../config/services/user.php',
     __DIR__ . '/../../config/services/book.php',
@@ -102,7 +103,6 @@ foreach ($moduleFiles as $path) {
         }
     }
 }
-
 
 ErrorHandler::log('📦 Service Container created (explicit order, no prefixes)', 'INFO');
 

@@ -5,6 +5,7 @@ use App\Shared\Base\BaseController;
 use App\User\Infrastructure\Security\UserAuthenticator;
 use App\Payment\Domain\Repository\PaymentRepositoryInterface;
 use App\Shared\Core\Authorization\Authorization;
+use PDO;
 
 class RefundController extends BaseController
 {
@@ -38,7 +39,22 @@ class RefundController extends BaseController
 
         $statusFilter = $_GET['status'] ?? 'all';
 
-        $allPayments = $this->paymentRepo->findAllWithDetails(0, 100);
+        $db = $this->container->get('db');
+
+        $sql = "
+            SELECT 
+                p.*,
+                u.name AS user_name,
+                u.email AS user_email
+            FROM payments p
+            LEFT JOIN users u ON p.user_id = u.id
+            ORDER BY p.created_at DESC
+        ";
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute();
+        $allPayments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
         $refunds = array_filter($allPayments, function($p) {
             return isset($p['refund_status']) && $p['refund_status'] !== 'none';
         });

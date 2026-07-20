@@ -80,7 +80,7 @@ if (!$loan) {
         border: 1px solid var(--border-color);
         border-radius: 1rem;
         padding: 0.75rem 1.25rem;
-        color: var(--text-primary);
+        /* ✅ No color defined here – will be set by Tailwind or inline style */
         transition: all 0.3s ease;
         width: 100%;
         font-size: 1rem;
@@ -95,6 +95,15 @@ if (!$loan) {
     .input-field:read-only {
         opacity: 0.7;
         cursor: not-allowed;
+    }
+
+    /* ✅ Fix for amount input text color */
+    .amount-input {
+        color: #000000 !important;  /* Light mode – black */
+    }
+
+    html.dark .amount-input {
+        color: #ffffff !important;  /* Dark mode – white */
     }
 
     .btn-submit {
@@ -122,7 +131,7 @@ if (!$loan) {
 
     .info-box {
         background: var(--active-bg);
-        border: 1px solid rgba(59, 130, 246, 0.15); /* 🟦 changed from emerald to blue */
+        border: 1px solid rgba(59, 130, 246, 0.15);
         border-radius: 1.25rem;
         padding: 1.5rem;
         transition: all 0.3s ease;
@@ -221,9 +230,8 @@ if (!$loan) {
     });
 </script>
 
-<div class="container max-w-3xl mx-auto py-12 px-4">
+<div class="container max-w-xl mx-auto py-14 px-6">
     <div class="payment-card">
-        <!-- 🟦 Changed icon gradient and shadow from emerald/teal to blue/indigo -->
         <div class="flex items-center gap-3 mb-6">
             <div class="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl text-white shadow-lg shadow-blue-500/20">
                 <i class="fas fa-credit-card text-xl"></i>
@@ -243,7 +251,6 @@ if (!$loan) {
         <?php endif; ?>
 
         <div class="info-box mb-6">
-            <!-- 🟦 Changed icon color from emerald to blue -->
             <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                 <i class="fas fa-info-circle text-blue-600 dark:text-blue-400"></i>
                 Payment Account Information
@@ -256,7 +263,6 @@ if (!$loan) {
 
             <div class="tab-content active" id="tab-kpay">
                 <div class="text-center">
-                    <!-- 🟦 Changed text color from teal to blue -->
                     <p class="font-bold text-blue-600 dark:text-blue-400 text-lg">KPay</p>
                     <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Account: 09-123456789</p>
                     <p class="text-sm text-gray-600 dark:text-gray-300">Name: Library Fund</p>
@@ -280,20 +286,21 @@ if (!$loan) {
             <input type="hidden" name="idempotency_key" value="<?= htmlspecialchars($idempotencyKey ?? '') ?>">
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label class="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
                     Payment Amount (MMK)
                 </label>
+                <!-- ✅ FIX: Added class "amount-input" and removed Tailwind text classes -->
                 <input
                     type="number"
                     name="amount"
                     value="<?= htmlspecialchars($borrowingFee ?? 5000) ?>"
                     readonly
-                    class="input-field"
+                    class="input-field amount-input"
                 >
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label class="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
                     Transaction Reference <span class="text-red-500">*</span>
                 </label>
                 <input
@@ -306,11 +313,10 @@ if (!$loan) {
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label class="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
                     Payment Screenshot <span class="text-red-500">*</span>
                 </label>
                 <div class="relative">
-                    <!-- 🟦 Changed file button colors from emerald to blue -->
                     <input
                         type="file"
                         name="screenshot"

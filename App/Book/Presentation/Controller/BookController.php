@@ -7,6 +7,7 @@ use App\Book\Application\UseCase\GetBook;
 use App\Book\Application\UseCase\UpdateBook;
 use App\Book\Application\UseCase\DeleteBook;
 use App\Book\Application\DTO\BookDTO;
+use App\Book\Domain\Repository\BookRepositoryInterface;
 use App\Book\Domain\Repository\CategoryRepositoryInterface;
 use App\User\Infrastructure\Security\UserAuthenticator;
 use App\Shared\Base\BaseController;
@@ -22,15 +23,17 @@ class BookController extends BaseController
     private UserAuthenticator $authenticator;
     private CategoryRepositoryInterface $categoryRepository;
     private Authorization $authorization;
+    private BookRepositoryInterface $bookRepo;
 
     public function __construct($container)
     {
         parent::__construct($container);
-        $this->createBook = new CreateBook($this->container->get('book.repository'));
-        $this->getBooks = new GetBooks($this->container->get('book.repository'));
-        $this->getBook = new GetBook($this->container->get('book.repository'));
-        $this->updateBook = new UpdateBook($this->container->get('book.repository'));
-        $this->deleteBook = new DeleteBook($this->container->get('book.repository'));
+        $this->bookRepo = $this->container->get('book.repository');
+        $this->createBook = new CreateBook($this->bookRepo);
+        $this->getBooks = new GetBooks($this->bookRepo);
+        $this->getBook = new GetBook($this->bookRepo);
+        $this->updateBook = new UpdateBook($this->bookRepo);
+        $this->deleteBook = new DeleteBook($this->bookRepo);
         $this->authenticator = $this->container->get('user.authenticator');
         $this->categoryRepository = $this->container->get('category.repository');
         $this->authorization = $this->container->get('Authorization');
@@ -52,11 +55,29 @@ class BookController extends BaseController
         }
     }
 
+
     public function librarianIndex(): void
     {
         $this->ensurePermissions('view_books');
 
-        $books = $this->getBooks->execute();
+        $page = 'books';
+
+        $pageNum = (int) ($_GET['page_num'] ?? 1);
+        if ($pageNum < 1) $pageNum = 1;
+        $perPage = 10;
+
+        $search = trim($_GET['search'] ?? '');
+        $categoryId = isset($_GET['category']) && $_GET['category'] !== '' ? (int) $_GET['category'] : null;
+
+        $totalBooks = $this->bookRepo->countFiltered($search, $categoryId);
+        $totalPages = ceil($totalBooks / $perPage);
+        
+        if ($pageNum > $totalPages && $totalPages > 0) {
+            $pageNum = $totalPages;
+        }
+
+        $offset = ($pageNum - 1) * $perPage;
+        $books = $this->bookRepo->findFilteredPaginated($search, $categoryId, $offset, $perPage);
         $categories = $this->categoryRepository->findAll();
 
         $categoryMap = [];
@@ -69,15 +90,24 @@ class BookController extends BaseController
             'books' => $books,
             'categories' => $categories,
             'categoryMap' => $categoryMap,
+            'currentPage' => $pageNum,
+            'totalPages' => $totalPages,
+            'totalBooks' => $totalBooks,
+            'perPage' => $perPage,
+            'search' => $search,
+            'categoryId' => $categoryId,
         ];
+
         $content = BASE_PATH . '/view/librarian/books/index.php';
         include BASE_PATH . '/view/librarian-dashboard.php';
     }
+
 
     public function create(): void
     {
         $this->ensurePermissions('create_books');
 
+        $page = 'books';
         $categories = $this->categoryRepository->findAll();
         
         $pageTitle = 'Add New Book';
@@ -85,6 +115,7 @@ class BookController extends BaseController
         $content = BASE_PATH . '/view/librarian/books/create.php';
         include BASE_PATH . '/view/librarian-dashboard.php';
     }
+
 
     public function store(): void
     {
@@ -124,34 +155,35 @@ class BookController extends BaseController
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed to create book: ' . $e->getMessage();
         }
-        header('Location: ' . BASE_URL . '/librarian/dashboard?page=books');
+        header('Location: ' . BASE_URL . '/librarian/books');
         exit;
     }
 
- public function edit(int $id): void
-{
-    $this->ensurePermissions('edit_books');
 
-    $book = $this->getBook->execute($id);
-    if (!$book) {
-        $_SESSION['error_message'] = 'Book not found.';
-        header('Location: ' . BASE_URL . '/librarian/dashboard?page=books');
-        exit;
+    public function edit(int $id): void
+    {
+        $this->ensurePermissions('edit_books');
+
+        $book = $this->getBook->execute($id);
+        if (!$book) {
+            $_SESSION['error_message'] = 'Book not found.';
+            header('Location: ' . BASE_URL . '/librarian/books');
+            exit;
+        }
+        $categories = $this->categoryRepository->findAll();
+
+        $page = 'books';
+        $pageTitle = 'Edit Book';
+        
+        $viewData = [
+            'book' => $book,
+            'categories' => $categories,
+        ];
+        $content = BASE_PATH . '/view/librarian/books/edit.php';
+        include BASE_PATH . '/view/librarian-dashboard.php';
     }
-    $categories = $this->categoryRepository->findAll();
 
-    $page = 'books_edit';
-    $pageTitle = 'Edit Book';
-    
-    $viewData = [
-        'book' => $book,
-        'categories' => $categories,
-    ];
-    extract($viewData);
 
-    $content = BASE_PATH . '/view/librarian/books/edit.php';
-    include BASE_PATH . '/view/librarian-dashboard.php';
-}
     public function update(int $id): void
     {
         $this->ensurePermissions('edit_books');
@@ -181,9 +213,10 @@ class BookController extends BaseController
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed to update book: ' . $e->getMessage();
         }
-        header('Location: ' . BASE_URL . '/librarian/dashboard?page=books');
+        header('Location: ' . BASE_URL . '/librarian/books');
         exit;
     }
+
 
     public function delete(int $id): void
     {
@@ -195,9 +228,10 @@ class BookController extends BaseController
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed to delete book: ' . $e->getMessage();
         }
-        header('Location: ' . BASE_URL . '/librarian/dashboard?page=books');
+        header('Location: ' . BASE_URL . '/librarian/books');
         exit;
     }
+
 
     public function publicIndex(): void
     {
@@ -211,10 +245,36 @@ class BookController extends BaseController
             return;
         }
 
-        $books = $this->getBooks->execute();
+        $page = (int) ($_GET['page'] ?? 1);
+        if ($page < 1) $page = 1;
+        $perPage = 12;
+
+        $search = trim($_GET['search'] ?? '');
+        $categoryId = isset($_GET['category']) && $_GET['category'] !== '' ? (int) $_GET['category'] : null;
+
+        $totalBooks = $this->bookRepo->countFiltered($search, $categoryId);
+        $totalPages = ceil($totalBooks / $perPage);
+        
+        if ($page > $totalPages && $totalPages > 0) {
+            $page = $totalPages;
+        }
+
+        $offset = ($page - 1) * $perPage;
+        $books = $this->bookRepo->findFilteredPaginated($search, $categoryId, $offset, $perPage);
         $categories = $this->categoryRepository->findAll();
-        $this->view('public/books/index', ['books' => $books, 'categories' => $categories]);
+
+        $this->view('public/books/index', [
+            'books' => $books,
+            'categories' => $categories,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'totalBooks' => $totalBooks,
+            'perPage' => $perPage,
+            'search' => $search,
+            'categoryId' => $categoryId,
+        ]);
     }
+
 
     public function show(int $id): void
     {

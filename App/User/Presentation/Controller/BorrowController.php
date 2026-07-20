@@ -48,7 +48,7 @@ class BorrowController extends BaseController
                 'borrow_request',
                 'Borrow request submitted',
                 'A user has requested to borrow a book.',
-                '/librarian/dashboard?page=loans'
+                BASE_URL .'/librarian/dashboard?page=loans'
             );
 
             $this->redirect(BASE_URL . '/books/' . $id);

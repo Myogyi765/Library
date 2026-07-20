@@ -8,22 +8,30 @@ use App\Shared\Base\BaseController;
 use App\User\Domain\Repository\UserRepositoryInterface;
 use App\User\Domain\Service\VerificationServiceInterface;
 use App\User\Infrastructure\Security\UserAuthenticator;
+use App\Circulation\Domain\Repository\LoanRepositoryInterface;
+use App\Book\Domain\Repository\BookRepositoryInterface;
 
 class DashboardController extends BaseController
 {
     private UserAuthenticator $authenticator;
     private VerificationServiceInterface $verificationService;
     private UserRepositoryInterface $userRepository;
+    private LoanRepositoryInterface $loanRepository;
+    private BookRepositoryInterface $bookRepository;
 
     public function __construct(
         UserAuthenticator $authenticator,
         VerificationServiceInterface $verificationService,
-        UserRepositoryInterface $userRepository
+        UserRepositoryInterface $userRepository,
+        LoanRepositoryInterface $loanRepository,
+        BookRepositoryInterface $bookRepository
     ) {
         parent::__construct();
         $this->authenticator = $authenticator;
         $this->verificationService = $verificationService;
         $this->userRepository = $userRepository;
+        $this->loanRepository = $loanRepository;
+        $this->bookRepository = $bookRepository;
     }
 
     public function userDashboard(): void
@@ -61,8 +69,27 @@ class DashboardController extends BaseController
             }
         }
 
+        $loans = [];
+        $books = [];
+        if ($user) {
+            $userId = $user->getId();
+            $loans = $this->loanRepository->findByUserId($userId) ?? [];
+
+            foreach ($loans as $loan) {
+                $bookId = $loan->getBookId();
+                if (!isset($books[$bookId])) {
+                    $book = $this->bookRepository->findById($bookId);
+                    if ($book) {
+                        $books[$bookId] = $book;
+                    }
+                }
+            }
+        }
+
         $this->view('user-dashboard', [
             'user' => $user,
+            'loans' => $loans,
+            'books' => $books,
             'pageTitle' => 'My Dashboard'
         ]);
     }

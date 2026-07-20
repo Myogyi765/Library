@@ -37,13 +37,13 @@
         <table class="w-full text-sm">
             <thead class="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">#</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Id</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">User</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Book</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Borrowed</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Due Date</th>
                     <th class="px-4 py-3 text-center text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Status</th>
-                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Actions</th>
+                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -73,49 +73,49 @@
                             <td class="px-4 py-3"><?= $borrowedAt ?></td>
                             <td class="px-4 py-3"><?= $dueDate ?></td>
                             <td class="px-4 py-3 text-center">
-                                <span class="px-2 py-1 text-xs rounded-full bg-<?= $statusColor ?>-100 text-<?= $statusColor ?>-800 dark:bg-<?= $statusColor ?>-900/30 dark:text-<?= $statusColor ?>-300">
+                                <!-- ✅ Fixed alignment and forced inline-block with no wrapping -->
+                                <span class="inline-block whitespace-nowrap px-2 py-1 text-xs rounded-full bg-<?= $statusColor ?>-100 text-<?= $statusColor ?>-800 dark:bg-<?= $statusColor ?>-900/30 dark:text-<?= $statusColor ?>-300">
                                     <?= ucfirst(str_replace('_', ' ', $status)) ?>
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right">
-                                 <div class="flex items-center justify-end gap-1 flex-nowrap">
-                                <?php if ($status === 'pending'): ?>
-                                    <form action="<?= BASE_URL ?>/librarian/loans/confirm/<?= $loan->getId() ?>" method="POST" class="inline">
-                                        <button type="submit" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 mr-2" title="Confirm">
-                                            <i class="fas fa-check-circle"></i>
-                                        </button>
-                                    </form>
-                                    <form action="<?= BASE_URL ?>/librarian/loans/reject/<?= $loan->getId() ?>" method="POST" class="inline">
-                                        <button type="submit" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 mr-2" title="Reject">
-                                            <i class="fas fa-times-circle"></i>
-                                        </button>
-                                    </form>
-                                <?php elseif ($status === 'awaiting_payment'): ?>
-                                    <span class="text-xs text-orange-600 dark:text-orange-400">Awaiting payment</span>
-                                <?php elseif ($status === 'active'): ?>
-                                    <form action="<?= BASE_URL ?>/librarian/loans/return/<?= $loan->getId() ?>" method="POST" class="inline">
-                                        <button type="submit" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-2" title="Return Book">
-                                            <i class="fas fa-undo-alt"></i>
-                                        </button>
-                                    </form>
-                                    <a href="<?= BASE_URL ?>/librarian/loans/edit/<?= $loan->getId() ?>" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-2" title="Edit">
-                                        <i class="fas fa-edit"></i>
+                                <div class="flex items-center justify-end gap-3 flex-nowrap">
+                                    <?php if ($status === 'pending'): ?>
+                                        <!-- Confirm icon -->
+                                        <form action="<?= BASE_URL ?>/librarian/loans/confirm/<?= $loan->getId() ?>" method="POST" class="inline">
+                                            <button type="submit" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300" title="Confirm">
+                                                <i class="fas fa-check-circle"></i>
+                                            </button>
+                                        </form>
+                                        <!-- Reject icon -->
+                                        <form action="<?= BASE_URL ?>/librarian/loans/reject/<?= $loan->getId() ?>" method="POST" class="inline">
+                                            <button type="submit" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Reject">
+                                                <i class="fas fa-times-circle"></i>
+                                            </button>
+                                        </form>
+                                    <?php elseif ($status === 'active'): ?>
+                                        <!-- Return icon -->
+                                        <form action="<?= BASE_URL ?>/librarian/loans/return/<?= $loan->getId() ?>" method="POST" class="inline">
+                                            <button type="submit" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" title="Return Book">
+                                                <i class="fas fa-undo-alt"></i>
+                                            </button>
+                                        </form>
+                                        <!-- Edit icon -->
+                                        <a href="<?= BASE_URL ?>/librarian/loans/edit/<?= $loan->getId() ?>" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                    <!-- Delete icon (always visible) -->
+                                    <a href="<?= BASE_URL ?>/librarian/loans/delete/<?= $loan->getId() ?>" 
+                                       class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" 
+                                       title="Delete" 
+                                       onclick="return confirm('Delete this loan record?')">
+                                        <i class="fas fa-trash-alt"></i>
                                     </a>
-                                <?php elseif ($status === 'returned'): ?>
-                                    <span class="text-xs text-green-600 dark:text-green-400">Returned</span>
-                                <?php elseif ($status === 'rejected'): ?>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">Rejected</span>
-                                <?php endif; ?>
-                                <a href="<?= BASE_URL ?>/librarian/loans/delete/<?= $loan->getId() ?>" 
-                                   class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" 
-                                   title="Delete" 
-                                   onclick="return confirm('Delete this loan record?')">
-                                    <i class="fas fa-trash-alt"></i>
-                                </a>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
-                    </div>
                 <?php else: ?>
                     <tr>
                         <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">No loans recorded.</td>

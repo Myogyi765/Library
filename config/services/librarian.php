@@ -16,6 +16,8 @@ use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Payment\Domain\Repository\PaymentRepositoryInterface;
 use App\Shared\Core\Authorization\Authorization;
 use App\Admin\Application\Service\DashboardStatisticsService;
+use App\Circulation\Application\Handler\BorrowBookHandler;
+use App\Admin\Application\Service\SettingsService;
 
 return function ($container) {
 
@@ -50,10 +52,12 @@ return function ($container) {
 
     $container->singleton(LoanController::class, function ($c) {
         return new LoanController(
-            $c->get(LoanRepositoryInterface::class),
-            $c->get(BookRepositoryInterface::class),
-            $c->get(UserRepositoryInterface::class),
-            $c->get('db')
+            $c->get(LoanRepositoryInterface::class),   // Argument #1
+            $c->get(BookRepositoryInterface::class),   // Argument #2
+            $c->get(UserRepositoryInterface::class),   // Argument #3
+            $c->get(BorrowBookHandler::class),         // Argument #4
+            $c->get(SettingsService::class),           // Argument #5
+            $c->get('db')                              // Argument #6 (PDO)
         );
     });
 

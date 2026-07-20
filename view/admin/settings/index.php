@@ -16,6 +16,7 @@ $defaultPermissions = [
     'view_reports', 'export_reports', 'manage_settings',
     'view_notifications', 'create_notifications', 'edit_notifications',
     'view_payments', 'create_payments', 'edit_payments', 'delete_payments',
+    'refund_payments', // ✅ Added missing permission
 ];
 
 $roles = $roles ?? ['admin', 'librarian', 'user'];

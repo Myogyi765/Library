@@ -6,7 +6,6 @@ use App\User\Presentation\Controller\ProfileController;
 use App\User\Presentation\Controller\BorrowController;
 use App\User\Presentation\Controller\HomeController;
 
-
 use App\Invoice\Presentation\Controller\InvoiceController as UserInvoiceController;
 
 use App\Payment\Presentation\Controller\PaymentController;
@@ -41,7 +40,6 @@ function isApiRequest(): bool {
     return strpos($path, '/api') === 0;
 }
 
-// ---------- Role check callbacks (with JSON support) ----------
 $adminOnly = function () {
     if (($_SESSION['user_role'] ?? '') !== 'admin') {
         if (isApiRequest()) {
@@ -115,6 +113,7 @@ $adminMiddleware = [AuthMiddleware::class, $adminOnly];
 $librarianMiddleware = [AuthMiddleware::class, $librarianOnly];
 $userMiddleware = [AuthMiddleware::class, $userOnly];
 
+
 $router->get('/', function () {
     header('Location: ' . BASE_URL . '/home');
     exit;
@@ -123,10 +122,23 @@ $router->get('/', function () {
 $router->get('/home', [HomeController::class, 'index']);
 $router->get('/register', [AuthController::class, 'showRegister']);
 $router->get('/login', [LoginController::class, 'showLogin']);
+
+
 $router->get('/verify', [VerificationController::class, 'verifyEmail']);
 $router->get('/verify-phone', [VerificationController::class, 'showVerifyPhone']);
 $router->get('/resend-verification', [VerificationController::class, 'resendVerification']);
 $router->get('/logout', [LoginController::class, 'logout']);
+
+$router->get('/forgot-password', [VerificationController::class, 'showForgotForm']);
+$router->post('/forgot-password/send', [VerificationController::class, 'sendResetLink']);
+$router->get('/reset-password', [VerificationController::class, 'showResetForm']);
+$router->post('/reset-password/update', [VerificationController::class, 'updatePassword']);
+
+
+$router->get('/notifications', [NotificationController::class, 'index'], 
+    array_merge([AuthMiddleware::class], [$authorizationCheck('view_notifications')])
+);
+
 
 $router->get('/user-dashboard', [AuthController::class, 'userDashboard'], $userMiddleware);
 $router->get('/profile', [ProfileController::class, 'profile'], array_merge($userMiddleware, [$authorizationCheck('view_profile')]));
@@ -136,6 +148,7 @@ $router->get('/payment/success', [PaymentController::class, 'success'], $userMid
 $router->post('/payment/submit', [PaymentController::class, 'submit'], array_merge($userMiddleware, [$authorizationCheck('create_payments')]));
 $router->post('/books/borrow/{id}', [BorrowController::class, 'borrow'], array_merge($userMiddleware, [$authorizationCheck('borrow_books')]));
 $router->get('/invoice/{id}', [UserInvoiceController::class, 'show'], $userMiddleware);
+
 
 $router->get('/admin/dashboard', [AdminDashboardController::class, 'index'], $adminMiddleware);
 $router->get('/admin/reports', [ReportController::class, 'index'], $adminMiddleware);
@@ -167,6 +180,7 @@ $router->post('/admin/settings/update', [AdminSettingsController::class, 'update
 $router->post('/admin/roles/update/{id}', [AdminRoleController::class, 'update'], $adminMiddleware);
 $router->post('/admin/fines/update', [AdminFineController::class, 'update'], $adminMiddleware);
 
+
 $router->get('/librarian/dashboard', [LibrarianDashboardController::class, 'index'], $librarianMiddleware);
 
 $router->get('/librarian/books', [BookController::class, 'librarianIndex'], array_merge($librarianMiddleware, [$authorizationCheck('view_books')]));
@@ -187,25 +201,21 @@ $router->get('/librarian/users/delete/{id}', [UserController::class, 'delete'], 
 $router->get('/librarian/payments', [LibrarianPaymentController::class, 'index'], 
     array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
 );
-
 $router->get('/librarian/payments/{id}/refund', [LibrarianPaymentController::class, 'showRefundForm'], 
     array_merge($librarianMiddleware, [$authorizationCheck('refund_payments')])
 );
 $router->post('/librarian/payments/{id}/refund', [LibrarianPaymentController::class, 'processRefund'], 
     array_merge($librarianMiddleware, [$authorizationCheck('refund_payments')])
 );
-
 $router->post('/librarian/payments/{id}/approve', [LibrarianPaymentController::class, 'approve'], 
     array_merge($librarianMiddleware, [$authorizationCheck('edit_payments')])
 );
 $router->post('/librarian/payments/{id}/reject', [LibrarianPaymentController::class, 'reject'], 
     array_merge($librarianMiddleware, [$authorizationCheck('edit_payments')])
 );
-
 $router->get('/librarian/payments/{id}', [LibrarianPaymentController::class, 'show'], 
     array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
 );
-
 $router->get('/librarian/payments/invoice/{id}', [LibrarianPaymentController::class, 'viewInvoice'], 
     array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
 );
@@ -242,11 +252,14 @@ $router->post('/librarian/loans/reject/{id}', [LoanController::class, 'reject'],
 $router->post('/librarian/users/store', [UserController::class, 'store'], array_merge($librarianMiddleware, [$authorizationCheck('create_users')]));
 $router->post('/librarian/users/update/{id}', [UserController::class, 'update'], array_merge($librarianMiddleware, [$authorizationCheck('edit_users')]));
 
+
 $router->get('/books', [BookController::class, 'publicIndex'], [AuthMiddleware::class, $authorizationCheck('view_books')]);
 $router->get('/books/{id}', [BookController::class, 'show'], [AuthMiddleware::class, $authorizationCheck('view_books')]);
 
+
 $router->get('/api/notifications', [NotificationController::class, 'getNotifications'], [AuthMiddleware::class, $authorizationCheck('view_notifications')]);
 $router->post('/api/notifications/read', [NotificationController::class, 'markRead'], [AuthMiddleware::class, $authorizationCheck('edit_notifications')]);
+
 
 $router->get('/dev/seed-notifications', function () {
     $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
@@ -298,6 +311,7 @@ $router->get('/dev/seed-notifications', function () {
     echo json_encode(['success' => true, 'inserted' => count($samples)]);
 }, [AuthMiddleware::class]);
 
+
 $router->get('/admin/login', function () { header('Location: ' . BASE_URL . '/login'); exit; });
 $router->get('/librarian/login', function () { header('Location: ' . BASE_URL . '/login'); exit; });
 $router->get('/librarian/logout', function () {
@@ -311,11 +325,16 @@ $router->get('/librarian/logout', function () {
     exit;
 });
 
+
 $router->post('/verify-phone', [VerificationController::class, 'verifyPhone']);
 $router->post('/register', [AuthController::class, 'register']);
 $router->post('/verify-email-code', [VerificationController::class, 'verifyEmailWithCode']);
 $router->post('/login', [LoginController::class, 'login']);
 
+
 $router->get('/librarian/scanner', [ScanController::class, 'scanner'], 
     array_merge($librarianMiddleware, [$authorizationCheck('view_loans')])
 );
+
+// ✅ User View Route – Fixed: method name 'showUser' (not 'show')
+$router->get('/admin/users/view/{id}', [AdminUserController::class, 'showUser'], $adminMiddleware);

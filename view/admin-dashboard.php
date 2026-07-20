@@ -42,6 +42,9 @@ if (!isset($stats) || !is_array($stats)) {
         'overdue' => 11,
     ];
 }
+
+// ✅ Unread notifications count (should be passed from controller)
+$unreadNotifications = $unreadNotifications ?? 0;
 ?>
 
 <div class="flex h-screen bg-gray-50 dark:bg-gray-900">
@@ -65,6 +68,8 @@ if (!isset($stats) || !is_array($stats)) {
                 <span>Dashboard</span>
             </a>
 
+        
+
             <!-- Librarian (Purple) -->
             <a href="<?= BASE_URL ?>/admin/librarian"
                 class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg <?= strpos($_SERVER['REQUEST_URI'], '/admin/librarian') !== false ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
@@ -82,11 +87,10 @@ if (!isset($stats) || !is_array($stats)) {
             <!-- Books (Amber/Orange) -->
             <a href="<?= BASE_URL ?>/admin/books"
                 class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg <?= strpos($_SERVER['REQUEST_URI'], '/admin/books') !== false ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-book w-5 text-center <?= strpos($_SERVER['REQUEST_URI'], '/admin/books') !== false ? 'text-blue-600 dark:text-blue-400' : 'text-amber-500 dark:text-amber-400' ?>"></i>
+                <i class="fas fa-book w-5 text-center <?= strpos($_SERVER['REQUEST_URI'], '/admin/books') !== false ? 'text-blue-600 dark:text-blue-400' : 'text-blue-500 dark:text-amber-400' ?>"></i>
                 <span>Books</span>
             </a>
 
-          
             <!-- Reports (Rose/Pink) -->
             <a href="<?= BASE_URL ?>/admin/reports"
                 class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg <?= strpos($_SERVER['REQUEST_URI'], '/admin/reports') !== false ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
@@ -101,7 +105,9 @@ if (!isset($stats) || !is_array($stats)) {
                 <span>Fine & Fee Settings</span>
             </a>
 
-            <!-- ✅ Settings (Blue) – changed from gray to blue -->
+            
+
+            <!-- ✅ Settings (Blue) -->
             <a href="<?= BASE_URL ?>/admin/settings"
                 class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg <?= strpos($_SERVER['REQUEST_URI'], '/admin/settings') !== false ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
                 <i class="fas fa-cog w-5 text-center <?= strpos($_SERVER['REQUEST_URI'], '/admin/settings') !== false ? 'text-blue-600 dark:text-blue-400' : 'text-blue-500 dark:text-blue-400' ?>"></i>
@@ -122,7 +128,6 @@ if (!isset($stats) || !is_array($stats)) {
                     <p class="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
                 </div>
             </div>
-         
         </div>
     </aside>
 

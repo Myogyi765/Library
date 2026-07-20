@@ -126,11 +126,9 @@ class BookRepository implements BookRepositoryInterface
         );
     }
 
-    
     public function decrementQuantity(int $bookId, int $amount = 1): void
     {
         try {
-           
             $sql = "UPDATE books 
                     SET available_quantity = available_quantity - ? 
                     WHERE id = ? AND available_quantity >= ?";
@@ -154,8 +152,6 @@ class BookRepository implements BookRepositoryInterface
         }
     }
 
-
-    
     public function count(): int
     {
         $stmt = $this->db->query("SELECT COUNT(*) FROM books");
@@ -174,16 +170,97 @@ class BookRepository implements BookRepositoryInterface
         return (int)$stmt->fetchColumn();
     }
 
-
     public function getLatestBooks(int $limit): array
-{
-    $sql = "SELECT * FROM books ORDER BY created_at DESC LIMIT :limit";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':limit' => $limit]);
-    $books = [];
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $books[] = $this->hydrate($row);
+    {
+        $sql = "SELECT * FROM books ORDER BY created_at DESC LIMIT :limit";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':limit' => $limit]);
+        $books = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $books[] = $this->hydrate($row);
+        }
+        return $books;
     }
-    return $books;
-}
+
+
+    public function findAllPaginated(int $offset, int $limit): array
+    {
+        $sql = "SELECT * FROM books ORDER BY created_at DESC LIMIT :offset, :limit";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        $books = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $books[] = $this->hydrate($row);
+        }
+        return $books;
+    }
+
+    public function countAll(): int
+    {
+        $stmt = $this->db->query("SELECT COUNT(*) FROM books");
+        return (int)$stmt->fetchColumn();
+    }
+
+    
+    public function findFilteredPaginated(?string $search, ?int $categoryId, int $offset, int $limit): array
+    {
+        $sql = "SELECT * FROM books WHERE 1=1";
+        $params = [];
+
+        if (!empty($search)) {
+            $sql .= " AND (title LIKE :search OR author LIKE :search)";
+            $params[':search'] = '%' . $search . '%';
+        }
+
+        if ($categoryId && $categoryId > 0) {
+            $sql .= " AND category_id = :category_id";
+            $params[':category_id'] = $categoryId;
+        }
+
+        $sql .= " ORDER BY created_at DESC LIMIT :offset, :limit";
+        
+        $stmt = $this->db->prepare($sql);
+        
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $books = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $books[] = $this->hydrate($row);
+        }
+        return $books;
+    }
+
+    
+    public function countFiltered(?string $search, ?int $categoryId): int
+    {
+        $sql = "SELECT COUNT(*) FROM books WHERE 1=1";
+        $params = [];
+
+        if (!empty($search)) {
+            $sql .= " AND (title LIKE :search OR author LIKE :search)";
+            $params[':search'] = '%' . $search . '%';
+        }
+
+        if ($categoryId && $categoryId > 0) {
+            $sql .= " AND category_id = :category_id";
+            $params[':category_id'] = $categoryId;
+        }
+
+        $stmt = $this->db->prepare($sql);
+        
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+    }
 }

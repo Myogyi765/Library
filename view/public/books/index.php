@@ -23,18 +23,23 @@ $categoryMap = [];
 foreach ($categories as $cat) {
     $categoryMap[$cat->getId()] = $cat->getName();
 }
+
+// Pagination variables
+$currentPage = $currentPage ?? 1;
+$totalPages = $totalPages ?? 1;
+$totalBooks = $totalBooks ?? 0;
+$perPage = $perPage ?? 12;
+$search = $search ?? '';
+$categoryId = $categoryId ?? null;
 ?>
 
-<!-- ================================================================ -->
-<!-- COMPACT 4‑COLUMN GRID WITH GENEROUS SIDE MARGINS                 -->
-<!-- ================================================================ -->
 <style>
     :root {
         --primary: #2563eb;
         --primary-hover: #1d4ed8;
         --primary-light: rgba(37, 99, 235, 0.05);
         --accent-cartoon: #ffb938;
-        --radius-card: 0.65rem;          /* smaller radius */
+        --radius-card: 0.65rem;
         --bg-light: #f8fafc;
         --bg-dark: #0f172a;
         --card-light: #ffffff;
@@ -61,7 +66,6 @@ foreach ($categories as $cat) {
         z-index: 10;
     }
 
-    /* Header – slightly tighter */
     .glass-header {
         background: var(--card-light);
         border: 1px solid var(--border-light);
@@ -134,7 +138,6 @@ foreach ($categories as $cat) {
     .dark .search-filter-wrapper select { color: #cbd5e1; }
     .search-filter-wrapper select option { text-align: left; }
 
-    /* Grid – 4 columns on large screens */
     .book-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -148,10 +151,9 @@ foreach ($categories as $cat) {
         .book-grid { grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
     }
     @media (min-width: 1024px) {
-        .book-grid { grid-template-columns: repeat(4, 1fr); gap: 1.25rem; } /* exactly 4 */
+        .book-grid { grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
     }
 
-    /* Smaller cards */
     .book-card {
         background: var(--card-light);
         border: 1px solid var(--border-light);
@@ -215,7 +217,6 @@ foreach ($categories as $cat) {
     }
     .dark .stock-badge.out { color: #f87171; border-color: rgba(255,255,255,0.08); }
 
-    /* Compact info area */
     .book-info {
         padding: 0.4rem 0.5rem 0.5rem;
         display: flex;
@@ -310,16 +311,64 @@ foreach ($categories as $cat) {
         background: var(--card-dark);
         border-color: var(--border-dark);
     }
+
+    /* ─── Pagination Styles ─── */
+    .pagination-wrapper {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-light);
+    }
+    .dark .pagination-wrapper {
+        border-top-color: var(--border-dark);
+    }
+    .pagination-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-light);
+        background: var(--card-light);
+        color: #475569;
+        font-size: 0.8rem;
+        font-weight: 500;
+        transition: all 0.15s ease;
+        text-decoration: none;
+        min-width: 2.2rem;
+    }
+    .dark .pagination-btn {
+        border-color: var(--border-dark);
+        background: var(--card-dark);
+        color: #94a3b8;
+    }
+    .pagination-btn:hover:not(.active):not(:disabled) {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-light);
+    }
+    .pagination-btn.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+    .pagination-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    .pagination-ellipsis {
+        padding: 0 0.3rem;
+        color: #94a3b8;
+        font-size: 0.8rem;
+    }
 </style>
 
 <!-- ================================================================ -->
-<!-- CONTAINER WITH EXTRA SIDE SPACE (wider padding, narrower max)    -->
+<!-- MAIN CONTAINER                                                   -->
 <!-- ================================================================ -->
 <div class="book-catalog min-h-screen py-8 transition-colors duration-300">
-    <!-- max-w-5xl + extra px-8 md:px-16 to create generous side margins -->
     <div class="container mx-auto px-8 md:px-16 max-w-5xl catalog-container">
 
-        <!-- Header Controls (unchanged logic) -->
+        <!-- ─── Header Controls ─── -->
         <div class="glass-header mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 to-blue-600 shadow-sm border border-blue-400/10">
@@ -348,7 +397,9 @@ foreach ($categories as $cat) {
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <input type="text" id="searchInput" placeholder="Search title or author..." class="py-0.5 bg-transparent border-0 focus:ring-0 focus:outline-none dark:text-white text-xs font-medium">
+                    <input type="text" id="searchInput" placeholder="Search title or author..." 
+                           class="py-0.5 bg-transparent border-0 focus:ring-0 focus:outline-none dark:text-white text-xs font-medium"
+                           value="<?= htmlspecialchars($search) ?>">
                 </div>
                 
                 <span class="w-[1px] h-4 bg-slate-200 dark:bg-slate-700"></span>
@@ -365,16 +416,18 @@ foreach ($categories as $cat) {
                                 continue;
                             }
                             $emoji = $categoryIconMap[$cleanName] ?? $categoryIconMap['general'];
+                            $selected = ($categoryId == $cat->getId()) ? 'selected' : '';
                         ?>
-                            <option value="<?= $cat->getId() ?>">
+                            <option value="<?= $cat->getId() ?>" <?= $selected ?>>
                                 <?= $emoji ?> <?= htmlspecialchars($cat->getName()) ?>
                             </option>
                         <?php endforeach; ?>
                         <?php if ($othersCategory): 
                             $cleanOthersName = strtolower(trim($othersCategory->getName()));
                             $othersEmoji = $categoryIconMap[$cleanOthersName] ?? $categoryIconMap['others'];
+                            $selected = ($categoryId == $othersCategory->getId()) ? 'selected' : '';
                         ?>
-                            <option value="<?= $othersCategory->getId() ?>">
+                            <option value="<?= $othersCategory->getId() ?>" <?= $selected ?>>
                                 <?= $othersEmoji ?> <?= htmlspecialchars($othersCategory->getName()) ?>
                             </option>
                         <?php endif; ?>
@@ -388,7 +441,7 @@ foreach ($categories as $cat) {
             </div>
         </div>
 
-        <!-- Grid -->
+        <!-- ─── Grid ─── -->
         <div class="relative">
             <div id="catalogEmptyState" class="empty-state <?= empty($books) ? '' : 'hidden' ?> mb-6">
                 <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">No matching books discovered</h3>
@@ -444,6 +497,74 @@ foreach ($categories as $cat) {
                     </div>
                     <?php endforeach; ?>
                 </div>
+
+                <!-- ─── PAGINATION ─── -->
+                <?php if ($totalPages > 1): ?>
+                <div class="pagination-wrapper">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
+                        <span class="text-gray-600 dark:text-gray-400">
+                            Showing <strong><?= count($books) ?></strong> of <strong><?= number_format($totalBooks) ?></strong> books
+                            <span class="text-xs text-gray-400 dark:text-gray-500">(Page <?= $currentPage ?> of <?= $totalPages ?>)</span>
+                        </span>
+                        
+                        <div class="flex items-center gap-1 flex-wrap">
+                            <!-- Previous -->
+                            <?php if ($currentPage > 1): ?>
+                                <a href="?page=<?= $currentPage - 1 ?><?= $search ? '&search=' . urlencode($search) : '' ?><?= $categoryId ? '&category=' . $categoryId : '' ?>" 
+                                   class="pagination-btn">
+                                    <i class="fas fa-chevron-left text-xs"></i>
+                                </a>
+                            <?php else: ?>
+                                <button class="pagination-btn" disabled>
+                                    <i class="fas fa-chevron-left text-xs"></i>
+                                </button>
+                            <?php endif; ?>
+
+                            <?php
+                            $start = max(1, $currentPage - 2);
+                            $end = min($totalPages, $currentPage + 2);
+                            $queryParams = '';
+                            if ($search) $queryParams .= '&search=' . urlencode($search);
+                            if ($categoryId) $queryParams .= '&category=' . $categoryId;
+                            ?>
+                            
+                            <?php if ($start > 1): ?>
+                                <a href="?page=1<?= $queryParams ?>" class="pagination-btn">1</a>
+                                <?php if ($start > 2): ?>
+                                    <span class="pagination-ellipsis">…</span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+
+                            <?php for ($i = $start; $i <= $end; $i++): ?>
+                                <?php if ($i == $currentPage): ?>
+                                    <span class="pagination-btn active"><?= $i ?></span>
+                                <?php else: ?>
+                                    <a href="?page=<?= $i . $queryParams ?>" class="pagination-btn"><?= $i ?></a>
+                                <?php endif; ?>
+                            <?php endfor; ?>
+
+                            <?php if ($end < $totalPages): ?>
+                                <?php if ($end < $totalPages - 1): ?>
+                                    <span class="pagination-ellipsis">…</span>
+                                <?php endif; ?>
+                                <a href="?page=<?= $totalPages . $queryParams ?>" class="pagination-btn"><?= $totalPages ?></a>
+                            <?php endif; ?>
+
+                            <!-- Next -->
+                            <?php if ($currentPage < $totalPages): ?>
+                                <a href="?page=<?= $currentPage + 1 ?><?= $search ? '&search=' . urlencode($search) : '' ?><?= $categoryId ? '&category=' . $categoryId : '' ?>" 
+                                   class="pagination-btn">
+                                    <i class="fas fa-chevron-right text-xs"></i>
+                                </a>
+                            <?php else: ?>
+                                <button class="pagination-btn" disabled>
+                                    <i class="fas fa-chevron-right text-xs"></i>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -490,8 +611,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    if (searchInput) searchInput.addEventListener('input', filterBooks);
-    if (categoryFilter) categoryFilter.addEventListener('change', filterBooks);
+    // Debounce search for better performance
+    let searchTimeout;
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                filterBooks();
+            }, 300);
+        });
+    }
+    
+    if (categoryFilter) categoryFilter.addEventListener('change', function() {
+        // Reload page with filter parameters
+        const searchVal = searchInput.value.trim();
+        const catVal = categoryFilter.value;
+        let url = window.location.pathname + '?page=1';
+        if (searchVal) url += '&search=' + encodeURIComponent(searchVal);
+        if (catVal) url += '&category=' + catVal;
+        window.location.href = url;
+    });
+
+    // Initial filter
     filterBooks();
 });
 </script>

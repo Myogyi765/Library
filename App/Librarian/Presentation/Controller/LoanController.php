@@ -8,6 +8,9 @@ use App\User\Domain\Repository\UserRepositoryInterface;
 use App\Shared\Base\BaseController;
 use App\Circulation\Domain\Entity\Loan;
 use App\Circulation\Domain\ValueObject\LoanStatus;
+use App\Circulation\Application\Command\BorrowBookCommand;
+use App\Circulation\Application\Handler\BorrowBookHandler;
+use App\Admin\Application\Service\SettingsService;
 use PDO;
 
 class LoanController extends BaseController
@@ -15,18 +18,24 @@ class LoanController extends BaseController
     private LoanRepositoryInterface $loanRepo;
     private BookRepositoryInterface $bookRepo;
     private UserRepositoryInterface $userRepo;
+    private BorrowBookHandler $borrowBookHandler;
+    private SettingsService $settingsService;
     private PDO $db;
 
     public function __construct(
         LoanRepositoryInterface $loanRepo,
         BookRepositoryInterface $bookRepo,
         UserRepositoryInterface $userRepo,
+        BorrowBookHandler $borrowBookHandler,
+        SettingsService $settingsService,
         PDO $db
     ) {
         parent::__construct();
         $this->loanRepo = $loanRepo;
         $this->bookRepo = $bookRepo;
         $this->userRepo = $userRepo;
+        $this->borrowBookHandler = $borrowBookHandler;
+        $this->settingsService = $settingsService;
         $this->db = $db;
     }
 
@@ -60,9 +69,13 @@ class LoanController extends BaseController
     {
         $users = $this->userRepo->findAll();
         $books = $this->bookRepo->findAll();
+        
+        $maxBorrowDays = $this->settingsService->getMaxBorrowDays();
+        
         $this->view('librarian/loans/create', [
             'users' => $users,
             'books' => $books,
+            'maxBorrowDays' => $maxBorrowDays
         ]);
     }
 
@@ -73,27 +86,27 @@ class LoanController extends BaseController
         
         if (!$userId || !$bookId) {
             $_SESSION['error_message'] = 'Please select a user and a book.';
-            $this->redirect('/librarian/loans/create');
+            $this->redirect(BASE_URL . '/librarian/loans/create');
             return;
         }
         
         $book = $this->bookRepo->findById($bookId);
         if (!$book || $book->getAvailableQuantity() <= 0) {
             $_SESSION['error_message'] = 'Book is not available for borrowing.';
-            $this->redirect('/librarian/loans/create');
+            $this->redirect(BASE_URL . '/librarian/loans/create');
             return;
         }
         
         $existingLoan = $this->loanRepo->findActiveOrPendingByUserAndBook($userId, $bookId);
         if ($existingLoan) {
             $_SESSION['error_message'] = 'User already has an active or pending loan for this book.';
-            $this->redirect('/librarian/loans/create');
+            $this->redirect(BASE_URL . '/librarian/loans/create');
             return;
         }
         
         try {
-            $loan = new Loan($userId, $bookId);
-            $this->loanRepo->save($loan);
+            $command = new BorrowBookCommand($userId, $bookId);
+            $this->borrowBookHandler->handle($command);
 
             $this->createNotification(
                 $userId,
@@ -101,7 +114,7 @@ class LoanController extends BaseController
                 'loan_created',
                 'Loan request created',
                 'A librarian has created a loan request for you.',
-                '/user-dashboard' 
+                BASE_URL . '/user-dashboard'
             );
 
             $_SESSION['success_message'] = 'Loan request created successfully.';
@@ -109,7 +122,7 @@ class LoanController extends BaseController
             $_SESSION['error_message'] = 'Failed to create loan: ' . $e->getMessage();
         }
         
-        $this->redirect('/librarian/loans');
+        $this->redirect(BASE_URL . '/librarian/loans');
     }
 
     public function edit($id): void
@@ -119,7 +132,7 @@ class LoanController extends BaseController
         
         if (!$loan) {
             $_SESSION['error_message'] = 'Loan not found.';
-            $this->redirect('/librarian/loans');
+            $this->redirect(BASE_URL . '/librarian/loans');
             return;
         }
         
@@ -140,7 +153,7 @@ class LoanController extends BaseController
         
         if (!$loan) {
             $_SESSION['error_message'] = 'Loan not found.';
-            $this->redirect('/librarian/loans');
+            $this->redirect(BASE_URL . '/librarian/loans');
             return;
         }
         
@@ -154,16 +167,16 @@ class LoanController extends BaseController
             $_SESSION['error_message'] = 'Failed to update loan: ' . $e->getMessage();
         }
         
-        $this->redirect('/librarian/loans');
+        $this->redirect(BASE_URL . '/librarian/loans');
     }
 
-    
+   
     public function confirm($id): void
     {
         $loan = $this->loanRepo->findById((int)$id);
         if (!$loan || !$loan->getStatus()->isPending()) {
             $_SESSION['error_message'] = 'Invalid loan or not pending.';
-            $this->redirect('/librarian/loans');
+            $this->redirect(BASE_URL . '/librarian/loans');
             return;
         }
 
@@ -171,7 +184,9 @@ class LoanController extends BaseController
             $this->db->beginTransaction();
 
             $borrowedAt = new \DateTimeImmutable();
-            $dueDate = $borrowedAt->modify('+14 days');
+            
+            $maxDays = $this->settingsService->getMaxBorrowDays();
+            $dueDate = $borrowedAt->modify("+{$maxDays} days");
 
             $loan->setBorrowedAt($borrowedAt);
             $loan->setDueDate($dueDate);
@@ -180,7 +195,6 @@ class LoanController extends BaseController
 
             $this->db->commit();
 
-            // ✅ Send notification with a link to the book details page
             $bookId = $loan->getBookId();
             $userId = $loan->getUserId();
             $this->createNotification(
@@ -189,7 +203,7 @@ class LoanController extends BaseController
                 'loan_confirmed',
                 'Loan confirmed',
                 'Your loan request has been confirmed. Please complete payment.',
-                BASE_URL .'/books/' . $bookId  
+                BASE_URL . '/books/' . $bookId
             );
 
             $_SESSION['success_message'] = 'Loan confirmed. User must pay now.';
@@ -198,7 +212,7 @@ class LoanController extends BaseController
             $_SESSION['error_message'] = 'Failed to confirm loan: ' . $e->getMessage();
         }
 
-        $this->redirect('/librarian/dashboard?page=loans');
+        $this->redirect(BASE_URL . '/librarian/dashboard?page=loans');
     }
 
     public function reject($id): void
@@ -208,13 +222,13 @@ class LoanController extends BaseController
 
         if (!$loan) {
             $_SESSION['error_message'] = 'Loan not found.';
-            $this->redirect('/librarian/dashboard?page=loans');
+            $this->redirect(BASE_URL . '/librarian/dashboard?page=loans');
             return;
         }
         
         if (!$loan->getStatus()->isPending()) {
             $_SESSION['error_message'] = 'Only pending loans can be rejected. Current status: ' . $loan->getStatus()->getValue();
-            $this->redirect('/librarian/dashboard?page=loans');
+            $this->redirect(BASE_URL . '/librarian/dashboard?page=loans');
             return;
         }
 
@@ -231,7 +245,7 @@ class LoanController extends BaseController
                 'loan_rejected',
                 'Loan rejected',
                 'Your loan request has been rejected by the librarian.',
-                '/user-dashboard'
+                BASE_URL . '/user-dashboard'
             );
 
             $_SESSION['success_message'] = 'Loan request rejected successfully.';
@@ -240,7 +254,7 @@ class LoanController extends BaseController
             $_SESSION['error_message'] = 'Failed to reject loan: ' . $e->getMessage();
         }
 
-        $this->redirect('/librarian/dashboard?page=loans');
+        $this->redirect(BASE_URL . '/librarian/dashboard?page=loans');
     }
 
     public function returnBook($id): void
@@ -250,13 +264,13 @@ class LoanController extends BaseController
 
         if (!$loan) {
             $_SESSION['error_message'] = 'Loan not found.';
-            $this->redirect('/librarian/loans');
+            $this->redirect(BASE_URL . '/librarian/loans');
             return;
         }
         
         if (!$loan->getStatus()->isActive()) {
             $_SESSION['error_message'] = 'Only active loans can be returned. Current status: ' . $loan->getStatus()->getValue();
-            $this->redirect('/librarian/loans');
+            $this->redirect(BASE_URL . '/librarian/loans');
             return;
         }
 
@@ -280,7 +294,7 @@ class LoanController extends BaseController
                 'loan_returned',
                 'Book returned',
                 'Your borrowed book has been returned successfully.',
-                '/user-dashboard'
+                BASE_URL . '/user-dashboard'
             );
 
             $_SESSION['success_message'] = 'Book returned successfully.';
@@ -289,7 +303,7 @@ class LoanController extends BaseController
             $_SESSION['error_message'] = 'Failed to return book: ' . $e->getMessage();
         }
 
-        $this->redirect('/librarian/loans');
+        $this->redirect(BASE_URL . '/librarian/loans');
     }
 
     public function delete($id): void
@@ -299,7 +313,7 @@ class LoanController extends BaseController
 
         if (!$loan) {
             $_SESSION['error_message'] = 'Loan not found.';
-            $this->redirect('/librarian/dashboard?page=loans');
+            $this->redirect(BASE_URL . '/librarian/dashboard?page=loans');
             return;
         }
 
@@ -320,7 +334,7 @@ class LoanController extends BaseController
             $_SESSION['error_message'] = 'Failed to delete loan: ' . $e->getMessage();
         }
 
-        $this->redirect('/librarian/dashboard?page=loans');
+        $this->redirect(BASE_URL . '/librarian/dashboard?page=loans');
     }
 
     private function getLoanStatusFromString(string $status): LoanStatus

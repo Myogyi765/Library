@@ -21,4 +21,6 @@ interface LoanRepositoryInterface
     public function countByStatus(string $status): int;
     public function countOverdue(): int;
     public function findRecent(int $limit): array;
+
+     public function findByUserId(int $userId): array;
 }

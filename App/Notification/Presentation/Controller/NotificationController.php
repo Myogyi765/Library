@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Notification\Presentation\Controller;
 
 use App\Notification\Application\Service\NotificationService;
@@ -22,6 +23,34 @@ class NotificationController extends BaseController
         $this->authorization = $authorization;
     }
 
+    
+    public function index()
+    {
+        if (!$this->authenticator->isAuthenticated()) {
+            header('Location: ' . BASE_URL . '/login');
+            exit;
+        }
+
+        $user = $this->authenticator->getCurrentUser();
+        if (!$user) {
+            header('Location: ' . BASE_URL . '/login');
+            exit;
+        }
+
+        $userId = $user->getId();
+        $role = $user->getRole();
+
+        $notifications = $this->notificationService->getLatest($userId, $role, 50);
+        $unreadCount = $this->notificationService->getUnreadCount($userId, $role);
+
+        return $this->view('notifications/index', [
+            'notifications' => $notifications,
+            'userRole'      => $role,
+            'unreadCount'   => $unreadCount,
+        ]);
+    }
+
+    
     public function getNotifications(): void
     {
         if (!$this->authenticator->isAuthenticated()) {
@@ -62,6 +91,7 @@ class NotificationController extends BaseController
         ]);
     }
 
+    
     public function markRead(): void
     {
         if (!$this->authenticator->isAuthenticated()) {
@@ -100,6 +130,7 @@ class NotificationController extends BaseController
         echo json_encode(['success' => true]);
     }
 
+    
     private function timeAgo(\DateTime $date): string
     {
         $now = new \DateTime();

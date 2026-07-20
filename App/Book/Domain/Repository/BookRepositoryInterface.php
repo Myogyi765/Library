@@ -13,9 +13,14 @@ interface BookRepositoryInterface
 
     public function decrementQuantity(int $bookId, int $amount = 1): void;
 
-        public function count(): int;
+    public function count(): int;
     public function getTotalAvailableQuantity(): int;
     public function getTotalBorrowedQuantity(): int;
 
-       public function getLatestBooks(int $limit): array;
+    public function getLatestBooks(int $limit): array;
+
+    public function findAllPaginated(int $offset, int $limit): array;
+    public function countAll(): int;
+    public function findFilteredPaginated(?string $search, ?int $categoryId, int $offset, int $limit): array;
+    public function countFiltered(?string $search, ?int $categoryId): int;
 }

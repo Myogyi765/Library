@@ -23,6 +23,10 @@
         color: #e2e8f0;
         border-bottom-color: #334155;
     }
+    /* Action header – center aligned */
+    .user-table thead th.actions-header {
+        text-align: center;
+    }
     .user-table tbody tr {
         border-bottom: 1px solid #f1f5f9;
         transition: background 0.15s;
@@ -39,6 +43,11 @@
     .user-table tbody td {
         padding: 12px 16px;
         vertical-align: middle;
+    }
+    /* Action cell – center aligned with minimal padding */
+    .user-table tbody td.actions-cell {
+        text-align: center;
+        padding: 2px 2px;
     }
 
     /* Avatar */
@@ -81,34 +90,58 @@
     .status-badge.banned { background: #fee2e2; color: #991b1b; }
     .dark .status-badge.banned { background: #7f1d1d; color: #fca5a5; }
 
-    /* ===== ACTION BUTTON – DELETE (Red) ===== */
+    /* ===== ACTION BUTTONS – All Colors, Tighter Spacing ===== */
     .action-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 30px;
-        height: 30px;
+        width: 23px;
+        height: 10px;
         border-radius: 6px;
         transition: all 0.15s;
         background: transparent;
         border: none;
         cursor: pointer;
         text-decoration: none;
+        font-size: 0.9rem;
+        margin: 0; /* No margin between buttons */
     }
-    .action-btn.delete {
-        color: #ef4444;
+    .action-btn:hover {
+        transform: scale(1.15);
+        background: rgba(0,0,0,0.05);
     }
-    .action-btn.delete:hover {
-        background: #fef2f2;
-        color: #dc2626;
+    .dark .action-btn:hover {
+        background: rgba(255,255,255,0.08);
     }
-    .dark .action-btn.delete {
-        color: #f87171;
-    }
-    .dark .action-btn.delete:hover {
-        background: #1e293b;
-        color: #fca5a5;
-    }
+    /* View - Blue */
+    .action-btn.view { color: #3b82f6; }
+    .action-btn.view:hover { background: #eff6ff; color: #2563eb; }
+    .dark .action-btn.view { color: #60a5fa; }
+    .dark .action-btn.view:hover { background: #1e293b; color: #93c5fd; }
+    
+    /* Edit - Amber */
+    .action-btn.edit { color: #f59e0b; }
+    .action-btn.edit:hover { background: #fffbeb; color: #d97706; }
+    .dark .action-btn.edit { color: #fbbf24; }
+    .dark .action-btn.edit:hover { background: #1e293b; color: #fcd34d; }
+    
+    /* Suspend - Purple */
+    .action-btn.suspend { color: #8b5cf6; }
+    .action-btn.suspend:hover { background: #f5f3ff; color: #7c3aed; }
+    .dark .action-btn.suspend { color: #a78bfa; }
+    .dark .action-btn.suspend:hover { background: #1e293b; color: #c4b5fd; }
+    
+    /* Activate - Green */
+    .action-btn.activate { color: #22c55e; }
+    .action-btn.activate:hover { background: #f0fdf4; color: #16a34a; }
+    .dark .action-btn.activate { color: #4ade80; }
+    .dark .action-btn.activate:hover { background: #1e293b; color: #86efac; }
+    
+    /* Delete - Red */
+    .action-btn.delete { color: #ef4444; }
+    .action-btn.delete:hover { background: #fef2f2; color: #dc2626; }
+    .dark .action-btn.delete { color: #f87171; }
+    .dark .action-btn.delete:hover { background: #1e293b; color: #fca5a5; }
 
     /* Search Input – clean */
     .search-input {
@@ -192,6 +225,11 @@
         .search-input:focus { width: 180px; }
         .user-avatar { width: 28px; height: 28px; font-size: 0.7rem; margin-right: 6px; }
         .serial-number { width: 35px; }
+        .action-btn {
+            width: 28px;
+            height: 28px;
+            font-size: 0.8rem;
+        }
     }
 </style>
 
@@ -206,9 +244,15 @@
                 <?= count($users) ?> users
             </span>
         </div>
-        <div class="relative mt-3 md:mt-0">
-            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
-            <input type="text" placeholder="Search users..." class="search-input">
+        <div class="flex items-center gap-3 mt-3 md:mt-0">
+            <a href="<?= BASE_URL ?>/admin/users/create" 
+               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition">
+                <i class="fas fa-plus"></i> Add User
+            </a>
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+                <input type="text" placeholder="Search users..." class="search-input">
+            </div>
         </div>
     </div>
 
@@ -241,7 +285,7 @@
                         <th>Phone</th>
                         <th>Status</th>
                         <th>Registered</th>
-                        <th class="text-center">Actions</th>
+                        <th class="actions-header">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -269,10 +313,10 @@
                                     ?>
                                     <span class="status-badge <?= $statusClass ?>">
                                         <i class="fas <?= match($status) {
-                                            'Active'   => 'fa-check-circle',
-                                            'Inactive' => 'fa-circle',
-                                            'Suspended'=> 'fa-exclamation-triangle',
-                                            'Banned'   => 'fa-ban',
+                                            'active'   => 'fa-check-circle',
+                                            'inactive' => 'fa-circle',
+                                            'suspended'=> 'fa-exclamation-triangle',
+                                            'banned'   => 'fa-ban',
                                             default    => 'fa-circle'
                                         } ?>"></i>
                                         <?= ucfirst($status) ?>
@@ -281,11 +325,36 @@
                                 <td class="text-gray-500 dark:text-gray-400 text-sm">
                                     <?= $user->getCreatedAt()->format('M d, Y') ?>
                                 </td>
-                                <td class="text-center">
-                                    <div class="flex items-center justify-center gap-1">
-                                        <!-- ✅ Delete only – red colored -->
+                                <td class="actions-cell">
+                                    <div class="flex items-center justify-center gap-0.5 flex-nowrap">
+                                        <!-- 👁️ View -->
+                                        <a href="<?= BASE_URL ?>/admin/users/view/<?= $user->getId() ?>" 
+                                           class="action-btn view" title="View User">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        
+                                        <!-- ✏️ Edit -->
+                                        <a href="<?= BASE_URL ?>/admin/users/edit/<?= $user->getId() ?>" 
+                                           class="action-btn edit" title="Edit User">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        
+                                        <!-- ⏸️ Suspend / ▶️ Activate -->
+                                        <?php
+                                        $isActive = $user->getStatus()->getValue() === 'active';
+                                        $actionClass = $isActive ? 'suspend' : 'activate';
+                                        $actionIcon = $isActive ? 'fa-pause-circle' : 'fa-play-circle';
+                                        $actionTitle = $isActive ? 'Suspend User' : 'Activate User';
+                                        ?>
+                                        <button onclick="toggleStatus(<?= $user->getId() ?>, '<?= $user->getStatus()->getValue() ?>')"
+                                                class="action-btn <?= $actionClass ?>" 
+                                                title="<?= $actionTitle ?>">
+                                            <i class="fas <?= $actionIcon ?>"></i>
+                                        </button>
+                                        
+                                        <!-- 🗑️ Delete -->
                                         <button onclick="confirmDelete(<?= $user->getId() ?>)"
-                                                class="action-btn delete" title="Delete">
+                                                class="action-btn delete" title="Delete User">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -298,13 +367,16 @@
                                 <i class="fas fa-users empty-state-icon text-4xl text-gray-300 dark:text-gray-600 mb-2 block"></i>
                                 <p class="text-lg font-medium">No users found</p>
                                 <p class="text-sm">There are currently no registered users.</p>
+                                <a href="<?= BASE_URL ?>/admin/users/create" class="mt-3 inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                                    <i class="fas fa-plus mr-1"></i> Add First User
+                                </a>
                             </td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
-        <!-- Table footer / Pagination (dummy) -->
+        <!-- Table footer / Pagination -->
         <div class="px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 flex items-center justify-between text-sm rounded-b-xl">
             <span class="text-gray-600 dark:text-gray-400">
                 Showing <strong><?= count($users) ?></strong> user<?= count($users) > 1 ? 's' : '' ?>
@@ -318,11 +390,19 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Script -->
+<!-- Action Scripts -->
 <script>
 function confirmDelete(id) {
     if (confirm('Are you sure you want to delete user #' + id + '? This action cannot be undone.')) {
         window.location.href = '<?= BASE_URL ?>/admin/users/delete/' + id;
+    }
+}
+
+function toggleStatus(id, currentStatus) {
+    var action = currentStatus === 'active' ? 'suspend' : 'activate';
+    var message = currentStatus === 'active' ? 'suspend' : 'activate';
+    if (confirm('Are you sure you want to ' + message + ' user #' + id + '?')) {
+        window.location.href = '<?= BASE_URL ?>/admin/users/toggle/' + id;
     }
 }
 </script>

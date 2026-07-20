@@ -1,8 +1,11 @@
 <?php
-/**
- * @var array $books  Array of Book entities
- * @var array $categoryMap  Category ID → Name
- */
+// view/admin/books/index.php
+// Variables available:
+//   $books (array of Book entities)
+//   $categoryMap (associative array: category_id => category_name)
+//   $currentPage, $totalPages, $totalBooks, $perPage (pagination)
+//   $search, $categoryId (filter parameters)
+//   $categories (array of Category entities)
 ?>
 
 <style>
@@ -106,7 +109,6 @@
         cursor: pointer;
         text-decoration: none;
     }
-    /* View – Blue */
     .action-btn.view {
         color: #3b82f6;
     }
@@ -121,8 +123,6 @@
         background: #1e293b;
         color: #93c5fd;
     }
-
-    /* Edit – Amber */
     .action-btn.edit {
         color: #f59e0b;
     }
@@ -137,8 +137,6 @@
         background: #1e293b;
         color: #fcd34d;
     }
-
-    /* Delete – Red */
     .action-btn.delete {
         color: #ef4444;
     }
@@ -246,14 +244,24 @@
                 <i class="fas fa-book text-blue-600 dark:text-blue-400 mr-2"></i>Book Management
             </h1>
             <span class="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-sm font-medium px-3 py-1 rounded-full">
-                <?= count($books) ?> books
+                <?= number_format($totalBooks ?? 0) ?> books
             </span>
         </div>
         <div class="flex items-center gap-3 mt-3 md:mt-0">
-            <div class="relative">
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
-                <input type="text" placeholder="Search books..." class="search-input" id="bookSearch">
-            </div>
+            <!-- Search Form -->
+            <form action="<?= BASE_URL ?>/admin/books" method="GET" class="flex items-center gap-2">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+                    <input type="text" name="search" value="<?= htmlspecialchars($search ?? '') ?>" 
+                           placeholder="Search books..." class="search-input">
+                </div>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition">
+                    <i class="fas fa-search"></i>
+                </button>
+                <a href="<?= BASE_URL ?>/admin/books" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 text-sm">
+                    <i class="fas fa-times"></i>
+                </a>
+            </form>
             <a href="<?= BASE_URL ?>/admin/books/create"
                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition inline-flex items-center text-sm">
                 <i class="fas fa-plus mr-2"></i>Add New Book
@@ -295,7 +303,7 @@
                 </thead>
                 <tbody>
                     <?php if (!empty($books)): ?>
-                        <?php $counter = 1; ?>
+                        <?php $counter = (($currentPage ?? 1) - 1) * ($perPage ?? 10) + 1; ?>
                         <?php foreach ($books as $book): ?>
                             <?php 
                                 $available = $book->getAvailableQuantity();
@@ -315,39 +323,23 @@
                                     $statusIcon = 'fa-times-circle';
                                 }
 
-                                // ---- ✅ FIXED: Handle full URLs and relative paths ----
+                                // ---- Image handling ----
                                 $cover = $book->getCoverImage();
                                 $imageUrl = null;
-
                                 if ($cover) {
-                                    // If it's a full URL, use it directly
                                     if (filter_var($cover, FILTER_VALIDATE_URL)) {
                                         $imageUrl = $cover;
                                     } else {
-                                        // It's a relative path – try to locate the file
-                                        $filename = basename($cover); // e.g., '6a57034c1dd7b.jpg'
-                                        
-                                        // Check possible physical locations
+                                        $filename = basename($cover);
                                         $possiblePaths = [
                                             BASE_PATH . '/public/uploads/books/' . $filename,
                                             BASE_PATH . '/uploads/books/' . $filename,
-                                            BASE_PATH . '/public/storage/upload/books/' . $filename,
-                                            BASE_PATH . '/storage/app/public/upload/books/' . $filename,
                                         ];
-                                        
-                                        $found = false;
                                         foreach ($possiblePaths as $path) {
                                             if (file_exists($path)) {
-                                                $found = true;
-                                                // Build the web URL (assume public/uploads/books/)
                                                 $imageUrl = BASE_URL . '/uploads/books/' . $filename;
                                                 break;
                                             }
-                                        }
-                                        
-                                        // If not found, fallback to a placeholder (no image)
-                                        if (!$found) {
-                                            $imageUrl = null;
                                         }
                                     }
                                 }
@@ -371,7 +363,6 @@
                                 <td class="text-gray-600 dark:text-gray-300"><?= htmlspecialchars($book->getAuthor()) ?></td>
                                 <td class="text-gray-600 dark:text-gray-300">
                                     <?php
-                                    // ✅ Show category name using $categoryMap
                                     $catId = $book->getCategoryId();
                                     echo htmlspecialchars($categoryMap[$catId] ?? 'Uncategorized');
                                     ?>
@@ -387,17 +378,14 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="flex items-center justify-center gap-1">
-                                        <!-- View – Blue -->
                                         <a href="<?= BASE_URL ?>/admin/books/show?id=<?= $book->getId() ?>"
                                            class="action-btn view" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <!-- Edit – Amber -->
                                         <a href="<?= BASE_URL ?>/admin/books/edit?id=<?= $book->getId() ?>"
                                            class="action-btn edit" title="Edit">
                                             <i class="fas fa-pen"></i>
                                         </a>
-                                        <!-- Delete – Red -->
                                         <a href="<?= BASE_URL ?>/admin/books/delete?id=<?= $book->getId() ?>"
                                            class="action-btn delete" title="Delete"
                                            onclick="return confirm('Are you sure you want to delete this book? This action cannot be undone.')">
@@ -422,28 +410,77 @@
                 </tbody>
             </table>
         </div>
-        <!-- Table footer -->
-        <div class="px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 flex items-center justify-between text-sm rounded-b-xl">
-            <span class="text-gray-600 dark:text-gray-400">
-                Showing <strong><?= count($books) ?></strong> book<?= count($books) > 1 ? 's' : '' ?>
+        
+        <!-- ─── PAGINATION ─── -->
+        <?php if (($totalPages ?? 0) > 1): ?>
+        <div class="px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-b-xl">
+            <span class="text-sm text-gray-600 dark:text-gray-400">
+                Showing <strong><?= count($books) ?></strong> of <strong><?= number_format($totalBooks ?? 0) ?></strong> books
+                <span class="text-xs text-gray-400 dark:text-gray-500">(Page <?= $currentPage ?? 1 ?> of <?= $totalPages ?? 1 ?>)</span>
             </span>
-            <div class="flex items-center gap-2">
-                <button class="pagination-btn" disabled>Previous</button>
-                <button class="pagination-btn active">1</button>
-                <button class="pagination-btn" disabled>Next</button>
+            
+            <div class="flex items-center gap-1.5 flex-wrap">
+                <?php
+                $current = $currentPage ?? 1;
+                $total = $totalPages ?? 1;
+                $queryParams = http_build_query([
+                    'search' => $search ?? '',
+                    'category' => $categoryId ?? ''
+                ]);
+                ?>
+                
+                <!-- Previous -->
+                <?php if ($current > 1): ?>
+                    <a href="?<?= $queryParams ?>&page_num=<?= $current - 1 ?>" 
+                       class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-sm">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                <?php else: ?>
+                    <button class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 opacity-40 cursor-not-allowed text-sm" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                <?php endif; ?>
+
+                <?php
+                $start = max(1, $current - 2);
+                $end = min($total, $current + 2);
+                ?>
+                
+                <?php if ($start > 1): ?>
+                    <a href="?<?= $queryParams ?>&page_num=1" class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-sm">1</a>
+                    <?php if ($start > 2): ?>
+                        <span class="text-gray-400 dark:text-gray-500 px-1">…</span>
+                    <?php endif; ?>
+                <?php endif; ?>
+
+                <?php for ($i = $start; $i <= $end; $i++): ?>
+                    <?php if ($i == $current): ?>
+                        <span class="px-3 py-1.5 rounded-lg bg-blue-600 text-white border border-blue-600 text-sm font-bold"><?= $i ?></span>
+                    <?php else: ?>
+                        <a href="?<?= $queryParams ?>&page_num=<?= $i ?>" class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-sm"><?= $i ?></a>
+                    <?php endif; ?>
+                <?php endfor; ?>
+
+                <?php if ($end < $total): ?>
+                    <?php if ($end < $total - 1): ?>
+                        <span class="text-gray-400 dark:text-gray-500 px-1">…</span>
+                    <?php endif; ?>
+                    <a href="?<?= $queryParams ?>&page_num=<?= $total ?>" class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-sm"><?= $total ?></a>
+                <?php endif; ?>
+
+                <!-- Next -->
+                <?php if ($current < $total): ?>
+                    <a href="?<?= $queryParams ?>&page_num=<?= $current + 1 ?>" 
+                       class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-sm">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                <?php else: ?>
+                    <button class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 opacity-40 cursor-not-allowed text-sm" disabled>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                <?php endif; ?>
             </div>
         </div>
+        <?php endif; ?>
     </div>
 </div>
-
-<!-- Search Function (JavaScript) -->
-<script>
-document.getElementById('bookSearch')?.addEventListener('keyup', function() {
-    const searchTerm = this.value.toLowerCase();
-    const rows = document.querySelectorAll('.book-table tbody tr');
-    rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchTerm) ? '' : 'none';
-    });
-});
-</script>

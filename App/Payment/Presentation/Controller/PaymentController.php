@@ -105,7 +105,7 @@ class PaymentController extends BaseController
                     'payment_submitted',
                     'Payment submitted',
                     'A user has submitted a payment for review.',
-                    '/librarian/dashboard?page=payments'
+                    BASE_URL . '/librarian/dashboard?page=payments' 
                 );
             }
 

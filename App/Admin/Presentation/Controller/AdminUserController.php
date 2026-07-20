@@ -29,37 +29,43 @@ class AdminUserController extends BaseController
         return $this->userAuth->isLoggedIn() && ($_SESSION['user_role'] ?? '') === 'admin';
     }
 
+
     public function index(): void
     {
         if (!$this->isAdmin()) {
             $this->redirect('/login');
+            return;
         }
 
         $users = $this->userRepository->findByRole('user');
 
         $this->view('admin-dashboard', [
             'pageTitle' => 'Manage Users',
-            'content' => BASE_PATH . '/view/admin/users/index.php',
-            'users' => $users
+            'content'   => BASE_PATH . '/view/admin/users/index.php',
+            'users'     => $users
         ]);
     }
+
 
     public function create(): void
     {
         if (!$this->isAdmin()) {
             $this->redirect('/login');
+            return;
         }
 
         $this->view('admin-dashboard', [
             'pageTitle' => 'Create User',
-            'content' => BASE_PATH . '/view/admin/users/create.php'
+            'content'   => BASE_PATH . '/view/admin/users/create.php'
         ]);
     }
+
 
     public function store(): void
     {
         if (!$this->isAdmin()) {
             $this->redirect('/login');
+            return;
         }
 
         $data = $_POST;
@@ -76,36 +82,65 @@ class AdminUserController extends BaseController
             );
             $_SESSION['success_message'] = 'User created successfully.';
         } catch (\Exception $e) {
-            $_SESSION['error_message'] = 'Failed: ' . $e->getMessage();
+            $_SESSION['error_message'] = 'Failed to create user: ' . $e->getMessage();
             $this->redirect('/admin/users/create');
+            return;
         }
 
         $this->redirect('/admin/users');
     }
 
-    public function edit(int $id): void
+
+    
+    public function showUser(int $id): void
     {
         if (!$this->isAdmin()) {
             $this->redirect('/login');
+            return;
         }
 
         $user = $this->userRepository->findById($id);
         if (!$user) {
             $_SESSION['error_message'] = 'User not found.';
             $this->redirect('/admin/users');
+            return;
+        }
+
+        $this->view('admin-dashboard', [
+            'pageTitle' => 'User Profile',
+            'content'   => BASE_PATH . '/view/admin/users/view.php',
+            'user'      => $user
+        ]);
+    }
+
+
+    public function edit(int $id): void
+    {
+        if (!$this->isAdmin()) {
+            $this->redirect('/login');
+            return;
+        }
+
+        $user = $this->userRepository->findById($id);
+        if (!$user) {
+            $_SESSION['error_message'] = 'User not found.';
+            $this->redirect('/admin/users');
+            return;
         }
 
         $this->view('admin-dashboard', [
             'pageTitle' => 'Edit User',
-            'content' => BASE_PATH . '/view/admin/users/edit.php',
-            'user' => $user
+            'content'   => BASE_PATH . '/view/admin/users/edit.php',
+            'user'      => $user
         ]);
     }
+
 
     public function update(int $id): void
     {
         if (!$this->isAdmin()) {
             $this->redirect('/login');
+            return;
         }
 
         $data = $_POST;
@@ -122,17 +157,20 @@ class AdminUserController extends BaseController
             );
             $_SESSION['success_message'] = 'User updated successfully.';
         } catch (\Exception $e) {
-            $_SESSION['error_message'] = 'Failed: ' . $e->getMessage();
+            $_SESSION['error_message'] = 'Failed to update user: ' . $e->getMessage();
             $this->redirect('/admin/users/edit/' . $id);
+            return;
         }
 
         $this->redirect('/admin/users');
     }
 
+
     public function delete(int $id): void
     {
         if (!$this->isAdmin()) {
             $this->redirect('/login');
+            return;
         }
 
         try {
@@ -147,15 +185,18 @@ class AdminUserController extends BaseController
             );
             $_SESSION['success_message'] = 'User deleted successfully.';
         } catch (\Exception $e) {
-            $_SESSION['error_message'] = 'Failed: ' . $e->getMessage();
+            $_SESSION['error_message'] = 'Failed to delete user: ' . $e->getMessage();
         }
 
         $this->redirect('/admin/users');
     }
+
+
     public function toggleStatus(int $id): void
     {
         if (!$this->isAdmin()) {
             $this->redirect('/login');
+            return;
         }
 
         try {
@@ -164,17 +205,18 @@ class AdminUserController extends BaseController
                 throw new \Exception('User not found.');
             }
 
-            $currentStatus = $user->getStatus(); 
-            if ($currentStatus->getValue() === 'active') {
-                $newStatusString = 'inactive';
+            $currentStatus = $user->getStatus()->getValue();
+
+            if ($currentStatus === 'active') {
+                $newStatusString = 'suspended';
+            } elseif ($currentStatus === 'suspended') {
+                $newStatusString = 'active';
             } else {
                 $newStatusString = 'active';
             }
 
             $newStatus = new UserStatus($newStatusString);
-
             $user->setStatus($newStatus);
-
             $this->userRepository->save($user);
 
             $this->createNotification(
@@ -182,7 +224,7 @@ class AdminUserController extends BaseController
                 'admin',
                 'user_status_toggled',
                 'User status updated',
-                'A user account status was changed successfully.',
+                'User account status was changed to ' . ucfirst($newStatusString) . '.',
                 '/admin/users'
             );
             $_SESSION['success_message'] = 'User status updated to ' . ucfirst($newStatusString) . '.';

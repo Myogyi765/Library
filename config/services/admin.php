@@ -2,6 +2,8 @@
 
 use App\Book\Application\UseCase\GetBook;
 use App\Book\Application\UseCase\GetBooks;
+use App\Book\Domain\Repository\BookRepositoryInterface;
+use App\Book\Domain\Repository\CategoryRepositoryInterface;
 use App\Admin\Infrastructure\Persistence\SettingRepository;
 use App\Admin\Application\Service\SettingsService;
 use App\Admin\Application\Service\PermissionService;
@@ -19,7 +21,6 @@ use App\Admin\Presentation\Controller\AdminReportController;
 use App\User\Infrastructure\Security\UserAuthenticator;
 use App\User\Infrastructure\Persistence\UserRepository;
 use App\User\Domain\Repository\UserRepositoryInterface;
-use App\Book\Domain\Repository\BookRepositoryInterface;
 use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Shared\Core\Authorization\Authorization;
 
@@ -106,7 +107,9 @@ return function ($container) {
     $container->singleton(AdminBookController::class, function ($c) {
         return new AdminBookController(
             $c->get(GetBooks::class),
-            $c->get(GetBook::class)
+            $c->get(GetBook::class),
+            $c->get(BookRepositoryInterface::class),
+            $c->get(CategoryRepositoryInterface::class)
         );
     });
 

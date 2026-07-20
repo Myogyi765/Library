@@ -111,7 +111,7 @@ if ($coverImage) {
 </style>
 
 <div class="min-h-screen bg-slate-50 dark:bg-slate-950 py-8 transition-colors duration-300">
-    <div class="container mx-auto px-4 max-w-5xl">
+    <div class="container mx-auto px-12 max-w-5xl">
 
         <!-- Breadcrumb -->
         <nav class="mb-5">
