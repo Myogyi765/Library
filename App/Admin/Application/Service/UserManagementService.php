@@ -26,7 +26,6 @@ class UserManagementService
         $phone = trim($data['phone'] ?? '');
         $password = $data['password'] ?? '';
         $status = $data['status'] ?? 'active';
-        $loginMethod = $data['login_method'] ?? 'email';
 
         if (empty($name) || empty($password)) {
             throw new \InvalidArgumentException('Name and password are required.');
@@ -53,13 +52,16 @@ class UserManagementService
             }
         }
 
-        $finalLoginMethod = (!empty($email)) ? 'email' : 'phone';
-
         if (empty($email) && !empty($phone)) {
-            $uniqueId = time() . '_' . bin2hex(random_bytes(3));
-            $generatedEmail = 'u_' . $uniqueId . '@p.local';
-            $emailVO = new Email($generatedEmail);
+            do {
+                $uniqueId = time() . '_' . bin2hex(random_bytes(3));
+                $generatedEmail = 'u_' . $uniqueId . '@p.local';
+                $emailVO = new Email($generatedEmail);
+            } while ($this->userRepository->findByEmail($emailVO));
+            
             $finalLoginMethod = 'phone';
+        } else {
+            $finalLoginMethod = 'email';
         }
 
         $passwordVO = new Password($password);

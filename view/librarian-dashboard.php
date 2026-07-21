@@ -130,6 +130,5 @@ include BASE_PATH . '/view/layout/header.php';
 </div>
 
 <?php
-// Close layout (header already included)
-include BASE_PATH . '/view/layout/footer.php';
+
 ?>

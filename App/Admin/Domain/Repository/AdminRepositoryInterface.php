@@ -9,6 +9,5 @@ interface AdminRepositoryInterface
     public function save(Admin $admin): void;
     public function findById(int $id): ?Admin;
     public function findByEmail(Email $email): ?Admin;
-    public function findAll(): array;
-    public function delete(Admin $admin): void;
+   
 }

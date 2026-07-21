@@ -44,6 +44,17 @@
     .book-table tbody td {
         padding: 12px 16px;
         vertical-align: middle;
+        text-align: left;
+    }
+
+    /* ─── Center align Status (5th), Available (6th), and Actions (7th) ─── */
+    .book-table thead th:nth-child(5),
+    .book-table thead th:nth-child(6),
+    .book-table thead th:nth-child(7),
+    .book-table tbody td:nth-child(5),
+    .book-table tbody td:nth-child(6),
+    .book-table tbody td:nth-child(7) {
+        text-align: center;
     }
 
     /* Book Cover */
@@ -296,9 +307,9 @@
                         <th>Title</th>
                         <th>Author</th>
                         <th>Category</th>
-                        <th>Status</th>
-                        <th>Available</th>
-                        <th class="text-center">Actions</th>
+                        <th>Status</th>          <!-- Center aligned -->
+                        <th>Available</th>        <!-- Center aligned -->
+                        <th class="text-center">Actions</th> <!-- Center aligned -->
                     </tr>
                 </thead>
                 <tbody>
@@ -373,22 +384,19 @@
                                         <?= $statusText ?>
                                     </span>
                                 </td>
-                                <td class="text-gray-800 dark:text-gray-300">
+                                <td>
                                     <?= $available ?> / <?= $total ?>
                                 </td>
                                 <td class="text-center">
                                     <div class="flex items-center justify-center gap-1">
-                                        <!-- ✅ View – using path parameter -->
                                         <a href="<?= BASE_URL ?>/admin/books/show/<?= $book->getId() ?>"
                                            class="action-btn view" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <!-- ✅ Edit – using path parameter -->
                                         <a href="<?= BASE_URL ?>/admin/books/edit/<?= $book->getId() ?>"
                                            class="action-btn edit" title="Edit">
                                             <i class="fas fa-pen"></i>
                                         </a>
-                                        <!-- ✅ Delete – using POST form (to match route) -->
                                         <form action="<?= BASE_URL ?>/admin/books/delete/<?= $book->getId() ?>" 
                                               method="POST" class="inline" 
                                               onsubmit="return confirm('Are you sure you want to delete this book? This action cannot be undone.')">
