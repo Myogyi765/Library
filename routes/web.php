@@ -188,7 +188,7 @@ $router->get('/admin/librarian', [AdminLibrarianController::class, 'index'], $ad
 $router->get('/admin/librarian/create', [AdminLibrarianController::class, 'create'], $adminMiddleware);
 $router->get('/admin/librarian/edit/{id}', [AdminLibrarianController::class, 'edit'], $adminMiddleware);
 $router->get('/admin/librarian/delete/{id}', [AdminLibrarianController::class, 'delete'], $adminMiddleware);
-$router->get('/admin/librarian/view/{id}', [AdminLibrarianController::class, 'show'], $adminMiddleware); // ✅ ADDED: View Route
+$router->get('/admin/librarian/view/{id}', [AdminLibrarianController::class, 'show'], $adminMiddleware);
 $router->post('/admin/librarian/create', [AdminLibrarianController::class, 'store'], $adminMiddleware);
 $router->post('/admin/librarian/edit/{id}', [AdminLibrarianController::class, 'update'], $adminMiddleware);
 $router->post('/admin/librarian/delete/{id}', [AdminLibrarianController::class, 'delete'], $adminMiddleware);
@@ -218,9 +218,14 @@ $router->post('/admin/roles/update/{id}', [AdminRoleController::class, 'update']
 $router->get('/admin/fines', [AdminFineController::class, 'index'], $adminMiddleware);
 $router->post('/admin/fines/update', [AdminFineController::class, 'update'], $adminMiddleware);
 
-// Admin Books
+// ─── ADMIN BOOKS (Fixed with {id} parameters) ──────────────
 $router->get('/admin/books', [AdminBookController::class, 'index'], $adminMiddleware);
-$router->get('/admin/books/show', [AdminBookController::class, 'show'], $adminMiddleware);
+$router->get('/admin/books/show/{id}', [AdminBookController::class, 'show'], $adminMiddleware);   // ✅ Fixed: added {id}
+$router->get('/admin/books/create', [AdminBookController::class, 'create'], $adminMiddleware);
+$router->get('/admin/books/edit/{id}', [AdminBookController::class, 'edit'], $adminMiddleware);   // ✅ Fixed: added {id}
+$router->post('/admin/books/store', [AdminBookController::class, 'store'], $adminMiddleware);
+$router->post('/admin/books/update/{id}', [AdminBookController::class, 'update'], $adminMiddleware);
+$router->post('/admin/books/delete/{id}', [AdminBookController::class, 'delete'], $adminMiddleware);
 
 
 // ─── LIBRARIAN ROUTES (Separate Module - Independent) ────────

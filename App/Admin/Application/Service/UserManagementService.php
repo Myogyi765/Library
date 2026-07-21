@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Admin\Application\Service;
 
 use App\User\Domain\Repository\UserRepositoryInterface;
@@ -73,26 +74,27 @@ class UserManagementService
         $phoneVerified = ($status === 'active' && !empty($phone));
 
         $user = new User(
-            null,                  
-            $name,                  
-            $emailVO,              
-            $passwordVO,           
-            $statusVO,             
-            $phoneVO,               
-            $roleId,                
-            'user',                
-            $emailVerified,         
-            $phoneVerified,        
-            $finalLoginMethod,     
-            null,                   
-            new DateTime(),       
-            new DateTime(),         
-            null,                  
-            null,                   
-            null,                   
-            null,                   
-            null,                  
-            null                 
+            null,
+            $name,
+            $emailVO,
+            $passwordVO,
+            $statusVO,
+            $phoneVO,
+            $roleId,
+            'user',
+            $emailVerified,
+            $phoneVerified,
+            $finalLoginMethod,
+            null,
+            new DateTime(),
+            new DateTime(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
         );
 
         $this->userRepository->save($user);

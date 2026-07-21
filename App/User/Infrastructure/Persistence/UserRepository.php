@@ -15,12 +15,12 @@ use Exception;
 class UserRepository implements UserRepositoryInterface
 {
     private PDO $db;
-    
+
     public function __construct(PDO $db)
     {
         $this->db = $db;
     }
-    
+
     public function save(User $user): User
     {
         if ($user->getId() === null) {
@@ -28,7 +28,7 @@ class UserRepository implements UserRepositoryInterface
         }
         return $this->update($user);
     }
-    
+
     private function insert(User $user): User
     {
         $sql = "INSERT INTO users (
@@ -44,10 +44,10 @@ class UserRepository implements UserRepositoryInterface
             :verification_code_expires_at, :email_verified_at, :phone_verified_at,
             :profile_image, :created_at, :updated_at
         )";
-        
+
         $stmt = $this->db->prepare($sql);
         $passwordHash = $user->getPassword()->getHash();
-        
+
         $params = [
             ':name' => $user->getName(),
             ':email' => $user->getEmail()->getValue(),
@@ -68,12 +68,12 @@ class UserRepository implements UserRepositoryInterface
             ':created_at' => $user->getCreatedAt()->format('Y-m-d H:i:s'),
             ':updated_at' => $user->getUpdatedAt()->format('Y-m-d H:i:s'),
         ];
-        
+
         $stmt->execute($params);
         $id = (int)$this->db->lastInsertId();
         return $this->findById($id);
     }
-    
+
     private function update(User $user): User
     {
         $sql = "UPDATE users SET
@@ -97,10 +97,10 @@ class UserRepository implements UserRepositoryInterface
             updated_at = :updated_at,
             last_login_at = :last_login_at
         WHERE id = :id";
-        
+
         $stmt = $this->db->prepare($sql);
         $passwordHash = $user->getPassword()->getHash();
-        
+
         $params = [
             ':id' => $user->getId(),
             ':name' => $user->getName(),
@@ -123,11 +123,11 @@ class UserRepository implements UserRepositoryInterface
             ':updated_at' => $user->getUpdatedAt()->format('Y-m-d H:i:s'),
             ':last_login_at' => $user->getLastLoginAt()?->format('Y-m-d H:i:s'),
         ];
-        
+
         $stmt->execute($params);
         return $user;
     }
-    
+
     public function findById(int $id): ?User
     {
         $sql = "SELECT * FROM users WHERE id = :id";
@@ -145,7 +145,7 @@ class UserRepository implements UserRepositoryInterface
             return null;
         }
     }
-    
+
     public function findByEmail(Email $email): ?User
     {
         $sql = "SELECT * FROM users WHERE email = :email";
@@ -162,7 +162,7 @@ class UserRepository implements UserRepositoryInterface
             return null;
         }
     }
-    
+
     public function findByPhone(Phone $phone): ?User
     {
         $sql = "SELECT * FROM users WHERE phone = :phone";
@@ -179,7 +179,7 @@ class UserRepository implements UserRepositoryInterface
             return null;
         }
     }
-    
+
     public function findByIdentifier(string $identifier): ?User
     {
         if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
@@ -192,7 +192,7 @@ class UserRepository implements UserRepositoryInterface
             }
         }
     }
-    
+
     public function findByRememberToken(string $token): ?User
     {
         $sql = "SELECT * FROM users WHERE remember_token = :token";
@@ -209,7 +209,7 @@ class UserRepository implements UserRepositoryInterface
             return null;
         }
     }
-    
+
     public function findByEmailVerificationToken(string $token): ?User
     {
         $sql = "SELECT * FROM users WHERE email_verification_token = :token";
@@ -226,7 +226,7 @@ class UserRepository implements UserRepositoryInterface
             return null;
         }
     }
-    
+
     public function findByPhoneVerificationCode(string $code): ?User
     {
         $sql = "SELECT * FROM users WHERE phone_verification_code = :code";
@@ -243,7 +243,7 @@ class UserRepository implements UserRepositoryInterface
             return null;
         }
     }
-    
+
     public function emailExists(Email $email): bool
     {
         $sql = "SELECT COUNT(*) FROM users WHERE email = :email";
@@ -251,7 +251,7 @@ class UserRepository implements UserRepositoryInterface
         $stmt->execute([':email' => $email->getValue()]);
         return (int)$stmt->fetchColumn() > 0;
     }
-    
+
     public function phoneExists(Phone $phone): bool
     {
         $sql = "SELECT COUNT(*) FROM users WHERE phone = :phone";
@@ -259,7 +259,7 @@ class UserRepository implements UserRepositoryInterface
         $stmt->execute([':phone' => $phone->getValue()]);
         return (int)$stmt->fetchColumn() > 0;
     }
-    
+
     public function delete(int $id): bool
     {
         $sql = "DELETE FROM users WHERE id = :id";
@@ -267,21 +267,21 @@ class UserRepository implements UserRepositoryInterface
         $stmt->execute([':id' => $id]);
         return $stmt->rowCount() > 0;
     }
-    
+
     public function updateRememberToken(int $userId, ?string $token): void
     {
         $sql = "UPDATE users SET remember_token = :token, updated_at = NOW() WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':token' => $token, ':id' => $userId]);
     }
-    
+
     public function updateLastLogin(int $userId): void
     {
         $sql = "UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $userId]);
     }
-    
+
     public function getRoleIdByName(string $roleName): ?int
     {
         $stmt = $this->db->prepare("SELECT id FROM roles WHERE name = :name");
@@ -289,13 +289,13 @@ class UserRepository implements UserRepositoryInterface
         $id = $stmt->fetchColumn();
         return $id !== false ? (int)$id : null;
     }
-    
+
     public function findAll(): array
     {
         $sql = "SELECT * FROM users ORDER BY created_at DESC";
         $stmt = $this->db->query($sql);
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         $users = [];
         foreach ($results as $data) {
             try {
@@ -306,7 +306,7 @@ class UserRepository implements UserRepositoryInterface
         }
         return $users;
     }
-    
+
     public function findByRole(string $roleName): array
     {
         $sql = "SELECT u.* 
@@ -317,7 +317,7 @@ class UserRepository implements UserRepositoryInterface
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':role_name' => $roleName]);
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         $users = [];
         foreach ($results as $data) {
             try {
@@ -328,12 +328,12 @@ class UserRepository implements UserRepositoryInterface
         }
         return $users;
     }
-    
+
     public function findByEmailString(string $email): ?User
     {
         return $this->findByEmail(new Email($email));
     }
-    
+
     public function findByPhoneString(string $phone): ?User
     {
         try {
@@ -342,7 +342,7 @@ class UserRepository implements UserRepositoryInterface
             return null;
         }
     }
-    
+
     public function getAllRoles(): array
     {
         $sql = "SELECT name FROM roles ORDER BY name";
@@ -431,19 +431,19 @@ class UserRepository implements UserRepositoryInterface
         $emailVerifiedAt = !empty($data['email_verified_at']) ? new DateTime($data['email_verified_at']) : null;
         $phoneVerifiedAt = !empty($data['phone_verified_at']) ? new DateTime($data['phone_verified_at']) : null;
         $verificationExpiresAt = !empty($data['verification_code_expires_at']) ? $data['verification_code_expires_at'] : null;
-        
+
         $roleName = $data['role'] ?? 'user';
         $roleId = $data['role_id'] ?? null;
-        
+
         try {
             $status = UserStatus::fromString($data['status'] ?? 'pending');
         } catch (Exception $e) {
             error_log("⚠️ Invalid status '{$data['status']}' for user ID {$data['id']}, defaulting to 'pending'. Error: " . $e->getMessage());
             $status = UserStatus::pending();
         }
-        
+
         $email = new Email($data['email']);
-        
+
         $phone = null;
         if (!empty($data['phone'])) {
             try {
@@ -452,9 +452,9 @@ class UserRepository implements UserRepositoryInterface
                 error_log("⚠️ Invalid phone '{$data['phone']}' for user ID {$data['id']}, setting to null. Error: " . $e->getMessage());
             }
         }
-        
+
         $password = new Password($data['password_hash'], true);
-        
+
         return new User(
             (int)$data['id'],
             $data['name'],

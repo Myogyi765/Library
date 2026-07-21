@@ -378,19 +378,24 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="flex items-center justify-center gap-1">
-                                        <a href="<?= BASE_URL ?>/admin/books/show?id=<?= $book->getId() ?>"
+                                        <!-- ✅ View – using path parameter -->
+                                        <a href="<?= BASE_URL ?>/admin/books/show/<?= $book->getId() ?>"
                                            class="action-btn view" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="<?= BASE_URL ?>/admin/books/edit?id=<?= $book->getId() ?>"
+                                        <!-- ✅ Edit – using path parameter -->
+                                        <a href="<?= BASE_URL ?>/admin/books/edit/<?= $book->getId() ?>"
                                            class="action-btn edit" title="Edit">
                                             <i class="fas fa-pen"></i>
                                         </a>
-                                        <a href="<?= BASE_URL ?>/admin/books/delete?id=<?= $book->getId() ?>"
-                                           class="action-btn delete" title="Delete"
-                                           onclick="return confirm('Are you sure you want to delete this book? This action cannot be undone.')">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
+                                        <!-- ✅ Delete – using POST form (to match route) -->
+                                        <form action="<?= BASE_URL ?>/admin/books/delete/<?= $book->getId() ?>" 
+                                              method="POST" class="inline" 
+                                              onsubmit="return confirm('Are you sure you want to delete this book? This action cannot be undone.')">
+                                            <button type="submit" class="action-btn delete" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

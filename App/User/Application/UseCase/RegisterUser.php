@@ -42,29 +42,22 @@ class RegisterUser
         $phoneObj = null;
 
         if ($method === 'email') {
-
             if (empty($email)) {
                 throw new \InvalidArgumentException('Email is required.');
             }
-
             $emailObj = new Email($email);
             $this->domainService->ensureUniqueEmail($emailObj);
-
         } elseif ($method === 'phone') {
-
             if (empty($phone)) {
                 throw new \InvalidArgumentException('Phone number is required.');
             }
-
             if (!preg_match('/^\+95[0-9]{7,10}$/', $phone)) {
                 throw new \InvalidArgumentException(
                     'Phone number must be in format +95XXXXXXXXX'
                 );
             }
-
             $phoneObj = new Phone($phone);
             $this->domainService->ensureUniquePhone($phoneObj);
-
         } else {
             throw new \InvalidArgumentException('Invalid registration method.');
         }
@@ -80,11 +73,11 @@ class RegisterUser
             null,
             $name,
             $emailObj ?? new Email('placeholder@example.com'),
-            $phoneObj ?? new Phone('+95000000000'),
             $passwordObj,
             UserStatus::pending(),
+            $phoneObj ?? new Phone('+95000000000'),
             $roleId,
-            'user',              
+            'user',
             false,
             false,
             $method,
@@ -96,27 +89,23 @@ class RegisterUser
             null,
             null,
             null,
+            null,
             null
         );
 
-        $token = $this->verificationService
-            ->generateVerificationToken($tempUser);
-
-        $code = $this->verificationService
-            ->generateVerificationCode();
-
-        $expiresAt = (new DateTime('+15 minutes'))
-            ->format('Y-m-d H:i:s');
+        $token = $this->verificationService->generateVerificationToken($tempUser);
+        $code = $this->verificationService->generateVerificationCode();
+        $expiresAt = (new DateTime('+15 minutes'))->format('Y-m-d H:i:s');
 
         $user = new User(
             null,
             $name,
             $emailObj ?? new Email('placeholder@example.com'),
-            $phoneObj ,
             $passwordObj,
             UserStatus::pending(),
-            $roleId,                
-            'user',                 
+            $phoneObj,
+            $roleId,
+            'user',
             false,
             false,
             $method,
@@ -128,26 +117,23 @@ class RegisterUser
             $code,
             $expiresAt,
             null,
+            null,
             null
         );
 
         $savedUser = $this->repository->save($user);
 
         if ($method === 'email') {
-
             $this->verificationService->sendVerificationEmail(
                 $savedUser,
                 $token,
                 $code
             );
-
         } else {
-
             $this->verificationService->sendVerificationSMS(
                 $savedUser,
                 $code
             );
-
         }
 
         return UserDTO::fromEntity($savedUser);

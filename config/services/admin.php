@@ -2,6 +2,9 @@
 
 use App\Book\Application\UseCase\GetBook;
 use App\Book\Application\UseCase\GetBooks;
+use App\Book\Application\UseCase\CreateBook;
+use App\Book\Application\UseCase\UpdateBook;
+use App\Book\Application\UseCase\DeleteBook;
 use App\Book\Domain\Repository\BookRepositoryInterface;
 use App\Book\Domain\Repository\CategoryRepositoryInterface;
 use App\Admin\Infrastructure\Persistence\SettingRepository;
@@ -108,8 +111,12 @@ return function ($container) {
         return new AdminBookController(
             $c->get(GetBooks::class),
             $c->get(GetBook::class),
+            $c->get(CreateBook::class),
+            $c->get(UpdateBook::class),
+            $c->get(DeleteBook::class),
             $c->get(BookRepositoryInterface::class),
-            $c->get(CategoryRepositoryInterface::class)
+            $c->get(CategoryRepositoryInterface::class),
+            $c->get(UserAuthenticator::class)
         );
     });
 

@@ -11,6 +11,10 @@ class ReportService
     private UserRepositoryInterface $userRepo;
     private LoanRepositoryInterface $loanRepo;
 
+    private ?array $cachedLoans = null;
+    private ?array $cachedBooks = null;
+    private ?array $cachedUsers = null;
+
     public function __construct(
         BookRepositoryInterface $bookRepo,
         UserRepositoryInterface $userRepo,
@@ -21,15 +25,19 @@ class ReportService
         $this->loanRepo = $loanRepo;
     }
 
+    
     public function getDashboardReport(): array
     {
-        $books = $this->bookRepo->findAll();
-        $users = $this->userRepo->findAll();
-        $loans = $this->loanRepo->findAll();
+        $loans = $this->getLoans();
+        $books = $this->getBooks();
+        $users = $this->getUsers();
 
         $totalBooks = count($books);
         $availableBooks = array_sum(array_map(fn($book) => $book->getAvailableQuantity(), $books));
-        $borrowedBooks = array_sum(array_map(fn($book) => max(0, $book->getQuantity() - $book->getAvailableQuantity()), $books));
+        $borrowedBooks = array_sum(array_map(
+            fn($book) => max(0, $book->getQuantity() - $book->getAvailableQuantity()),
+            $books
+        ));
         $totalUsers = count($users);
 
         $activeLoans = 0;
@@ -39,12 +47,17 @@ class ReportService
 
         foreach ($loans as $loan) {
             $status = $loan->getStatus()->getValue();
+
             if ($status === 'active') {
                 $activeLoans++;
                 $dueDate = $loan->getDueDate();
                 if ($dueDate instanceof \DateTimeImmutable && $dueDate < $now) {
                     $overdueLoans++;
                 }
+            }
+
+            if ($status === 'overdue') {
+                $overdueLoans++;
             }
 
             $borrowedAt = $loan->getBorrowedAt();
@@ -67,16 +80,47 @@ class ReportService
         ];
     }
 
+    
     public function getPopularBooks(): array
     {
-        return $this->getPopularBooksFromLoans($this->loanRepo->findAll());
+        return $this->getPopularBooksFromLoans($this->getLoans());
     }
 
+    
     public function getRecentActivities(): array
     {
-        return $this->getRecentActivitiesFromLoans($this->loanRepo->findAll());
+        return $this->getRecentActivitiesFromLoans($this->getLoans());
     }
 
+
+    
+    private function getLoans(): array
+    {
+        if ($this->cachedLoans === null) {
+            $this->cachedLoans = $this->loanRepo->findAll();
+        }
+        return $this->cachedLoans;
+    }
+
+    
+    private function getBooks(): array
+    {
+        if ($this->cachedBooks === null) {
+            $this->cachedBooks = $this->bookRepo->findAll();
+        }
+        return $this->cachedBooks;
+    }
+
+    
+    private function getUsers(): array
+    {
+        if ($this->cachedUsers === null) {
+            $this->cachedUsers = $this->userRepo->findAll();
+        }
+        return $this->cachedUsers;
+    }
+
+    
     private function buildMonthlyLoanSummary(array $monthlyLoans): array
     {
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -87,6 +131,7 @@ class ReportService
         return $summary;
     }
 
+    
     private function getPopularBooksFromLoans(array $loans): array
     {
         $counts = [];
@@ -101,15 +146,24 @@ class ReportService
         $result = [];
         foreach ($popular as $bookId => $quantity) {
             $book = $this->bookRepo->findById($bookId);
-            $result[] = [
-                'title' => $book ? $book->getTitle() : 'Book #' . $bookId,
-                'borrows' => $quantity,
-            ];
+            if ($book) {
+                $result[] = [
+                    'title' => $book->getTitle(),
+                    'borrows' => $quantity,
+                ];
+            } else {
+                error_log("⚠️ Book not found for ID: {$bookId} in popular books calculation");
+                $result[] = [
+                    'title' => 'Book #' . $bookId,
+                    'borrows' => $quantity,
+                ];
+            }
         }
 
         return $result;
     }
 
+    
     private function getRecentActivitiesFromLoans(array $loans): array
     {
         usort($loans, function ($a, $b) {
@@ -122,30 +176,46 @@ class ReportService
         });
 
         $activities = [];
+        $bookCache = []; 
+        $userCache = []; 
+
         foreach ($loans as $loan) {
             if (count($activities) >= 6) {
                 break;
             }
 
-            $user = $this->userRepo->findById($loan->getUserId());
-            $book = $this->bookRepo->findById($loan->getBookId());
+            $bookId = $loan->getBookId();
+            $userId = $loan->getUserId();
+
+            if (!isset($bookCache[$bookId])) {
+                $bookCache[$bookId] = $this->bookRepo->findById($bookId);
+            }
+            $book = $bookCache[$bookId];
+
+            if (!isset($userCache[$userId])) {
+                $userCache[$userId] = $this->userRepo->findById($userId);
+            }
+            $user = $userCache[$userId];
+
             $status = $loan->getStatus()->getValue();
 
             $userName = $user ? $user->getName() : 'Unknown User';
             $bookTitle = $book ? $book->getTitle() : 'Unknown Book';
 
             $action = match ($status) {
-                'active' => 'Borrowed',
+                'active'   => 'Borrowed',
                 'returned' => 'Returned',
-                'pending' => 'Requested',
-                'overdue' => 'Overdue',
-                default => 'Updated',
+                'pending'  => 'Requested',
+                'overdue'  => 'Overdue',
+                default    => 'Updated',
             };
 
             $activities[] = [
                 'user' => $userName,
                 'action' => sprintf('%s "%s"', $action, $bookTitle),
-                'date' => $loan->getBorrowedAt() ? $loan->getBorrowedAt()->format('Y-m-d H:i') : date('Y-m-d H:i'),
+                'date' => $loan->getBorrowedAt()
+                    ? $loan->getBorrowedAt()->format('Y-m-d H:i')
+                    : date('Y-m-d H:i'),
             ];
         }
 

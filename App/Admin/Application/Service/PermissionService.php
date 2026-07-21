@@ -7,36 +7,55 @@ class PermissionService
 {
     private PDO $db;
 
-    public function __construct(PDO $db) {
+    public function __construct(PDO $db)
+    {
         $this->db = $db;
     }
 
-    public function getAllRoles(): array {
+    
+    public function getAllRoles(): array
+    {
         $stmt = $this->db->query("SELECT name FROM roles ORDER BY id");
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
-    public function getRolePermissions(array $roles): array {
+    
+    public function getRolePermissions(array $roles): array
+    {
         $result = [];
         foreach ($roles as $role) {
-            $stmt = $this->db->prepare("SELECT rp.permission FROM role_permissions rp JOIN roles r ON r.id = rp.role_id WHERE r.name = ?");
-            $stmt->execute([$role]);
+            $stmt = $this->db->prepare(
+                "SELECT rp.permission 
+                 FROM role_permissions rp 
+                 JOIN roles r ON r.id = rp.role_id 
+                 WHERE r.name = :role"
+            );
+            $stmt->execute([':role' => $role]);
             $result[$role] = $stmt->fetchAll(PDO::FETCH_COLUMN);
         }
         return $result;
     }
 
-    public function getRoleCounts(array $roles): array {
+    
+    public function getRoleCounts(array $roles): array
+    {
         $result = [];
         foreach ($roles as $role) {
-            $stmt = $this->db->prepare("SELECT COUNT(u.id) FROM users u INNER JOIN roles r ON u.role_id = r.id WHERE r.name = ?");
-            $stmt->execute([$role]);
+            $stmt = $this->db->prepare(
+                "SELECT COUNT(u.id) 
+                 FROM users u 
+                 INNER JOIN roles r ON u.role_id = r.id 
+                 WHERE r.name = :role"
+            );
+            $stmt->execute([':role' => $role]);
             $result[$role] = (int)$stmt->fetchColumn();
         }
         return $result;
     }
 
-    public function getAllAvailablePermissions(): array {
+    
+    public function getAllAvailablePermissions(): array
+    {
         return [
             'view_users', 'create_users', 'edit_users', 'delete_users',
             'view_books', 'create_books', 'edit_books', 'delete_books',
@@ -45,28 +64,47 @@ class PermissionService
             'view_reports', 'export_reports', 'manage_settings',
             'view_notifications', 'create_notifications', 'edit_notifications',
             'view_payments', 'create_payments', 'edit_payments', 'delete_payments',
-            'refund_payments', 
+            'refund_payments',
         ];
     }
 
-    public function updateRolePermissions(array $newPermissions): void {
-        foreach ($newPermissions as $roleName => $permissionsArray) {
-            $stmt = $this->db->prepare("SELECT id FROM roles WHERE name = ?");
-            $stmt->execute([$roleName]);
-            $roleId = $stmt->fetchColumn();
-            if (!$roleId) continue;
+    
+    public function updateRolePermissions(array $newPermissions): void
+    {
+        $this->db->beginTransaction();
 
-            $delStmt = $this->db->prepare("DELETE FROM role_permissions WHERE role_id = ?");
-            $delStmt->execute([$roleId]);
+        try {
+            foreach ($newPermissions as $roleName => $permissionsArray) {
+                $stmt = $this->db->prepare("SELECT id FROM roles WHERE name = :role");
+                $stmt->execute([':role' => $roleName]);
+                $roleId = $stmt->fetchColumn();
 
-            if (!empty($permissionsArray)) {
-                $insertStmt = $this->db->prepare("INSERT INTO role_permissions (role_id, permission) VALUES (?, ?)");
-                foreach ($permissionsArray as $permName => $value) {
-                    if ($value == '1') {
-                        $insertStmt->execute([$roleId, $permName]);
+                if (!$roleId) {
+                    continue; 
+                }
+
+                $delStmt = $this->db->prepare("DELETE FROM role_permissions WHERE role_id = :role_id");
+                $delStmt->execute([':role_id' => $roleId]);
+
+                if (!empty($permissionsArray)) {
+                    $insertStmt = $this->db->prepare(
+                        "INSERT INTO role_permissions (role_id, permission) VALUES (:role_id, :permission)"
+                    );
+                    foreach ($permissionsArray as $permName => $value) {
+                        if ($value == '1' || $value === true) {
+                            $insertStmt->execute([
+                                ':role_id' => $roleId,
+                                ':permission' => $permName
+                            ]);
+                        }
                     }
                 }
             }
+
+            $this->db->commit();
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e; 
         }
     }
 }

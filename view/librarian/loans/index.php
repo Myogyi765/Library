@@ -10,9 +10,9 @@
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400">Manage all library loans</p>
     </div>
-    <a href="<?= BASE_URL ?>/librarian/loans/create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition">
+    <!-- <a href="<?= BASE_URL ?>/librarian/loans/create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition">
         <i class="fas fa-plus"></i> Issue Book
-    </a>
+    </a> -->
 </div>
 
 <!-- Flash Messages -->

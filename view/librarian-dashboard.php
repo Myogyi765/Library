@@ -57,7 +57,7 @@ include BASE_PATH . '/view/layout/header.php';
             <!-- Books -->
             <a href="<?= BASE_URL ?>/librarian/books" 
                class="flex items-center gap-3 px-4 py-2.5 rounded-lg <?= $page === 'books' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' ?> transition">
-                <i class="fas fa-book w-5 text-center <?= $page === 'books' ? 'text-blue-600 dark:text-blue-400' : 'text-green-500 dark:text-green-400' ?>"></i>
+                <i class="fas fa-book w-5 text-center <?= $page === 'books' ? 'text-blue-600 dark:text-blue-400' : 'text-blue-500 dark:text-green-400' ?>"></i>
                 <span>Books</span>
             </a>
 
