@@ -119,7 +119,6 @@ return function ($container) {
         );
     });
 
-    
     $container->singleton(DashboardController::class, function ($c) {
         return new DashboardController(
             $c->get(UserAuthenticator::class),
@@ -130,10 +129,12 @@ return function ($container) {
         );
     });
 
+    
     $container->singleton(UserBorrowController::class, function ($c) {
         return new UserBorrowController(
             $c->get(BorrowBookHandler::class),
-            $c->get(Authorization::class)
+            $c->get(Authorization::class),
+            $c->get(BookRepositoryInterface::class) 
         );
     });
 

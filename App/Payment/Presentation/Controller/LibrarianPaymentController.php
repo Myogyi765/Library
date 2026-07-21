@@ -15,6 +15,7 @@ use App\Invoice\Domain\Repository\InvoiceRepositoryInterface;
 use App\Invoice\Domain\Entity\Invoice;
 use App\Payment\Domain\ValueObject\PaymentStatus;
 use App\Admin\Application\Service\SettingsService;
+use App\Notification\Application\Service\NotificationService;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\SvgWriter;
 use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
@@ -30,6 +31,7 @@ class LibrarianPaymentController extends BaseController
     private BookRepositoryInterface $bookRepo;
     private InvoiceRepositoryInterface $invoiceRepo;
     private SettingsService $settingsService;
+    private NotificationService $notificationService;
 
     public function __construct(
         PaymentRepositoryInterface $paymentRepo,
@@ -39,7 +41,8 @@ class LibrarianPaymentController extends BaseController
         UserRepositoryInterface $userRepo,
         BookRepositoryInterface $bookRepo,
         InvoiceRepositoryInterface $invoiceRepo,
-        SettingsService $settingsService
+        SettingsService $settingsService,
+        NotificationService $notificationService
     ) {
         parent::__construct();
         $this->paymentRepo = $paymentRepo;
@@ -50,10 +53,10 @@ class LibrarianPaymentController extends BaseController
         $this->bookRepo = $bookRepo;
         $this->invoiceRepo = $invoiceRepo;
         $this->settingsService = $settingsService;
+        $this->notificationService = $notificationService;
         $this->setViewBasePath(BASE_PATH . '/view/');
     }
 
-    
     public function index(): void
     {
         $statusFilter = $_GET['status'] ?? 'all';
@@ -63,7 +66,6 @@ class LibrarianPaymentController extends BaseController
                 $payments = $this->paymentRepo->findPendingApprovalsWithDetails();
                 break;
             case 'approved':
-               
                 $payments = $this->paymentRepo->findByStatusWithDetails('completed');
                 break;
             case 'rejected':
@@ -75,7 +77,7 @@ class LibrarianPaymentController extends BaseController
         }
 
         $pageTitle = 'Payments';
-      $content = BASE_PATH . '/view/librarian/payments/index.php';
+        $content = BASE_PATH . '/view/librarian/payments/index.php';
         $data = [
             'payments' => $payments,
             'currentFilter' => $statusFilter,
@@ -84,7 +86,6 @@ class LibrarianPaymentController extends BaseController
         include BASE_PATH . '/view/librarian-dashboard.php';
     }
 
-    
     public function show($id): void
     {
         $id = (int) $id;
@@ -96,13 +97,15 @@ class LibrarianPaymentController extends BaseController
         $this->view('payment/librarian/show', ['payment' => $payment]);
     }
 
-    
     public function approve($id): void
     {
         $id = (int) $id;
         try {
             $cmd = new ApprovePaymentCommand($id, $_SESSION['user_id'] ?? 0);
             $this->approveHandler->handle($cmd);
+
+            $this->sendApprovalNotification($id);
+
             $this->redirect(BASE_URL . '/librarian/payments/invoice/' . $id);
         } catch (\Exception $e) {
             $_SESSION['flash_error'] = $e->getMessage();
@@ -116,6 +119,9 @@ class LibrarianPaymentController extends BaseController
         try {
             $cmd = new RejectPaymentCommand($id, $_SESSION['user_id'] ?? 0);
             $this->rejectHandler->handle($cmd);
+
+            $this->sendRejectionNotification($id);
+
             $_SESSION['flash_success'] = 'Payment rejected.';
             $this->redirect(BASE_URL . '/librarian/payments');
         } catch (\Exception $e) {
@@ -124,7 +130,72 @@ class LibrarianPaymentController extends BaseController
         }
     }
 
-    
+    private function sendApprovalNotification(int $paymentId): void
+    {
+        try {
+            $payment = $this->paymentRepo->findById($paymentId);
+            if (!$payment) {
+                return;
+            }
+
+            $loan = $this->loanRepo->findById($payment->getLoanId());
+            if (!$loan) {
+                return;
+            }
+
+            $book = $this->bookRepo->findById($loan->getBookId());
+            $bookTitle = $book ? $book->getTitle() : 'Unknown Book';
+
+            $userId = $loan->getUserId();
+
+            $this->notificationService->createNotification(
+                $userId,
+                'user',
+                'payment_approved',
+                '✅ Payment Approved',
+                'Your payment has been approved for book: "' . $bookTitle . '".',
+                BASE_URL . '/payment/invoice/' . $paymentId
+            );
+
+            error_log("✅ Approval notification sent to User ID: {$userId} for Payment ID: {$paymentId}");
+        } catch (\Exception $e) {
+            error_log("❌ Failed to send approval notification: " . $e->getMessage());
+        }
+    }
+
+    private function sendRejectionNotification(int $paymentId): void
+    {
+        try {
+            $payment = $this->paymentRepo->findById($paymentId);
+            if (!$payment) {
+                return;
+            }
+
+            $loan = $this->loanRepo->findById($payment->getLoanId());
+            if (!$loan) {
+                return;
+            }
+
+            $book = $this->bookRepo->findById($loan->getBookId());
+            $bookTitle = $book ? $book->getTitle() : 'Unknown Book';
+
+            $userId = $loan->getUserId();
+
+            $this->notificationService->createNotification(
+                $userId,
+                'user',
+                'payment_rejected',
+                '❌ Payment Rejected',
+                'Your payment for book: "' . $bookTitle . '" has been rejected. Please contact support.',
+                BASE_URL . '/payment/submit/' . $paymentId
+            );
+
+            error_log("✅ Rejection notification sent to User ID: {$userId} for Payment ID: {$paymentId}");
+        } catch (\Exception $e) {
+            error_log("❌ Failed to send rejection notification: " . $e->getMessage());
+        }
+    }
+
     public function viewInvoice($id): void
     {
         $id = (int) $id;
@@ -219,7 +290,6 @@ class LibrarianPaymentController extends BaseController
         $refundStatus = $payment->getRefundStatus() ?? 'none';
         $status = $payment->getStatus()->getValue();
 
-     
         if ($refundStatus !== 'none' || !in_array($status, ['completed', 'approved'])) {
             $_SESSION['error_message'] = 'This payment cannot be refunded.';
             $this->redirect(BASE_URL . '/librarian/payments');

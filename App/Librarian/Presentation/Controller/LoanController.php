@@ -195,14 +195,17 @@ class LoanController extends BaseController
 
             $this->db->commit();
 
+
+         $book = $this->bookRepo->findById($loan->getBookId());
+            $bookTitle = $book ? $book->getTitle() : 'Unknown Book';
             $bookId = $loan->getBookId();
             $userId = $loan->getUserId();
             $this->createNotification(
                 $userId,
                 'user',
                 'loan_confirmed',
-                'Loan confirmed',
-                'Your loan request has been confirmed. Please complete payment.',
+                       '✅ Loan Confirmed - ' . $bookTitle,  
+                'Your loan for book: "' . $bookTitle . '" has been confirmed. Please complete payment.',
                 BASE_URL . '/books/' . $bookId
             );
 

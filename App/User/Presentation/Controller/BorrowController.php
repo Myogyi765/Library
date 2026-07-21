@@ -8,17 +8,20 @@ use App\Circulation\Application\Command\BorrowBookCommand;
 use App\Circulation\Application\Handler\BorrowBookHandler;
 use App\Shared\Base\BaseController;
 use App\Shared\Core\Authorization\Authorization;
+use App\Book\Domain\Repository\BookRepositoryInterface;
 
 class BorrowController extends BaseController
 {
     private BorrowBookHandler $handler;
     private Authorization $authorization;
+     private BookRepositoryInterface $bookRepo;
 
-    public function __construct(BorrowBookHandler $handler, Authorization $authorization)
+    public function __construct(BorrowBookHandler $handler, Authorization $authorization, BookRepositoryInterface $bookRepo)
     {
         parent::__construct();
         $this->handler = $handler;
         $this->authorization = $authorization;
+           $this->bookRepo = $bookRepo;
     }
 
     public function borrow(int $id): void
@@ -41,12 +44,15 @@ class BorrowController extends BaseController
 
             $_SESSION['success_message'] = 'Borrow request submitted successfully. Waiting for librarian approval.';
 
+               $book = $this->bookRepo->findById($id);
+            $bookTitle = $book ? $book->getTitle() : 'Unknown Book';
+
             $this->createNotification(
                 null,
                 'librarian',
                 'borrow_request',
-                'Borrow request submitted',
-                'A user has requested to borrow a book.',
+                  '📚 Borrow Request - ' . $bookTitle, 
+                 'A user has requested to borrow book: "' . $bookTitle . '". Please review and confirm.',
                 BASE_URL . '/librarian/dashboard?page=loans'
             );
 

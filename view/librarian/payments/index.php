@@ -75,8 +75,8 @@
                     <th class="px-2 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 truncate hidden xl:table-cell">Book</th>
                     <th class="px-2 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 truncate hidden md:table-cell">Submitted</th>
                     <th class="px-2 py-3 text-center text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 truncate">Status</th>
-                    <th class="px-2 py-3 text-left text-xs font-bold uppercase text-gray-800 dark:text-gray-400 truncate hidden sm:table-cell">Refund</th>
-                    <th class="px-2 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 ">Actions</th>
+                    <th class="px-2 py-3 text-center text-xs font-bold uppercase text-gray-800 dark:text-gray-400 truncate hidden sm:table-cell">Refund</th>
+                    <th class="px-2 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -137,14 +137,32 @@
                             <td class="px-2 py-3 text-gray-900 dark:text-gray-200 text-xs truncate hidden md:table-cell">
                                 <?= $submittedAt ? date('d M Y', strtotime($submittedAt)) : '—' ?>
                             </td>
-                            <td class="px-2 py-3 text-center">
-                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium <?= $statusColor ?> truncate">
-                                    <?= $statusLabel ?>
-                                </span>
+                            <!-- ✅ Status Column - Pending Approval split into two lines -->
+                            <td class="px-2 py-3 text-center align-middle">
+                                <?php if ($status === 'pending_approval'): ?>
+                                    <span class="inline-flex flex-col items-center px-2.5 py-1 rounded-full text-xs font-medium <?= $statusColor ?> whitespace-normal leading-tight">
+                                        <span>Pending</span>
+                                        <span class="text-[12px] opacity-90">Approval</span>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium <?= $statusColor ?> truncate">
+                                        <?= htmlspecialchars($statusLabel) ?>
+                                    </span>
+                                <?php endif; ?>
                             </td>
-                            <td class="px-2 py-3 hidden sm:table-cell">
-                                <span class="text-sm font-bold <?= $refundColor ?> truncate"><?= $refundLabel ?></span>
+                            <!-- ✅ Refund Column - "None" as pill, centered -->
+                            <td class="px-2 py-3 hidden sm:table-cell text-center align-middle">
+                                <?php if ($refundStatus === 'none'): ?>
+                                    <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                                        None
+                                    </span>
+                                <?php else: ?>
+                                    <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold <?= $refundColor ?>">
+                                        <?= htmlspecialchars($refundLabel) ?>
+                                    </span>
+                                <?php endif; ?>
                             </td>
+                            <!-- Actions Column -->
                             <td class="px-2 py-3 text-center">
                                 <div class="flex items-center justify-center gap-1 whitespace-nowrap">
                                     <?php if ($status === 'pending_approval'): ?>

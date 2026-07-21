@@ -416,3 +416,8 @@ $router->get('/dev/seed-notifications', function () {
     header('Content-Type: application/json');
     echo json_encode(['success' => true, 'inserted' => count($samples)]);
 }, [AuthMiddleware::class]);
+
+
+$router->get('/book/{id}', [BookController::class, 'show'], 
+    [AuthMiddleware::class, $authorizationCheck('view_books')]
+);

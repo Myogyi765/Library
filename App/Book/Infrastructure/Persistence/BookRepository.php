@@ -171,17 +171,20 @@ class BookRepository implements BookRepositoryInterface
         return (int)$stmt->fetchColumn();
     }
 
-    public function getLatestBooks(int $limit): array
-    {
-        $sql = "SELECT * FROM books ORDER BY created_at DESC LIMIT :limit";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':limit' => $limit]);
-        $books = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $books[] = $this->hydrate($row);
-        }
-        return $books;
+   public function getLatestBooks(int $limit): array
+{
+    $sql = "SELECT * FROM books ORDER BY created_at DESC LIMIT :limit";
+    $stmt = $this->db->prepare($sql);
+    
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+    
+    $books = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $books[] = $this->hydrate($row);
     }
+    return $books;
+}
 
 
     public function findAllPaginated(int $offset, int $limit): array

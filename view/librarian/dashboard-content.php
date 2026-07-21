@@ -15,7 +15,7 @@ $categoryMap = $categoryMap ?? [];
         <div class="flex items-end justify-between">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-                <p class="text-sm text-gray-500 dark:text-gray-400">of library operations</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Overview of library operations</p>
             </div>
             <div class="flex items-center gap-4">
                 <!-- ✅ Scan Button – Camera Icon -->
@@ -46,7 +46,7 @@ $categoryMap = $categoryMap ?? [];
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Total Users</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><?= number_format($stats['users'] ?? 0) ?></p>
+                        <p class="text-2xl font-bold text-blue-500 dark:text-white mt-1"><?= number_format($stats['users'] ?? 0) ?></p>
                     </div>
                     <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
                         <i class="fas fa-users text-2xl"></i>
@@ -60,7 +60,7 @@ $categoryMap = $categoryMap ?? [];
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Total Books</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><?= number_format($stats['books'] ?? 0) ?></p>
+                        <p class="text-2xl font-bold text-indigo-500 dark:text-white mt-1"><?= number_format($stats['books'] ?? 0) ?></p>
                     </div>
                     <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                         <i class="fas fa-book text-2xl"></i>
@@ -74,7 +74,7 @@ $categoryMap = $categoryMap ?? [];
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Active Loans</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><?= number_format($stats['activeLoans'] ?? 0) ?></p>
+                        <p class="text-2xl font-bold text-green-500 dark:text-white mt-1"><?= number_format($stats['activeLoans'] ?? 0) ?></p>
                     </div>
                     <div class="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                         <i class="fas fa-hand-holding text-2xl"></i>
@@ -88,7 +88,7 @@ $categoryMap = $categoryMap ?? [];
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Overdue</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><?= number_format($stats['overdue'] ?? 0) ?></p>
+                        <p class="text-2xl font-bold text-red-500 dark:text-white mt-1"><?= number_format($stats['overdue'] ?? 0) ?></p>
                     </div>
                     <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400">
                         <i class="fas fa-clock text-2xl"></i>

@@ -14,6 +14,7 @@ use App\Book\Domain\Repository\BookRepositoryInterface;
 use App\Admin\Application\Service\SettingsService;  
 use App\User\Domain\Repository\UserRepositoryInterface;
 use App\Invoice\Domain\Repository\InvoiceRepositoryInterface;
+use App\Notification\Application\Service\NotificationService; 
 
 return function ($container) {
 
@@ -70,7 +71,8 @@ return function ($container) {
             $c->get(UserRepositoryInterface::class),
             $c->get(BookRepositoryInterface::class),
             $c->get(InvoiceRepositoryInterface::class),
-            $c->get(SettingsService::class)
+            $c->get(SettingsService::class),
+            $c->get(NotificationService::class) 
         );
     });
 };
