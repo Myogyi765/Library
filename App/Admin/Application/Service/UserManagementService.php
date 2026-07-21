@@ -73,26 +73,26 @@ class UserManagementService
         $phoneVerified = ($status === 'active' && !empty($phone));
 
         $user = new User(
-            null,
-            $name,
-            $emailVO,
-            $phoneVO,
-            $passwordVO,
-            $statusVO,
-            $roleId,
-            'user',
-            $emailVerified,
-            $phoneVerified,
-            $finalLoginMethod,
-            null,
-            new DateTime(),
-            new DateTime(),
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
+            null,                  
+            $name,                  
+            $emailVO,              
+            $passwordVO,           
+            $statusVO,             
+            $phoneVO,               
+            $roleId,                
+            'user',                
+            $emailVerified,         
+            $phoneVerified,        
+            $finalLoginMethod,     
+            null,                   
+            new DateTime(),       
+            new DateTime(),         
+            null,                  
+            null,                   
+            null,                   
+            null,                   
+            null,                  
+            null                 
         );
 
         $this->userRepository->save($user);

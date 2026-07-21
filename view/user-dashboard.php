@@ -20,6 +20,12 @@ $loans = $loans ?? [];
 $books = $books ?? [];
 $user = $user ?? null;
 
+// ---- FIX: Convert $books to associative array by ID for easy lookup ----
+$booksById = [];
+foreach ($books as $book) {
+    $booksById[$book->getId()] = $book;
+}
+
 // Calculate stats
 $totalBorrowed = count($loans);
 $activeLoans = 0;
@@ -67,6 +73,209 @@ try {
 }
 ?>
 
+<style>
+    /* ─── LOAN TABLE (Admin Style) ─── */
+    .loan-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    .loan-table thead th {
+        background: #f8fafc;
+        color: #1e293b;
+        font-weight: 600;
+        padding: 12px 16px;
+        border-bottom: 2px solid #e2e8f0;
+        text-align: center;
+        vertical-align: middle;
+    }
+    .dark .loan-table thead th {
+        background: #1e293b;
+        color: #e2e8f0;
+        border-bottom-color: #334155;
+    }
+    .loan-table tbody td {
+        padding: 12px 16px;
+        vertical-align: middle;
+        text-align: center;
+    }
+    .loan-table tbody tr {
+        transition: background 0.15s;
+    }
+    .loan-table tbody tr:hover {
+        background: #f8fafc;
+    }
+    .dark .loan-table tbody tr:hover {
+        background: #1e293b;
+    }
+
+    /* ─── LEFT-ALIGN BOOK & AUTHOR COLUMNS ─── */
+    .loan-table thead th:nth-child(2),
+    .loan-table thead th:nth-child(3),
+    .loan-table tbody td:nth-child(2),
+    .loan-table tbody td:nth-child(3) {
+        text-align: left;
+    }
+
+    /* ─── Book Cover Image ─── */
+    .book-cover-thumb {
+        width: 50px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+    .dark .book-cover-thumb {
+        border-color: #334155;
+        background: #0f172a;
+    }
+    .book-cover-placeholder {
+        width: 50px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f1f5f9;
+        border-radius: 6px;
+        color: #94a3b8;
+        font-size: 1.5rem;
+        border: 1px solid #e2e8f0;
+    }
+    .dark .book-cover-placeholder {
+        background: #1e293b;
+        border-color: #334155;
+        color: #64748b;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.7rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: none;
+    }
+    .status-badge i { font-size: 0.6rem; }
+    
+    .status-badge.active { 
+        background: #dcfce7; 
+        color: #166534; 
+    }
+    .dark .status-badge.active { 
+        background: #14532d; 
+        color: #86efac; 
+    }
+    
+    .status-badge.returned { 
+        background: #f1f5f9; 
+        color: #475569; 
+    }
+    .dark .status-badge.returned { 
+        background: #334155; 
+        color: #94a3b8; 
+    }
+    
+    .status-badge.overdue { 
+        background: #fee2e2; 
+        color: #991b1b; 
+    }
+    .dark .status-badge.overdue { 
+        background: #7f1d1d; 
+        color: #fca5a5; 
+    }
+    
+    .status-badge.pending { 
+        background: #fef3c7; 
+        color: #92400e; 
+    }
+    .dark .status-badge.pending { 
+        background: #78350f; 
+        color: #fcd34d; 
+    }
+    
+    .status-badge.awaiting_payment { 
+        background: #ffedd5; 
+        color: #9a3412; 
+    }
+    .dark .status-badge.awaiting_payment { 
+        background: #7c2d12; 
+        color: #fdba74; 
+    }
+    
+    .status-badge.rejected { 
+        background: #f1f5f9; 
+        color: #475569; 
+    }
+    .dark .status-badge.rejected { 
+        background: #334155; 
+        color: #94a3b8; 
+    }
+
+    /* Action Icons */
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        transition: all 0.15s;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin: 0 2px;
+        color: #3b82f6;
+    }
+    .action-btn:hover {
+        transform: scale(1.15);
+        background: rgba(0,0,0,0.05);
+    }
+    .dark .action-btn:hover {
+        background: rgba(255,255,255,0.08);
+    }
+    .action-btn.invoice { color: #3b82f6; }
+    .action-btn.invoice:hover { background: #eff6ff; color: #2563eb; }
+    .dark .action-btn.invoice { color: #60a5fa; }
+    .dark .action-btn.invoice:hover { background: #1e293b; color: #93c5fd; }
+    
+    .action-btn.refunded { color: #22c55e; }
+    .action-btn.refunded:hover { background: #f0fdf4; color: #16a34a; }
+    .dark .action-btn.refunded { color: #4ade80; }
+    .dark .action-btn.refunded:hover { background: #1e293b; color: #86efac; }
+    
+    .action-btn.pending-refund { color: #f59e0b; }
+    .action-btn.pending-refund:hover { background: #fffbeb; color: #d97706; }
+    .dark .action-btn.pending-refund { color: #fbbf24; }
+    .dark .action-btn.pending-refund:hover { background: #1e293b; color: #fcd34d; }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+        .loan-table thead th, .loan-table tbody td {
+            padding: 8px 10px;
+            font-size: 0.8rem;
+        }
+        .action-btn {
+            width: 24px;
+            height: 24px;
+            font-size: 0.8rem;
+        }
+        .book-cover-thumb, .book-cover-placeholder {
+            width: 40px;
+            height: 56px;
+        }
+        .book-cover-placeholder {
+            font-size: 1.2rem;
+        }
+    }
+</style>
+
 <!-- ─── FULL PAGE WRAPPER WITH DARK MODE BACKGROUND ─── -->
 <main class="min-h-screen w-full bg-gray-50 dark:bg-gray-900">
     <div class="container mx-auto px-4 py-8">
@@ -85,7 +294,7 @@ try {
             <?php unset($_SESSION['success_message']); ?>
         <?php endif; ?>
 
-        <!-- Welcome Section – Auto‑adapts to dark/light mode -->
+        <!-- Welcome Section -->
         <div class="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-900 dark:to-indigo-900 rounded-2xl p-8 text-white shadow-lg mb-8">
             <div class="flex items-center justify-between">
                 <div>
@@ -169,7 +378,7 @@ try {
             </div>
         </div>
 
-        <!-- ===== MY PROFILE – Full width (Quick Actions removed) ===== -->
+        <!-- ===== MY PROFILE ===== -->
         <?php if ($hasViewProfile || $hasEditProfile): ?>
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 mb-8  mx-auto">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
@@ -207,7 +416,7 @@ try {
                 </div>
                 <?php if ($hasEditProfile): ?>
                     <div class="mt-4">
-                        <a href="<?php echo BASE_URL; ?>/profile/edit" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                        <a href="<?php echo BASE_URL; ?>/profile" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
                             <i class="fas fa-edit"></i> Edit Profile
                         </a>
                     </div>
@@ -215,7 +424,7 @@ try {
             </div>
         <?php endif; ?>
 
-        <!-- ===== BORROWED BOOKS (bottom) ===== -->
+        <!-- ===== BORROWED BOOKS (with Book Cover Image – FIXED) ===== -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white">
@@ -227,26 +436,48 @@ try {
 
             <?php if (!empty($loans)): ?>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 dark:bg-gray-900/50">
+                    <table class="loan-table">
+                        <thead>
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Book</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Author</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Borrowed Date</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Due Date</th>
-                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Days Left</th>
-                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Invoice</th>
-                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Refund</th>
+                                <th>Cover</th>
+                                <th>Book</th>
+                                <th>Author</th>
+                                <th>Borrowed Date</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                                <th>Days Left</th>
+                                <th>Invoice</th>
+                                <th>Refund</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             <?php foreach ($loans as $loan): 
-                                $book = $books[$loan->getBookId()] ?? null;
+                                // ---- FIX: Use associative array $booksById ----
+                                $book = $booksById[$loan->getBookId()] ?? null;
                                 $dueDate = $loan->getDueDate();
                                 $isOverdue = $now > $dueDate;
                                 $daysLeft = $now->diff($dueDate)->days;
                                 $statusString = $loan->getStatus()->getValue();
+
+                                // ---- Get Book Cover Image (as in Catalog) ----
+                                $coverImage = null;
+                                if ($book) {
+                                    if (method_exists($book, 'getCoverImage')) {
+                                        $coverImage = $book->getCoverImage();
+                                    } elseif (method_exists($book, 'getImage')) {
+                                        $coverImage = $book->getImage();
+                                    }
+                                }
+                                // Build cover URL (similar to catalog)
+                                $coverUrl = '';
+                                if ($coverImage) {
+                                    // If it's already a full URL, use it as is; otherwise prepend BASE_URL
+                                    if (strpos($coverImage, 'http') === 0) {
+                                        $coverUrl = $coverImage;
+                                    } else {
+                                        $coverUrl = BASE_URL . '/' . ltrim($coverImage, '/');
+                                    }
+                                }
 
                                 // ---- Fetch Payment & Invoice ----
                                 $payment = null;
@@ -266,38 +497,71 @@ try {
                                         // ignore
                                     }
                                 }
+
+                                // Determine status badge class
+                                $badgeClass = '';
+                                $badgeIcon = 'fa-circle';
+                                if ($statusString === 'returned') {
+                                    $badgeClass = 'returned';
+                                    $badgeIcon = 'fa-check-circle';
+                                } elseif ($isOverdue && $statusString === 'active') {
+                                    $badgeClass = 'overdue';
+                                    $badgeIcon = 'fa-exclamation-circle';
+                                } elseif ($statusString === 'active') {
+                                    $badgeClass = 'active';
+                                    $badgeIcon = 'fa-check-circle';
+                                } elseif ($statusString === 'pending') {
+                                    $badgeClass = 'pending';
+                                    $badgeIcon = 'fa-clock';
+                                } elseif ($statusString === 'awaiting_payment') {
+                                    $badgeClass = 'awaiting_payment';
+                                    $badgeIcon = 'fa-clock';
+                                } elseif ($statusString === 'rejected') {
+                                    $badgeClass = 'rejected';
+                                    $badgeIcon = 'fa-times-circle';
+                                } else {
+                                    $badgeClass = 'returned';
+                                    $badgeIcon = 'fa-circle';
+                                }
                             ?>
-                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition">
-                                    <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
-                                        <?= htmlspecialchars($book ? $book->getTitle() : 'Unknown') ?>
-                                    </td>
-                                    <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
-                                        <?= htmlspecialchars($book ? $book->getAuthor() : 'Unknown') ?>
-                                    </td>
-                                    <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
-                                        <?= $loan->getBorrowedAt() ? $loan->getBorrowedAt()->format('M d, Y') : '—' ?>
-                                    </td>
-                                    <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
-                                        <?= $dueDate ? $dueDate->format('M d, Y') : '—' ?>
-                                    </td>
-                                    <td class="px-4 py-3 text-center">
-                                        <?php if ($statusString === 'returned'): ?>
-                                            <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">Returned</span>
-                                        <?php elseif ($isOverdue && $statusString === 'active'): ?>
-                                            <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Overdue</span>
-                                        <?php elseif ($statusString === 'active'): ?>
-                                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Active</span>
-                                        <?php elseif ($statusString === 'pending'): ?>
-                                            <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">Pending</span>
-                                        <?php elseif ($statusString === 'awaiting_payment'): ?>
-                                            <span class="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">Awaiting Payment</span>
-                                        <?php elseif ($statusString === 'rejected'): ?>
-                                            <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">Rejected</span>
+                                <tr>
+                                    <!-- Book Cover -->
+                                    <td>
+                                        <?php if ($coverUrl): ?>
+                                            <img src="<?= $coverUrl ?>" 
+                                                 alt="<?= htmlspecialchars($book ? $book->getTitle() : 'Book Cover') ?>"
+                                                 class="book-cover-thumb"
+                                                 onerror="this.style.display='none'; this.parentElement.querySelector('.book-cover-placeholder').style.display='flex';">
+                                            <div class="book-cover-placeholder" style="display:none;">
+                                                <i class="fas fa-book"></i>
+                                            </div>
                                         <?php else: ?>
-                                            <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"><?= ucfirst(str_replace('_', ' ', $statusString)) ?></span>
+                                            <div class="book-cover-placeholder">
+                                                <i class="fas fa-book"></i>
+                                            </div>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="px-4 py-3 text-center">
+                                    <!-- Book (left aligned) -->
+                                    <td class="font-medium text-gray-900 dark:text-white">
+                                        <?= htmlspecialchars($book ? $book->getTitle() : 'Unknown') ?>
+                                    </td>
+                                    <!-- Author (left aligned) -->
+                                    <td class="text-gray-800 dark:text-gray-300">
+                                        <?= htmlspecialchars($book ? $book->getAuthor() : 'Unknown') ?>
+                                    </td>
+                                    <td class="text-gray-800 dark:text-gray-300">
+                                        <?= $loan->getBorrowedAt() ? $loan->getBorrowedAt()->format('M d, Y') : '—' ?>
+                                    </td>
+                                    <td class="text-gray-800 dark:text-gray-300">
+                                        <?= $dueDate ? $dueDate->format('M d, Y') : '—' ?>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge <?= $badgeClass ?>">
+                                            <i class="fas <?= $badgeIcon ?>"></i>
+                                            <?= ucfirst(str_replace('_', ' ', $statusString)) ?>
+                                        </span>
+                                    </td>
+                                    <td>
                                         <?php if ($statusString === 'active'): ?>
                                             <?php if ($isOverdue): ?>
                                                 <span class="text-red-600 dark:text-red-400 font-bold">Overdue!</span>
@@ -308,24 +572,24 @@ try {
                                             <span class="text-gray-400">—</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="px-4 py-3 text-center">
+                                    <td>
                                         <?php if ($invoiceLink): ?>
-                                            <a href="<?= $invoiceLink ?>" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" title="View Invoice">
+                                            <a href="<?= $invoiceLink ?>" class="action-btn invoice" title="View Invoice">
                                                 <i class="fas fa-file-invoice"></i>
                                             </a>
                                         <?php else: ?>
                                             <span class="text-gray-400">—</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="px-4 py-3 text-center">
+                                    <td>
                                         <?php if ($payment && $payment->getStatus()->isApproved()): ?>
                                             <?php if ($refundStatus === 'completed'): ?>
-                                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                                    <i class="fas fa-check-circle"></i> Refunded
+                                                <span class="action-btn refunded" title="Refunded">
+                                                    <i class="fas fa-check-circle"></i>
                                                 </span>
                                             <?php elseif ($refundStatus === 'pending'): ?>
-                                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
-                                                    <i class="fas fa-clock"></i> Pending
+                                                <span class="action-btn pending-refund" title="Refund Pending">
+                                                    <i class="fas fa-clock"></i>
                                                 </span>
                                             <?php else: ?>
                                                 <span class="text-gray-400">—</span>

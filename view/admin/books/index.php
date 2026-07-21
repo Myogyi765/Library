@@ -360,8 +360,8 @@
                                         <span class="font-medium text-gray-900 dark:text-white"><?= htmlspecialchars($book->getTitle()) ?></span>
                                     </div>
                                 </td>
-                                <td class="text-gray-600 dark:text-gray-300"><?= htmlspecialchars($book->getAuthor()) ?></td>
-                                <td class="text-gray-600 dark:text-gray-300">
+                                <td class="text-gray-800 dark:text-gray-300"><?= htmlspecialchars($book->getAuthor()) ?></td>
+                                <td class="text-gray-800 dark:text-gray-300">
                                     <?php
                                     $catId = $book->getCategoryId();
                                     echo htmlspecialchars($categoryMap[$catId] ?? 'Uncategorized');
@@ -373,7 +373,7 @@
                                         <?= $statusText ?>
                                     </span>
                                 </td>
-                                <td class="text-gray-600 dark:text-gray-300">
+                                <td class="text-gray-800 dark:text-gray-300">
                                     <?= $available ?> / <?= $total ?>
                                 </td>
                                 <td class="text-center">

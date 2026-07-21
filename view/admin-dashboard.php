@@ -50,7 +50,7 @@ $unreadNotifications = $unreadNotifications ?? 0;
 <div class="flex h-screen bg-gray-50 dark:bg-gray-900">
     <!-- ===== SIDEBAR ===== -->
     <aside
-        class="w-64 bg-white dark:bg-gray-800 shadow-lg flex flex-col fixed inset-y-0 left-0 z-30 transition-all duration-300">
+        class="w-63 bg-white dark:bg-gray-800 shadow-lg flex flex-col fixed inset-y-0 left-0 z-30 transition-all duration-300">
         <!-- Brand -->
         <div class="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700">
             <!-- <a href="<?= BASE_URL ?>/admin/dashboard" class="flex items-center gap-2">

@@ -113,6 +113,8 @@ $adminMiddleware = [AuthMiddleware::class, $adminOnly];
 $librarianMiddleware = [AuthMiddleware::class, $librarianOnly];
 $userMiddleware = [AuthMiddleware::class, $userOnly];
 
+
+// ─── PUBLIC ROUTES ──────────────────────────────────────────────
 $router->get('/', function () {
     header('Location: ' . BASE_URL . '/home');
     exit;
@@ -122,6 +124,8 @@ $router->get('/home', [HomeController::class, 'index']);
 $router->get('/register', [AuthController::class, 'showRegister']);
 $router->get('/login', [LoginController::class, 'showLogin']);
 
+
+// ─── AUTH / VERIFICATION ROUTES ────────────────────────────────
 $router->get('/verify', [VerificationController::class, 'verifyEmail']);
 $router->get('/verify-phone', [VerificationController::class, 'showVerifyPhone']);
 $router->get('/resend-verification', [VerificationController::class, 'resendVerification']);
@@ -132,16 +136,39 @@ $router->post('/forgot-password/send', [VerificationController::class, 'sendRese
 $router->get('/reset-password', [VerificationController::class, 'showResetForm']);
 $router->post('/reset-password/update', [VerificationController::class, 'updatePassword']);
 
+$router->post('/verify-phone', [VerificationController::class, 'verifyPhone']);
+$router->post('/register', [AuthController::class, 'register']);
+$router->post('/verify-email-code', [VerificationController::class, 'verifyEmailWithCode']);
+$router->post('/login', [LoginController::class, 'login']);
+
+
+// ─── NOTIFICATIONS ──────────────────────────────────────────────
 $router->get('/notifications', [NotificationController::class, 'index'], 
     array_merge([AuthMiddleware::class], [$authorizationCheck('view_notifications')])
 );
 
+$router->get('/api/notifications', [NotificationController::class, 'getNotifications'], 
+    [AuthMiddleware::class, $authorizationCheck('view_notifications')]
+);
+$router->post('/api/notifications/read', [NotificationController::class, 'markRead'], 
+    [AuthMiddleware::class, $authorizationCheck('edit_notifications')]
+);
+
+
+// ─── USER ROUTES ────────────────────────────────────────────────
 $router->get('/user-dashboard', [AuthController::class, 'userDashboard'], $userMiddleware);
 $router->get('/profile', [ProfileController::class, 'profile'], array_merge($userMiddleware, [$authorizationCheck('view_profile')]));
 $router->get('/profile/edit', [ProfileController::class, 'editProfile'], array_merge($userMiddleware, [$authorizationCheck('edit_profile')]));
+$router->post('/profile/update', [ProfileController::class, 'updateProfile'], 
+    array_merge($userMiddleware, [$authorizationCheck('edit_profile')])
+);
 
-// ✅ Added POST route for profile update
-$router->post('/profile/update', [ProfileController::class, 'updateProfile'], array_merge($userMiddleware, [$authorizationCheck('edit_profile')]));
+$router->get('/change-password', [ProfileController::class, 'showChangePasswordForm'], 
+    array_merge($userMiddleware, [$authorizationCheck('edit_profile')])
+);
+$router->post('/change-password', [ProfileController::class, 'changePassword'], 
+    array_merge($userMiddleware, [$authorizationCheck('edit_profile')])
+);
 
 $router->get('/payment/submit/{loan}', [PaymentController::class, 'showSubmitForm'], array_merge($userMiddleware, [$authorizationCheck('view_payments')]));
 $router->get('/payment/success', [PaymentController::class, 'success'], $userMiddleware);
@@ -149,57 +176,102 @@ $router->post('/payment/submit', [PaymentController::class, 'submit'], array_mer
 $router->post('/books/borrow/{id}', [BorrowController::class, 'borrow'], array_merge($userMiddleware, [$authorizationCheck('borrow_books')]));
 $router->get('/invoice/{id}', [UserInvoiceController::class, 'show'], $userMiddleware);
 
+
+// ─── ADMIN ROUTES (Separate Module) ────────────────────────────
 $router->get('/admin/dashboard', [AdminDashboardController::class, 'index'], $adminMiddleware);
 $router->get('/admin/reports', [ReportController::class, 'index'], $adminMiddleware);
 $router->get('/admin/reports/export/csv', [ReportController::class, 'exportCsv'], $adminMiddleware);
 $router->get('/admin/reports/export/pdf', [ReportController::class, 'exportPdf'], $adminMiddleware);
+
+// Admin Librarian
 $router->get('/admin/librarian', [AdminLibrarianController::class, 'index'], $adminMiddleware);
 $router->get('/admin/librarian/create', [AdminLibrarianController::class, 'create'], $adminMiddleware);
 $router->get('/admin/librarian/edit/{id}', [AdminLibrarianController::class, 'edit'], $adminMiddleware);
 $router->get('/admin/librarian/delete/{id}', [AdminLibrarianController::class, 'delete'], $adminMiddleware);
+$router->get('/admin/librarian/view/{id}', [AdminLibrarianController::class, 'show'], $adminMiddleware); // ✅ ADDED: View Route
+$router->post('/admin/librarian/create', [AdminLibrarianController::class, 'store'], $adminMiddleware);
+$router->post('/admin/librarian/edit/{id}', [AdminLibrarianController::class, 'update'], $adminMiddleware);
+$router->post('/admin/librarian/delete/{id}', [AdminLibrarianController::class, 'delete'], $adminMiddleware);
+$router->post('/admin/librarians/toggle/{id}', [AdminLibrarianController::class, 'toggleStatus'], $adminMiddleware);
+
+// Admin Users
 $router->get('/admin/users', [AdminUserController::class, 'index'], $adminMiddleware);
 $router->get('/admin/users/create', [AdminUserController::class, 'create'], $adminMiddleware);
 $router->get('/admin/users/edit/{id}', [AdminUserController::class, 'edit'], $adminMiddleware);
-
-// Delete user – POST method (form uses POST)
+$router->get('/admin/users/view/{id}', [AdminUserController::class, 'showUser'], $adminMiddleware);
+$router->post('/admin/users/create', [AdminUserController::class, 'store'], $adminMiddleware);
+$router->post('/admin/users/edit/{id}', [AdminUserController::class, 'update'], $adminMiddleware);
 $router->post('/admin/users/delete/{id}', [AdminUserController::class, 'delete'], $adminMiddleware);
 $router->get('/admin/users/delete/{id}', [AdminUserController::class, 'delete'], $adminMiddleware);
+$router->post('/admin/users/toggle/{id}', [AdminUserController::class, 'toggleStatus'], $adminMiddleware);
 
+// Admin Settings
 $router->get('/admin/settings', [AdminSettingsController::class, 'index'], $adminMiddleware);
+$router->post('/admin/settings/update', [AdminSettingsController::class, 'update'], $adminMiddleware);
+
+// Admin Roles
 $router->get('/admin/roles', [AdminRoleController::class, 'index'], $adminMiddleware);
 $router->get('/admin/roles/edit/{id}', [AdminRoleController::class, 'edit'], $adminMiddleware);
+$router->post('/admin/roles/update/{id}', [AdminRoleController::class, 'update'], $adminMiddleware);
+
+// Admin Fines
 $router->get('/admin/fines', [AdminFineController::class, 'index'], $adminMiddleware);
+$router->post('/admin/fines/update', [AdminFineController::class, 'update'], $adminMiddleware);
+
+// Admin Books
 $router->get('/admin/books', [AdminBookController::class, 'index'], $adminMiddleware);
 $router->get('/admin/books/show', [AdminBookController::class, 'show'], $adminMiddleware);
 
-$router->post('/admin/users/toggle/{id}', [AdminUserController::class, 'toggleStatus'], $adminMiddleware);
-$router->post('/admin/librarians/toggle/{id}', [AdminLibrarianController::class, 'toggleStatus'], $adminMiddleware);
 
-$router->post('/admin/librarian/create', [AdminLibrarianController::class, 'store'], $adminMiddleware);
-$router->post('/admin/librarian/edit/{id}', [AdminLibrarianController::class, 'update'], $adminMiddleware);
-$router->post('/admin/users/create', [AdminUserController::class, 'store'], $adminMiddleware);
-$router->post('/admin/users/edit/{id}', [AdminUserController::class, 'update'], $adminMiddleware);
-$router->post('/admin/settings/update', [AdminSettingsController::class, 'update'], $adminMiddleware);
-$router->post('/admin/roles/update/{id}', [AdminRoleController::class, 'update'], $adminMiddleware);
-$router->post('/admin/fines/update', [AdminFineController::class, 'update'], $adminMiddleware);
-
+// ─── LIBRARIAN ROUTES (Separate Module - Independent) ────────
 $router->get('/librarian/dashboard', [LibrarianDashboardController::class, 'index'], $librarianMiddleware);
 
+// Librarian Books
 $router->get('/librarian/books', [BookController::class, 'librarianIndex'], array_merge($librarianMiddleware, [$authorizationCheck('view_books')]));
 $router->get('/librarian/books/create', [BookController::class, 'create'], array_merge($librarianMiddleware, [$authorizationCheck('create_books')]));
 $router->get('/librarian/books/edit/{id}', [BookController::class, 'edit'], array_merge($librarianMiddleware, [$authorizationCheck('edit_books')]));
 $router->get('/librarian/books/delete/{id}', [BookController::class, 'delete'], array_merge($librarianMiddleware, [$authorizationCheck('delete_books')]));
+$router->post('/librarian/books/store', [BookController::class, 'store'], array_merge($librarianMiddleware, [$authorizationCheck('create_books')]));
+$router->post('/librarian/books/update/{id}', [BookController::class, 'update'], array_merge($librarianMiddleware, [$authorizationCheck('edit_books')]));
 
+// Librarian Loans
 $router->get('/librarian/loans', [LoanController::class, 'index'], array_merge($librarianMiddleware, [$authorizationCheck('view_loans')]));
 $router->get('/librarian/loans/create', [LoanController::class, 'create'], array_merge($librarianMiddleware, [$authorizationCheck('create_loans')]));
 $router->get('/librarian/loans/edit/{id}', [LoanController::class, 'edit'], array_merge($librarianMiddleware, [$authorizationCheck('edit_loans')]));
 $router->get('/librarian/loans/delete/{id}', [LoanController::class, 'delete'], array_merge($librarianMiddleware, [$authorizationCheck('delete_loans')]));
+$router->post('/librarian/loans/store', [LoanController::class, 'store'], array_merge($librarianMiddleware, [$authorizationCheck('create_loans')]));
+$router->post('/librarian/loans/update/{id}', [LoanController::class, 'update'], array_merge($librarianMiddleware, [$authorizationCheck('edit_loans')]));
+$router->post('/librarian/loans/return/{id}', [LoanController::class, 'returnBook'], array_merge($librarianMiddleware, [$authorizationCheck('edit_loans')]));
+$router->post('/librarian/loans/confirm/{id}', [LoanController::class, 'confirm'], array_merge($librarianMiddleware, [$authorizationCheck('edit_loans')]));
+$router->post('/librarian/loans/reject/{id}', [LoanController::class, 'reject'], array_merge($librarianMiddleware, [$authorizationCheck('edit_loans')]));
 
-$router->get('/librarian/users', [UserController::class, 'index'], array_merge($librarianMiddleware, [$authorizationCheck('view_users')]));
-$router->get('/librarian/users/create', [UserController::class, 'create'], array_merge($librarianMiddleware, [$authorizationCheck('create_users')]));
-$router->get('/librarian/users/edit/{id}', [UserController::class, 'edit'], array_merge($librarianMiddleware, [$authorizationCheck('edit_users')]));
-$router->get('/librarian/users/delete/{id}', [UserController::class, 'delete'], array_merge($librarianMiddleware, [$authorizationCheck('delete_users')]));
+// Librarian Users
+$router->get('/librarian/users', [UserController::class, 'index'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('view_users')])
+);
+$router->get('/librarian/users/create', [UserController::class, 'create'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('create_users')])
+);
+$router->post('/librarian/users/store', [UserController::class, 'store'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('create_users')])
+);
+$router->get('/librarian/users/view/{id}', [UserController::class, 'show'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('view_users')])
+);
+$router->get('/librarian/users/edit/{id}', [UserController::class, 'edit'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('edit_users')])
+);
+$router->post('/librarian/users/update/{id}', [UserController::class, 'update'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('edit_users')])
+);
+$router->post('/librarian/users/delete/{id}', [UserController::class, 'delete'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('delete_users')])
+);
+$router->post('/librarian/users/toggle/{id}', [UserController::class, 'toggleStatus'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('edit_users')])
+);
 
+// Librarian Payments
 $router->get('/librarian/payments', [LibrarianPaymentController::class, 'index'], 
     array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
 );
@@ -222,6 +294,7 @@ $router->get('/librarian/payments/invoice/{id}', [LibrarianPaymentController::cl
     array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
 );
 
+// Librarian Refunds
 $router->get('/librarian/refunds', [RefundController::class, 'index'], 
     array_merge($librarianMiddleware, [$authorizationCheck('view_payments')])
 );
@@ -232,34 +305,63 @@ $router->post('/librarian/refunds/{id}/reject', [RefundController::class, 'rejec
     array_merge($librarianMiddleware, [$authorizationCheck('refund_payments')])
 );
 
+// Librarian Scan
 $router->get('/librarian/scan', [ScanController::class, 'scan'], 
     array_merge($librarianMiddleware, [$authorizationCheck('view_loans')])
 );
 $router->post('/librarian/scan/return', [ScanController::class, 'returnBook'], 
     array_merge($librarianMiddleware, [$authorizationCheck('edit_loans')])
 );
+$router->get('/librarian/scanner', [ScanController::class, 'scanner'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('view_loans')])
+);
 
-$router->get('/librarian/categories', [LibrarianCategoryController::class, 'index'], array_merge($librarianMiddleware, [$authorizationCheck('view_categories')]));
-$router->get('/librarian/categories/create', [LibrarianCategoryController::class, 'create'], array_merge($librarianMiddleware, [$authorizationCheck('create_categories')]));
-$router->get('/librarian/categories/delete/{id}', [LibrarianCategoryController::class, 'delete'], array_merge($librarianMiddleware, [$authorizationCheck('delete_categories')]));
+// Librarian Categories
+$router->get('/librarian/categories', [LibrarianCategoryController::class, 'index'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('view_categories')])
+);
+$router->get('/librarian/categories/create', [LibrarianCategoryController::class, 'create'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('create_categories')])
+);
+$router->get('/librarian/categories/delete/{id}', [LibrarianCategoryController::class, 'delete'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('delete_categories')])
+);
+$router->post('/librarian/categories/store', [LibrarianCategoryController::class, 'store'], 
+    array_merge($librarianMiddleware, [$authorizationCheck('create_categories')])
+);
 
-$router->post('/librarian/categories/store', [LibrarianCategoryController::class, 'store'], array_merge($librarianMiddleware, [$authorizationCheck('create_categories')]));
-$router->post('/librarian/books/store', [BookController::class, 'store'], array_merge($librarianMiddleware, [$authorizationCheck('create_books')]));
-$router->post('/librarian/books/update/{id}', [BookController::class, 'update'], array_merge($librarianMiddleware, [$authorizationCheck('edit_books')]));
-$router->post('/librarian/loans/store', [LoanController::class, 'store'], array_merge($librarianMiddleware, [$authorizationCheck('create_loans')]));
-$router->post('/librarian/loans/update/{id}', [LoanController::class, 'update'], array_merge($librarianMiddleware, [$authorizationCheck('edit_loans')]));
-$router->post('/librarian/loans/return/{id}', [LoanController::class, 'returnBook'], array_merge($librarianMiddleware, [$authorizationCheck('edit_loans')]));
-$router->post('/librarian/loans/confirm/{id}', [LoanController::class, 'confirm'], array_merge($librarianMiddleware, [$authorizationCheck('edit_loans')]));
-$router->post('/librarian/loans/reject/{id}', [LoanController::class, 'reject'], array_merge($librarianMiddleware, [$authorizationCheck('edit_loans')]));
-$router->post('/librarian/users/store', [UserController::class, 'store'], array_merge($librarianMiddleware, [$authorizationCheck('create_users')]));
-$router->post('/librarian/users/update/{id}', [UserController::class, 'update'], array_merge($librarianMiddleware, [$authorizationCheck('edit_users')]));
 
-$router->get('/books', [BookController::class, 'publicIndex'], [AuthMiddleware::class, $authorizationCheck('view_books')]);
-$router->get('/books/{id}', [BookController::class, 'show'], [AuthMiddleware::class, $authorizationCheck('view_books')]);
+// ─── PUBLIC BOOK ROUTES ─────────────────────────────────────────
+$router->get('/books', [BookController::class, 'publicIndex'], 
+    [AuthMiddleware::class, $authorizationCheck('view_books')]
+);
+$router->get('/books/{id}', [BookController::class, 'show'], 
+    [AuthMiddleware::class, $authorizationCheck('view_books')]
+);
 
-$router->get('/api/notifications', [NotificationController::class, 'getNotifications'], [AuthMiddleware::class, $authorizationCheck('view_notifications')]);
-$router->post('/api/notifications/read', [NotificationController::class, 'markRead'], [AuthMiddleware::class, $authorizationCheck('edit_notifications')]);
 
+// ─── LOGIN REDIRECTS ────────────────────────────────────────────
+$router->get('/admin/login', function () { 
+    header('Location: ' . BASE_URL . '/login'); 
+    exit; 
+});
+$router->get('/librarian/login', function () { 
+    header('Location: ' . BASE_URL . '/login'); 
+    exit; 
+});
+$router->get('/librarian/logout', function () {
+    if (isset($_SESSION['librarian_logged_in'])) {
+        unset($_SESSION['librarian_logged_in']);
+        unset($_SESSION['librarian_id']);
+        unset($_SESSION['librarian_name']);
+        unset($_SESSION['librarian_department']);
+    }
+    header('Location: ' . BASE_URL . '/login');
+    exit;
+});
+
+
+// ─── DEVELOPMENT ROUTES ─────────────────────────────────────────
 $router->get('/dev/seed-notifications', function () {
     $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
     if (!in_array($ip, ['127.0.0.1', '::1'])) {
@@ -309,28 +411,3 @@ $router->get('/dev/seed-notifications', function () {
     header('Content-Type: application/json');
     echo json_encode(['success' => true, 'inserted' => count($samples)]);
 }, [AuthMiddleware::class]);
-
-$router->get('/admin/login', function () { header('Location: ' . BASE_URL . '/login'); exit; });
-$router->get('/librarian/login', function () { header('Location: ' . BASE_URL . '/login'); exit; });
-$router->get('/librarian/logout', function () {
-    if (isset($_SESSION['librarian_logged_in'])) {
-        unset($_SESSION['librarian_logged_in']);
-        unset($_SESSION['librarian_id']);
-        unset($_SESSION['librarian_name']);
-        unset($_SESSION['librarian_department']);
-    }
-    header('Location: ' . BASE_URL . '/login');
-    exit;
-});
-
-$router->post('/verify-phone', [VerificationController::class, 'verifyPhone']);
-$router->post('/register', [AuthController::class, 'register']);
-$router->post('/verify-email-code', [VerificationController::class, 'verifyEmailWithCode']);
-$router->post('/login', [LoginController::class, 'login']);
-
-$router->get('/librarian/scanner', [ScanController::class, 'scanner'], 
-    array_merge($librarianMiddleware, [$authorizationCheck('view_loans')])
-);
-
-// User View Route – Fixed: method name 'showUser' (not 'show')
-$router->get('/admin/users/view/{id}', [AdminUserController::class, 'showUser'], $adminMiddleware);

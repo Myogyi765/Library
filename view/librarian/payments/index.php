@@ -46,24 +46,37 @@
     </a>
 </div>
 
-<!-- ===== TABLE – Responsive & No Overflow ===== -->
+<!-- ===== TABLE – Full width, no right-side gap ===== -->
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
     <div class="overflow-x-auto">
-        <table class="w-full text-sm min-w-[800px]">
+        <table class="w-full text-sm table-fixed">
+            <colgroup>
+                <col style="width: 5%;">    <!-- ID -->
+                <col style="width: 16%;">   <!-- User -->
+                <col style="width: 6%;">     <!-- Loan -->
+                <col style="width: 10%;">    <!-- Amount -->
+                <col style="width: 9%;">     <!-- Method -->
+                <col style="width: 10%;">    <!-- Ref -->
+                <col style="width: 12%;">    <!-- Book -->
+                <col style="width: 10%;">    <!-- Submitted -->
+                <col style="width: 8%;">     <!-- Status -->
+                <col style="width: 8%;">     <!-- Refund -->
+                <col style="width: 2%;">     <!-- Actions -->
+            </colgroup>
             <!-- Header -->
             <thead class="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
                 <tr>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 whitespace-nowrap">ID</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 whitespace-nowrap">User</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 whitespace-nowrap hidden md:table-cell">Loan</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 whitespace-nowrap">Amount</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 whitespace-nowrap hidden sm:table-cell">Method</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 whitespace-nowrap hidden lg:table-cell">Ref</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 whitespace-nowrap hidden xl:table-cell">Book</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 whitespace-nowrap hidden md:table-cell">Submitted</th>
-                    <th class="px-3 py-3 text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 whitespace-nowrap">Status</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 whitespace-nowrap hidden sm:table-cell">Refund</th>
-                    <th class="px-3 py-3 text-center text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 whitespace-nowrap">Actions</th>
+                    <th class="px-2 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 truncate">ID</th>
+                    <th class="px-2 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 truncate">User</th>
+                    <th class="px-2 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 truncate hidden md:table-cell">Loan</th>
+                    <th class="px-2 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 truncate">Amount</th>
+                    <th class="px-2 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 truncate hidden sm:table-cell">Method</th>
+                    <th class="px-2 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 truncate hidden lg:table-cell">Ref</th>
+                    <th class="px-2 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 truncate hidden xl:table-cell">Book</th>
+                    <th class="px-2 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 truncate hidden md:table-cell">Submitted</th>
+                    <th class="px-2 py-3 text-center text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 truncate">Status</th>
+                    <th class="px-2 py-3 text-left text-xs font-bold uppercase text-gray-800 dark:text-gray-400 truncate hidden sm:table-cell">Refund</th>
+                    <th class="px-2 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400 ">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -101,39 +114,39 @@
                             };
                         ?>
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition duration-150">
-                            <td class="px-3 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap"><?= $id ?></td>
-                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300">
-                                <div class="font-medium text-gray-900 dark:text-white"><?= htmlspecialchars($userName) ?></div>
+                            <td class="px-2 py-3 font-medium text-gray-900 dark:text-white truncate"><?= $id ?></td>
+                            <td class="px-2 py-3 text-gray-700 dark:text-gray-300 overflow-hidden">
+                                <div class="font-medium text-gray-900 dark:text-white truncate" title="<?= htmlspecialchars($userName) ?>"><?= htmlspecialchars($userName) ?></div>
                                 <?php if ($userEmail): ?>
-                                    <div class="text-xs text-gray-500 truncate max-w-[120px]"><?= htmlspecialchars($userEmail) ?></div>
+                                    <div class="text-xs text-gray-500 truncate" title="<?= htmlspecialchars($userEmail) ?>"><?= htmlspecialchars($userEmail) ?></div>
                                 <?php endif; ?>
                             </td>
-                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap hidden md:table-cell"><?= $payment['loan_id'] ?? '?' ?></td>
-                            <td class="px-3 py-3 text-gray-900 dark:text-white font-semibold whitespace-nowrap"><?= number_format($amount, 2) ?> MMK</td>
-                            <td class="px-3 py-3 hidden sm:table-cell">
-                                <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 whitespace-nowrap">
+                            <td class="px-2 py-3 text-gray-700 dark:text-gray-300 truncate hidden md:table-cell"><?= $payment['loan_id'] ?? '?' ?></td>
+                            <td class="px-2 py-3 text-gray-900 dark:text-white font-semibold truncate"><?= number_format($amount, 2) ?> MMK</td>
+                            <td class="px-2 py-3 hidden sm:table-cell">
+                                <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 truncate">
                                     <?= htmlspecialchars(ucfirst($paymentMethod)) ?>
                                 </span>
                             </td>
-                            <td class="px-3 py-3 text-gray-800 dark:text-gray-200 font-mono text-xs truncate max-w-[100px] hidden lg:table-cell" title="<?= htmlspecialchars($transactionRef) ?>">
+                            <td class="px-2 py-3 text-gray-800 dark:text-gray-200 font-mono text-xs truncate hidden lg:table-cell" title="<?= htmlspecialchars($transactionRef) ?>">
                                 <?= htmlspecialchars($transactionRef) ?>
                             </td>
-                            <td class="px-3 py-3 text-gray-800 dark:text-gray-200 truncate max-w-[120px] hidden xl:table-cell" title="<?= htmlspecialchars($bookTitle) ?>">
+                            <td class="px-2 py-3 text-gray-800 dark:text-gray-200 truncate hidden xl:table-cell" title="<?= htmlspecialchars($bookTitle) ?>">
                                 <?= htmlspecialchars($bookTitle) ?>
                             </td>
-                            <td class="px-3 py-3 text-gray-900 dark:text-gray-200 text-xs whitespace-nowrap hidden md:table-cell">
+                            <td class="px-2 py-3 text-gray-900 dark:text-gray-200 text-xs truncate hidden md:table-cell">
                                 <?= $submittedAt ? date('d M Y', strtotime($submittedAt)) : '—' ?>
                             </td>
-                            <td class="px-3 py-3">
-                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium <?= $statusColor ?> whitespace-nowrap">
+                            <td class="px-2 py-3 text-center">
+                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium <?= $statusColor ?> truncate">
                                     <?= $statusLabel ?>
                                 </span>
                             </td>
-                            <td class="px-3 py-3 hidden sm:table-cell">
-                                <span class="text-sm font-bold  <?= $refundColor ?> whitespace-nowrap"><?= $refundLabel ?></span>
+                            <td class="px-2 py-3 hidden sm:table-cell">
+                                <span class="text-sm font-bold <?= $refundColor ?> truncate"><?= $refundLabel ?></span>
                             </td>
-                            <td class="px-3 py-3 text-center">
-                                <div class="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                            <td class="px-2 py-3 text-center">
+                                <div class="flex items-center justify-center gap-1 whitespace-nowrap">
                                     <?php if ($status === 'pending_approval'): ?>
                                         <form action="<?= BASE_URL ?>/librarian/payments/<?= $id ?>/approve" method="POST" class="inline">
                                             <button type="submit" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 transition p-1" title="Approve" onclick="return confirm('Approve this payment?')">

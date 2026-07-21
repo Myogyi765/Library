@@ -283,7 +283,7 @@ include BASE_PATH . '/view/layout/header.php';
 
 <!-- ─── FULL PAGE WRAPPER WITH DARK MODE BACKGROUND ─── -->
 <main class="min-h-screen w-full bg-gray-50 dark:bg-gray-900">
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="container mx-auto px-25 py-16 max-w-xl">
 
         <!-- Success/Error Messages -->
         <?php if (isset($_SESSION['success_message'])): ?>
@@ -401,7 +401,7 @@ include BASE_PATH . '/view/layout/header.php';
                             <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($userEmail); ?>" class="form-input" required>
                         </div>
                         <div>
-                            <label for="phone" class="form-label">Phone</label>
+                            <label for="phone" class="form-label">Phone<span class="text-red-500">*</span></label>
                             <input type="tel" id="phone" name="phone" value="<?php echo htmlspecialchars($userPhone); ?>" class="form-input">
                         </div>
                     </div>

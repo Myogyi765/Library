@@ -12,7 +12,6 @@ use DateTime;
 
 class UserMapper
 {
-    
     public static function toEntity(array $data): User
     {
         $status = isset($data['status']) 
@@ -37,9 +36,9 @@ class UserMapper
             $data['id'] ?? null,
             $data['name'],
             new Email($data['email']),
-            $phone,
             $password,
             $status,
+            $phone,
             $roleId,
             $roleName,
             $emailVerified,
@@ -60,7 +59,6 @@ class UserMapper
         return $user;
     }
 
-    
     public static function toArray(User $user): array
     {
         $data = [
@@ -103,7 +101,6 @@ class UserMapper
         return $data;
     }
 
-    
     public function toDTO(User $user): UserDTO
     {
         return new UserDTO(
@@ -118,7 +115,6 @@ class UserMapper
         );
     }
 
-    
     public function toDTOArray(array $users): array
     {
         return array_map([$this, 'toDTO'], $users);

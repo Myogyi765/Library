@@ -24,13 +24,12 @@ class AdminLibrarianController extends BaseController
         return $this->userAuth->isLoggedIn() && ($_SESSION['user_role'] ?? '') === 'admin';
     }
 
-    /**
-     * Show list of librarians
-     */
     public function index(): void
     {
         if (!$this->isAdmin()) {
-            $this->redirect('/login');
+            http_response_code(403);
+            echo '<h1>403 Forbidden</h1><p>You do not have permission to access this page.</p>';
+            exit;
         }
 
         $librarians = $this->librarianService->getAllLibrarians();
@@ -51,7 +50,9 @@ class AdminLibrarianController extends BaseController
     public function create(): void
     {
         if (!$this->isAdmin()) {
-            $this->redirect('/login');
+            http_response_code(403);
+            echo '<h1>403 Forbidden</h1><p>You do not have permission to access this page.</p>';
+            exit;
         }
 
         $pageTitle = 'Add Librarian';
@@ -71,7 +72,9 @@ class AdminLibrarianController extends BaseController
     public function store(): void
     {
         if (!$this->isAdmin()) {
-            $this->redirect('/login');
+            http_response_code(403);
+            echo '<h1>403 Forbidden</h1><p>You do not have permission to access this page.</p>';
+            exit;
         }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -108,10 +111,41 @@ class AdminLibrarianController extends BaseController
         }
     }
 
+    public function show(int $id): void
+    {
+        if (!$this->isAdmin()) {
+            http_response_code(403);
+            echo '<h1>403 Forbidden</h1><p>You do not have permission to access this page.</p>';
+            exit;
+        }
+
+        $librarian = $this->librarianService->getLibrarian($id);
+        if (!$librarian) {
+            $_SESSION['error_message'] = 'Librarian not found.';
+            $this->redirect('/admin/librarian');
+            return;
+        }
+
+        $pageTitle = 'View Librarian';
+        $content = BASE_PATH . '/view/admin/librarian/view.php';
+
+        if (
+            !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
+        ) {
+            include $content;
+            return;
+        }
+
+        include BASE_PATH . '/view/admin-dashboard.php';
+    }
+
     public function edit(int $id): void
     {
         if (!$this->isAdmin()) {
-            $this->redirect('/login');
+            http_response_code(403);
+            echo '<h1>403 Forbidden</h1><p>You do not have permission to access this page.</p>';
+            exit;
         }
 
         $librarian = $this->librarianService->getLibrarian($id);
@@ -137,7 +171,9 @@ class AdminLibrarianController extends BaseController
     public function update(int $id): void
     {
         if (!$this->isAdmin()) {
-            $this->redirect('/login');
+            http_response_code(403);
+            echo '<h1>403 Forbidden</h1><p>You do not have permission to access this page.</p>';
+            exit;
         }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -169,7 +205,9 @@ class AdminLibrarianController extends BaseController
     public function delete(int $id): void
     {
         if (!$this->isAdmin()) {
-            $this->redirect('/login');
+            http_response_code(403);
+            echo '<h1>403 Forbidden</h1><p>You do not have permission to access this page.</p>';
+            exit;
         }
 
         try {
@@ -190,11 +228,12 @@ class AdminLibrarianController extends BaseController
         $this->redirect('/admin/librarian');
     }
 
-   
     public function toggleStatus(int $id): void
     {
         if (!$this->isAdmin()) {
-            $this->redirect('/login');
+            http_response_code(403);
+            echo '<h1>403 Forbidden</h1><p>You do not have permission to access this page.</p>';
+            exit;
         }
 
         try {
@@ -205,8 +244,6 @@ class AdminLibrarianController extends BaseController
 
             $currentStatus = $librarian->getStatus(); 
             $newStatus = ($currentStatus === 'active') ? 'inactive' : 'active';
-
-
 
             $this->librarianService->updateLibrarianStatus($id, $newStatus);
             $this->createNotification(

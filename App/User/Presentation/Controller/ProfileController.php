@@ -9,6 +9,7 @@ use App\Shared\Core\Authorization\Authorization;
 use App\User\Domain\Repository\UserRepositoryInterface;
 use App\User\Domain\ValueObject\Email;
 use App\User\Domain\ValueObject\Phone;
+use App\User\Domain\ValueObject\Password;
 use App\Payment\Domain\Repository\PaymentRepositoryInterface;
 
 class ProfileController extends BaseController
@@ -51,6 +52,60 @@ class ProfileController extends BaseController
         $this->view('user/profile_edit', [
             'user' => $this->getCurrentUser()
         ]);
+    }
+
+    public function showChangePasswordForm(): void
+    {
+        if (!$this->checkPermission('edit_profile')) {
+            $this->sendForbidden('You do not have permission to change password.');
+            return;
+        }
+
+        $this->view('user/change_password', [
+            'user' => $this->getCurrentUser()
+        ]);
+    }
+
+    public function changePassword(): void
+    {
+        $userId = $this->getCurrentUserId();
+        if (!$userId) {
+            $this->redirect(BASE_URL . '/login');
+            return;
+        }
+
+        try {
+            $user = $this->userRepo->findById($userId);
+            if (!$user) {
+                throw new \Exception('User not found.');
+            }
+
+            $currentPassword = $_POST['current_password'] ?? '';
+            $newPassword = $_POST['new_password'] ?? '';
+            $confirmPassword = $_POST['confirm_password'] ?? '';
+
+            if (empty($currentPassword) || empty($newPassword) || empty($confirmPassword)) {
+                throw new \Exception('All password fields are required.');
+            }
+
+            if ($newPassword !== $confirmPassword) {
+                throw new \Exception('New passwords do not match.');
+            }
+
+            if (!$user->getPassword()->verify($currentPassword)) {
+                throw new \Exception('Current password is incorrect.');
+            }
+
+            $user->setPassword(new Password($newPassword));
+            $this->userRepo->save($user);
+
+            $_SESSION['success_message'] = 'Password changed successfully!';
+            $this->redirect(BASE_URL . '/profile');
+
+        } catch (\Exception $e) {
+            $_SESSION['error_message'] = $e->getMessage();
+            $this->redirect(BASE_URL . '/change-password');
+        }
     }
 
     public function payments(): void

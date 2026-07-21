@@ -350,7 +350,6 @@ class UserRepository implements UserRepositoryInterface
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
-
     public function findByRolePaginated(string $role, int $offset, int $limit): array
     {
         $sql = "SELECT u.* FROM users u 
@@ -424,7 +423,6 @@ class UserRepository implements UserRepositoryInterface
         return (int) $stmt->fetchColumn();
     }
 
-
     private function hydrate(array $data): User
     {
         $createdAt = !empty($data['created_at']) ? new DateTime($data['created_at']) : new DateTime();
@@ -461,9 +459,9 @@ class UserRepository implements UserRepositoryInterface
             (int)$data['id'],
             $data['name'],
             $email,
-            $phone,
             $password,
             $status,
+            $phone,
             $roleId,
             $roleName,
             (bool)($data['email_verified'] ?? false),
@@ -478,7 +476,7 @@ class UserRepository implements UserRepositoryInterface
             $verificationExpiresAt,
             $emailVerifiedAt,
             $phoneVerifiedAt,
-            $data['profile_image'] ?? null 
+            $data['profile_image'] ?? null
         );
     }
 

@@ -32,13 +32,14 @@ class User
     private ?DateTime $phoneVerifiedAt;
     private ?string $profileImage = null;
 
+    // ✅ FIXED: Required parameters first, optional after
     public function __construct(
         ?int $id,
         string $name,
         Email $email,
-        ?Phone $phone = null,     
         Password $password,
         UserStatus $status,
+        ?Phone $phone = null,
         ?int $roleId = null,
         string $roleName = 'user',
         bool $emailVerified = false,

@@ -53,89 +53,86 @@ class LibrarianRepository implements LibrarianRepositoryInterface
         return $row ? $this->mapRowToLibrarian($row) : null;
     }
 
-   public function save(Librarian $librarian): void
-{
-    if ($librarian->getId()) {
-
-        $sql = "UPDATE users SET
-            name = :name,
-            email = :email,
-            password_hash = :password,
-            role = 'librarian',
-            department = :department,
-            last_login_at = :last_login
-            WHERE id = :id
-            AND role_id = (SELECT id FROM roles WHERE name = 'librarian')";
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            ':name' => $librarian->getName(),
-            ':email' => $librarian->getEmail()->getValue(),
-            ':password' => $librarian->getPassword()->getHash(),
-            ':department' => $librarian->getDepartment()->getValue(),
-            ':last_login' => $librarian->getLastLogin()
-                ? $librarian->getLastLogin()->format('Y-m-d H:i:s')
-                : null,
-            ':id' => $librarian->getId()
-        ]);
-
-    } else {
-
-        $this->db->beginTransaction();
-
-        try {
-
-            $sql = "INSERT INTO users (
-                name,
-                email,
-                password_hash,
-                role,
-                role_id,
-                department,
-                status,
-                email_verified,
-                phone_verified,
-                login_method,
-                created_at,
-                updated_at
-            ) VALUES (
-                :name,
-                :email,
-                :password,
-                'librarian',
-                (SELECT id FROM roles WHERE name = 'librarian'),
-                :department,
-                'active',
-                1,
-                0,
-                'email',
-                NOW(),
-                NOW()
-            )";
+    public function save(Librarian $librarian): void
+    {
+        if ($librarian->getId()) {
+            $sql = "UPDATE users SET
+                name = :name,
+                email = :email,
+                password_hash = :password,
+                role = 'librarian',
+                department = :department,
+                status = :status,              
+                last_login_at = :last_login,
+                updated_at = NOW()
+                WHERE id = :id
+                AND role_id = (SELECT id FROM roles WHERE name = 'librarian')";
 
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
                 ':name' => $librarian->getName(),
                 ':email' => $librarian->getEmail()->getValue(),
                 ':password' => $librarian->getPassword()->getHash(),
-                ':department' => $librarian->getDepartment()->getValue()
+                ':department' => $librarian->getDepartment()->getValue(),
+                ':status' => $librarian->getStatus(),     
+                ':last_login' => $librarian->getLastLogin()
+                    ? $librarian->getLastLogin()->format('Y-m-d H:i:s')
+                    : null,
+                ':id' => $librarian->getId()
             ]);
+        } else {
+            $this->db->beginTransaction();
 
-            $userId = (int)$this->db->lastInsertId();
-            $librarian->setId($userId);
+            try {
+                $sql = "INSERT INTO users (
+                    name,
+                    email,
+                    password_hash,
+                    role,
+                    role_id,
+                    department,
+                    status,
+                    email_verified,
+                    phone_verified,
+                    login_method,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    :name,
+                    :email,
+                    :password,
+                    'librarian',
+                    (SELECT id FROM roles WHERE name = 'librarian'),
+                    :department,
+                    'active',
+                    1,
+                    0,
+                    'email',
+                    NOW(),
+                    NOW()
+                )";
 
-            $this->assignLibrarianRole($userId);
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute([
+                    ':name' => $librarian->getName(),
+                    ':email' => $librarian->getEmail()->getValue(),
+                    ':password' => $librarian->getPassword()->getHash(),
+                    ':department' => $librarian->getDepartment()->getValue()
+                ]);
 
-            $this->db->commit();
+                $userId = (int)$this->db->lastInsertId();
+                $librarian->setId($userId);
 
-        } catch (\Exception $e) {
+                $this->assignLibrarianRole($userId);
 
-            $this->db->rollBack();
-            throw $e;
+                $this->db->commit();
+            } catch (\Exception $e) {
+                $this->db->rollBack();
+                throw $e;
+            }
         }
     }
-}
-    
+
     private function assignLibrarianRole(int $userId): void
     {
         $stmt = $this->db->prepare("SELECT id FROM roles WHERE name = 'librarian'");
@@ -181,6 +178,8 @@ class LibrarianRepository implements LibrarianRepositoryInterface
             new Department($department)
         );
         $librarian->setId((int)$row['id']);
+        $librarian->setStatus($row['status'] ?? 'active');
+
         if (!empty($row['created_at'])) {
             $librarian->setHiredAt(new \DateTimeImmutable($row['created_at']));
         }

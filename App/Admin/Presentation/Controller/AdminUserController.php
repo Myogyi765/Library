@@ -29,6 +29,7 @@ class AdminUserController extends BaseController
         return $this->userAuth->isLoggedIn() && ($_SESSION['user_role'] ?? '') === 'admin';
     }
 
+    
     public function index(): void
     {
         if (!$this->isAdmin()) {
@@ -36,12 +37,39 @@ class AdminUserController extends BaseController
             return;
         }
 
-        $users = $this->userRepository->findByRole('user');
+        $page = (int) ($_GET['page_num'] ?? 1);
+        if ($page < 1) $page = 1;
+        $perPage = 10;
+        $search = trim($_GET['search'] ?? '');
+
+        if (!empty($search)) {
+            $totalUsers = $this->userRepository->countByRoleWithSearch('user', $search);
+        } else {
+            $totalUsers = $this->userRepository->countByRole('user');
+        }
+        $totalPages = (int) ceil($totalUsers / $perPage);
+        if ($page > $totalPages && $totalPages > 0) $page = $totalPages;
+        $offset = ($page - 1) * $perPage;
+
+        if (!empty($search)) {
+            $users = $this->userRepository->findByRoleWithSearchPaginated('user', $search, $offset, $perPage);
+        } else {
+            $users = $this->userRepository->findByRolePaginated('user', $offset, $perPage);
+        }
+
+        $viewData = [
+            'users'        => $users,
+            'currentPage'  => $page,
+            'totalPages'   => $totalPages,
+            'totalUsers'   => $totalUsers,
+            'perPage'      => $perPage,
+            'search'       => $search,
+        ];
 
         $this->view('admin-dashboard', [
             'pageTitle' => 'Manage Users',
             'content'   => BASE_PATH . '/view/admin/users/index.php',
-            'users'     => $users
+            ...$viewData
         ]);
     }
 
@@ -202,8 +230,6 @@ class AdminUserController extends BaseController
             }
 
             $currentStatus = $user->getStatus()->getValue();
-            error_log("🔍 Current status for user #{$id}: {$currentStatus}");
-
             if ($currentStatus === 'active') {
                 $newStatusString = 'inactive';
             } elseif ($currentStatus === 'inactive') {
@@ -214,14 +240,9 @@ class AdminUserController extends BaseController
                 $newStatusString = 'active';
             }
 
-            error_log("🔍 New status for user #{$id}: {$newStatusString}");
-
             $newStatus = UserStatus::fromString($newStatusString);
             $user->setStatus($newStatus);
             $this->userRepository->save($user);
-
-            $savedUser = $this->userRepository->findById($id);
-            error_log("✅ User #{$id} saved. Status is now: " . ($savedUser ? $savedUser->getStatus()->getValue() : 'NOT FOUND'));
 
             $this->createNotification(
                 (int) ($_SESSION['user_id'] ?? 0),
@@ -233,7 +254,6 @@ class AdminUserController extends BaseController
             );
             $_SESSION['success_message'] = 'User status updated to ' . ucfirst($newStatusString) . '.';
         } catch (\Exception $e) {
-            error_log("❌ Toggle status error: " . $e->getMessage());
             $_SESSION['error_message'] = 'Failed to toggle status: ' . $e->getMessage();
         }
 
