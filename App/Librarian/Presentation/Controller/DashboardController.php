@@ -10,6 +10,7 @@ use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Shared\Core\Authorization\Authorization;
 use App\Payment\Domain\Repository\PaymentRepositoryInterface;
 use App\Admin\Application\Service\DashboardStatisticsService;
+use App\Admin\Application\Service\SettingsService; 
 
 class DashboardController extends BaseController
 {
@@ -21,7 +22,7 @@ class DashboardController extends BaseController
     private PaymentRepositoryInterface $paymentRepo;
     private Authorization $authorization;
     private DashboardStatisticsService $dashboardStats;
-
+    private SettingsService $settingsService; 
     public function __construct(
         UserAuthenticator $userAuth,
         BookRepositoryInterface $bookRepository,
@@ -30,7 +31,8 @@ class DashboardController extends BaseController
         LoanRepositoryInterface $loanRepository,
         PaymentRepositoryInterface $paymentRepo,
         Authorization $authorization,
-        DashboardStatisticsService $dashboardStats
+        DashboardStatisticsService $dashboardStats,
+        SettingsService $settingsService 
     ) {
         $this->userAuth = $userAuth;
         $this->bookRepository = $bookRepository;
@@ -40,6 +42,7 @@ class DashboardController extends BaseController
         $this->paymentRepo = $paymentRepo;
         $this->authorization = $authorization;
         $this->dashboardStats = $dashboardStats;
+        $this->settingsService = $settingsService; 
     }
 
     public function index(): void
@@ -73,7 +76,6 @@ class DashboardController extends BaseController
                 exit;
             }
         }
-
 
         $users = [];
         $books = [];
@@ -122,10 +124,35 @@ class DashboardController extends BaseController
                 $books[$book->getId()] = $book;
             }
 
-            $allLoans = $this->loanRepository->findAll();
-            if (count($allLoans) > $maxRecords) {
-                $allLoans = array_slice($allLoans, 0, $maxRecords);
+            // Fetch raw loans from repository
+            $rawLoans = $this->loanRepository->findAll();
+            if (count($rawLoans) > $maxRecords) {
+                $rawLoans = array_slice($rawLoans, 0, $maxRecords);
             }
+
+            $finePerDay = $this->settingsService->getFinePerDay();
+            $gracePeriod = $this->settingsService->getGracePeriodDays();
+
+            $enrichedLoans = [];
+            foreach ($rawLoans as $loan) {
+                $fine = $loan->calculateFine($finePerDay, $gracePeriod);
+                $overdueDays = $loan->getOverdueDays();
+                $isOverdue = $loan->isOverdue();
+
+                $userName = isset($users[$loan->getUserId()]) ? $users[$loan->getUserId()]->getName() : 'Unknown';
+                $bookTitle = isset($books[$loan->getBookId()]) ? $books[$loan->getBookId()]->getTitle() : 'Unknown';
+
+                $enrichedLoans[] = [
+                    'loan'         => $loan,
+                    'user_name'    => $userName,
+                    'book_title'   => $bookTitle,
+                    'fine'         => $fine,
+                    'overdue_days' => $overdueDays,
+                    'is_overdue'   => $isOverdue,
+                ];
+            }
+
+            $allLoans = $enrichedLoans; 
 
             $allCategories = $this->categoryRepository->findAll();
             foreach ($allCategories as $category) {
@@ -138,7 +165,7 @@ class DashboardController extends BaseController
         $viewData = [
             'page'        => $page,
             'stats'       => $stats,
-            'loans'       => $allLoans,
+            'loans'       => $allLoans,   
             'users'       => $users,
             'books'       => $books,
             'allBooks'    => $allBooks,
@@ -179,6 +206,7 @@ class DashboardController extends BaseController
             $viewData['currentFilter'] = $statusFilter;
         }
 
+        $page = 'dashboard'; 
         $pageTitle = 'Librarian Dashboard';
         include BASE_PATH . '/view/librarian-dashboard.php';
     }

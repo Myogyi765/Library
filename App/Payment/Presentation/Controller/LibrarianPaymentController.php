@@ -75,6 +75,7 @@ class LibrarianPaymentController extends BaseController
                 $payments = $this->paymentRepo->findAllWithDetails();
                 break;
         }
+            $page = 'payments';
 
         $pageTitle = 'Payments';
         $content = BASE_PATH . '/view/librarian/payments/index.php';

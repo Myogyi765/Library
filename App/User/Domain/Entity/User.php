@@ -32,7 +32,7 @@ class User
     private ?DateTime $phoneVerifiedAt;
     private ?string $profileImage = null;
 
-    // ✅ FIXED: Required parameters first, optional after
+    
     public function __construct(
         ?int $id,
         string $name,
@@ -79,6 +79,8 @@ class User
         $this->profileImage = $profileImage;
     }
 
+    // ─── Getters ──────────────────────────────────────────────────────────
+
     public function getId(): ?int { return $this->id; }
     public function getName(): string { return $this->name; }
     public function getEmail(): Email { return $this->email; }
@@ -92,7 +94,9 @@ class User
     public function getLoginMethod(): string { return $this->loginMethod; }
     public function getIdentifier(): string
     {
-        return $this->loginMethod === 'phone' ? ($this->phone ? $this->phone->getValue() : '') : $this->email->getValue();
+        return $this->loginMethod === 'phone' 
+            ? ($this->phone ? $this->phone->getValue() : '') 
+            : $this->email->getValue();
     }
     public function getRememberToken(): ?string { return $this->rememberToken; }
     public function getCreatedAt(): ?DateTime { return $this->createdAt; }
@@ -103,46 +107,231 @@ class User
     public function getVerificationExpiresAt(): ?string { return $this->verificationExpiresAt; }
     public function getEmailVerifiedAt(): ?DateTime { return $this->emailVerifiedAt; }
     public function getPhoneVerifiedAt(): ?DateTime { return $this->phoneVerifiedAt; }
-    
-    public function getProfileImage(): ?string
-    {
-        return $this->profileImage;
+    public function getProfileImage(): ?string { return $this->profileImage; }
+
+    // ─── Setters ──────────────────────────────────────────────────────────
+
+    public function setName(string $name): self 
+    { 
+        $this->name = $name; 
+        return $this; 
     }
 
-    public function setName(string $name): self { $this->name = $name; return $this; }
-    public function setEmail(Email $email): self { $this->email = $email; return $this; }
-    public function setPhone(?Phone $phone): self { $this->phone = $phone; return $this; }
-    public function setPassword(Password $password): self { $this->password = $password; return $this; }
-    public function setRoleId(?int $roleId): self { $this->roleId = $roleId; return $this; }
-    public function setRoleName(string $roleName): self { $this->roleName = $roleName; return $this; }
-    public function setStatus(UserStatus $status): self { $this->status = $status; return $this; }
-    public function setEmailVerified(bool $verified): self { $this->emailVerified = $verified; return $this; }
-    public function setPhoneVerified(bool $verified): self { $this->phoneVerified = $verified; return $this; }
-    public function setLoginMethod(string $method): self { $this->loginMethod = $method; return $this; }
-    public function setRememberToken(?string $token): self { $this->rememberToken = $token; return $this; }
-    public function setUpdatedAt(?DateTime $updatedAt): self { $this->updatedAt = $updatedAt ?? new DateTime(); return $this; }
-    public function setLastLoginAt(?DateTime $lastLoginAt): self { $this->lastLoginAt = $lastLoginAt; return $this; }
-    public function setVerificationToken(?string $token): self { $this->verificationToken = $token; return $this; }
-    public function setVerificationCode(?string $code): self { $this->verificationCode = $code; return $this; }
-    public function setVerificationExpiresAt(?string $expiresAt): self { $this->verificationExpiresAt = $expiresAt; return $this; }
-    public function setEmailVerifiedAt(?DateTime $verifiedAt): self { $this->emailVerifiedAt = $verifiedAt; return $this; }
-    public function setPhoneVerifiedAt(?DateTime $verifiedAt): self { $this->phoneVerifiedAt = $verifiedAt; return $this; }
-    
+    public function setEmail(Email $email): self 
+    { 
+        $this->email = $email; 
+        return $this; 
+    }
+
+    public function setPhone(?Phone $phone): self 
+    { 
+        $this->phone = $phone; 
+        return $this; 
+    }
+
+    public function setPassword(Password $password): self 
+    { 
+        $this->password = $password; 
+        return $this; 
+    }
+
+    public function setRoleId(?int $roleId): self 
+    { 
+        $this->roleId = $roleId; 
+        return $this; 
+    }
+
+    public function setRoleName(string $roleName): self 
+    { 
+        $this->roleName = $roleName; 
+        return $this; 
+    }
+
+    public function setStatus(UserStatus $status): self 
+    { 
+        $this->status = $status; 
+        return $this; 
+    }
+
+    public function setEmailVerified(bool $verified): self 
+    { 
+        $this->emailVerified = $verified; 
+        return $this; 
+    }
+
+    public function setPhoneVerified(bool $verified): self 
+    { 
+        $this->phoneVerified = $verified; 
+        return $this; 
+    }
+
+    public function setLoginMethod(string $method): self 
+    { 
+        $this->loginMethod = $method; 
+        return $this; 
+    }
+
+    public function setRememberToken(?string $token): self 
+    { 
+        $this->rememberToken = $token; 
+        return $this; 
+    }
+
+    public function setUpdatedAt(?DateTime $updatedAt): self 
+    { 
+        $this->updatedAt = $updatedAt ?? new DateTime(); 
+        return $this; 
+    }
+
+    public function setLastLoginAt(?DateTime $lastLoginAt): self 
+    { 
+        $this->lastLoginAt = $lastLoginAt; 
+        return $this; 
+    }
+
+    public function setVerificationToken(?string $token): self 
+    { 
+        $this->verificationToken = $token; 
+        return $this; 
+    }
+
+    public function setVerificationCode(?string $code): self 
+    { 
+        $this->verificationCode = $code; 
+        return $this; 
+    }
+
+    public function setVerificationExpiresAt(?string $expiresAt): self 
+    { 
+        $this->verificationExpiresAt = $expiresAt; 
+        return $this; 
+    }
+
+    public function setEmailVerifiedAt(?DateTime $verifiedAt): self 
+    { 
+        $this->emailVerifiedAt = $verifiedAt; 
+        return $this; 
+    }
+
+    public function setPhoneVerifiedAt(?DateTime $verifiedAt): self 
+    { 
+        $this->phoneVerifiedAt = $verifiedAt; 
+        return $this; 
+    }
+
     public function setProfileImage(?string $profileImage): self
     {
         $this->profileImage = $profileImage;
         return $this;
     }
 
-    public function isVerified(): bool { return $this->emailVerified || $this->phoneVerified; }
-    public function isActive(): bool { return $this->status->getValue() === 'active'; }
-    public function canLogin(): bool { return $this->isActive(); }
-    public function isPending(): bool { return $this->status->getValue() === 'pending'; }
-    public function verifyEmail(): self { $this->emailVerified = true; $this->emailVerifiedAt = new DateTime(); return $this; }
-    public function verifyPhone(): self { $this->phoneVerified = true; $this->phoneVerifiedAt = new DateTime(); return $this; }
-    public function isVerificationValid(): bool {
-        if (!$this->verificationExpiresAt) return false;
+    // ─── Business Logic ───────────────────────────────────────────────────
+
+    public function isVerified(): bool 
+    { 
+        return $this->emailVerified || $this->phoneVerified; 
+    }
+
+    public function isActive(): bool 
+    { 
+        return $this->status->getValue() === 'active'; 
+    }
+
+    public function canLogin(): bool 
+    { 
+        return $this->isActive(); 
+    }
+
+    public function isPending(): bool 
+    { 
+        return $this->status->getValue() === 'pending'; 
+    }
+
+    
+    public function verifyEmail(): self 
+    { 
+        $this->emailVerified = true; 
+        $this->emailVerifiedAt = new DateTime(); 
+        return $this; 
+    }
+
+    
+    public function verifyPhone(): self 
+    { 
+        $this->phoneVerified = true; 
+        $this->phoneVerifiedAt = new DateTime();
+        $this->verificationCode = null;
+        $this->verificationExpiresAt = null;
+        return $this; 
+    }
+
+    
+    public function verifyPhoneCode(string $code): bool
+    {
+        if ($this->verificationCode === null || $this->verificationExpiresAt === null) {
+            return false;
+        }
+
+        $expires = new DateTime($this->verificationExpiresAt);
+        $now = new DateTime();
+
+        if ($this->verificationCode === $code && $now < $expires) {
+            $this->phoneVerified = true;
+            $this->phoneVerifiedAt = $now;
+            $this->verificationCode = null;
+            $this->verificationExpiresAt = null;
+            return true;
+        }
+
+        return false;
+    }
+
+    
+    public function verifyEmailCode(string $code): bool
+    {
+        if ($this->verificationCode === null || $this->verificationExpiresAt === null) {
+            return false;
+        }
+
+        $expires = new DateTime($this->verificationExpiresAt);
+        $now = new DateTime();
+
+        if ($this->verificationCode === $code && $now < $expires) {
+            $this->emailVerified = true;
+            $this->emailVerifiedAt = $now;
+            $this->verificationCode = null;
+            $this->verificationExpiresAt = null;
+            return true;
+        }
+
+        return false;
+    }
+
+    
+    public function isVerificationValid(): bool 
+    {
+        if (!$this->verificationExpiresAt) {
+            return false;
+        }
         $expires = new DateTime($this->verificationExpiresAt);
         return (new DateTime()) < $expires;
+    }
+
+    
+    public function matchesVerificationCode(string $code): bool
+    {
+        if ($this->verificationCode === null) {
+            return false;
+        }
+        return $this->verificationCode === $code;
+    }
+
+    
+    public function clearVerification(): self
+    {
+        $this->verificationToken = null;
+        $this->verificationCode = null;
+        $this->verificationExpiresAt = null;
+        return $this;
     }
 }

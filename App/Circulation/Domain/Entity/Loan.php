@@ -27,8 +27,6 @@ class Loan
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    
-
     public function confirm(): void
     {
         if (!$this->status->isPending()) {
@@ -61,6 +59,54 @@ class Loan
     public function markAwaitingPayment(): void
     {
         $this->status = LoanStatus::AWAITING_PAYMENT();
+    }
+
+    
+    public function calculateFine(int $finePerDay, int $gracePeriodDays): int
+    {
+        if (!$this->status->isActive() || $this->dueDate === null) {
+            return 0;
+        }
+
+        $today = new \DateTimeImmutable();
+        $due = $this->dueDate;
+
+        if ($today <= $due) {
+            return 0;
+        }
+
+        $diff = $today->diff($due)->days;
+        
+        $overdueDays = max(0, $diff - $gracePeriodDays);
+
+        return $overdueDays * $finePerDay;
+    }
+
+    
+    public function getOverdueDays(): int
+    {
+        if (!$this->status->isActive() || $this->dueDate === null) {
+            return 0;
+        }
+
+        $today = new \DateTimeImmutable();
+        $due = $this->dueDate;
+
+        if ($today <= $due) {
+            return 0;
+        }
+
+        return $today->diff($due)->days;
+    }
+
+    
+    public function isOverdue(): bool
+    {
+        if (!$this->status->isActive() || $this->dueDate === null) {
+            return false;
+        }
+
+        return new \DateTimeImmutable() > $this->dueDate;
     }
 
 

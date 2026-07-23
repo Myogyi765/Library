@@ -7,8 +7,6 @@ use App\Admin\Infrastructure\Persistence\SettingRepository;
 class SettingsService
 {
     private SettingRepository $repository;
-    
-    
     private ?array $settingsCache = null;
 
     public function __construct(SettingRepository $repository)
@@ -16,20 +14,17 @@ class SettingsService
         $this->repository = $repository;
     }
 
-    
     private function get(string $key, $default = null)
     {
         $value = $this->repository->findByKey($key);
         return $value !== null ? $value : $default;
     }
 
-    
     public function getSetting(string $key, $default = null)
     {
         return $this->get($key, $default);
     }
 
-    
     public function getSettings(): array
     {
         if ($this->settingsCache === null) {
@@ -38,13 +33,11 @@ class SettingsService
         return $this->settingsCache;
     }
 
-    
     public function getAll(): array
     {
         return $this->getSettings();
     }
 
-    
     public function updateSetting(string $key, $value): void
     {
         if (is_bool($value)) {
@@ -56,11 +49,9 @@ class SettingsService
         }
 
         $this->repository->set($key, $value);
-        
         $this->settingsCache = null;
     }
 
-    
     public function updateSettings(array $settings): void
     {
         foreach ($settings as $key => $value) {
@@ -68,13 +59,11 @@ class SettingsService
         }
     }
 
-    
     public function deleteSetting(string $key): void
     {
         $this->repository->delete($key);
         $this->settingsCache = null;
     }
-
 
     
     public function getFinePerDay(): int 

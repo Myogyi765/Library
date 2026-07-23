@@ -155,6 +155,22 @@ class LoanRepository implements LoanRepositoryInterface
     }
 
     
+    public function findAllWithDetails(): array
+    {
+        $sql = "SELECT l.*, 
+                       u.name AS user_name, 
+                       u.email AS user_email,
+                       b.title AS book_title, 
+                       b.author AS book_author,
+                       b.cover_image AS book_cover
+                FROM loans l
+                LEFT JOIN users u ON l.user_id = u.id
+                LEFT JOIN books b ON l.book_id = b.id
+                ORDER BY l.created_at DESC";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function findByUserId(int $userId): array
     {
         $sql = "SELECT * FROM loans WHERE user_id = :user_id ORDER BY id DESC";

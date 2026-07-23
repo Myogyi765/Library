@@ -39,27 +39,42 @@ class LoanController extends BaseController
         $this->db = $db;
     }
 
+    
     public function index(): void
     {
-        $loans = $this->loanRepo->findAll();
-        $allUsers = $this->userRepo->findAll();
-        $allBooks = $this->bookRepo->findAll();
+        $loanData = $this->loanRepo->findAllWithDetails();
+        
+        $finePerDay = $this->settingsService->getFinePerDay();
+        $gracePeriod = $this->settingsService->getGracePeriodDays();
 
-        $users = [];
-        foreach ($allUsers as $user) {
-            $users[$user->getId()] = $user;
+        $enrichedLoans = [];
+        foreach ($loanData as $row) {
+            $loan = $this->loanRepo->findById((int)$row['id']);
+            if (!$loan) {
+                continue;
+            }
+
+            $fine = $loan->calculateFine($finePerDay, $gracePeriod);
+            $overdueDays = $loan->getOverdueDays();
+            $isOverdue = $loan->isOverdue();
+
+            $enrichedLoans[] = [
+                'loan'          => $loan,
+                'user_name'     => $row['user_name'] ?? 'Unknown',
+                'user_email'    => $row['user_email'] ?? '',
+                'book_title'    => $row['book_title'] ?? 'Unknown',
+                'book_author'   => $row['book_author'] ?? 'Unknown',
+                'book_cover'    => $row['book_cover'] ?? null,
+                'fine'          => $fine,
+                'overdue_days'  => $overdueDays,
+                'is_overdue'    => $isOverdue,
+            ];
         }
 
-        $books = [];
-        foreach ($allBooks as $book) {
-            $books[$book->getId()] = $book;
-        }
-
+        $page = 'loans'; 
         $pageTitle = 'Loan Records';
         $viewData = [
-            'loans' => $loans,
-            'users' => $users,
-            'books' => $books,
+            'loans' => $enrichedLoans,  
         ];
         $content = BASE_PATH . '/view/librarian/loans/index.php';
         include BASE_PATH . '/view/librarian-dashboard.php';
@@ -170,7 +185,6 @@ class LoanController extends BaseController
         $this->redirect(BASE_URL . '/librarian/loans');
     }
 
-   
     public function confirm($id): void
     {
         $loan = $this->loanRepo->findById((int)$id);
@@ -195,8 +209,7 @@ class LoanController extends BaseController
 
             $this->db->commit();
 
-
-         $book = $this->bookRepo->findById($loan->getBookId());
+            $book = $this->bookRepo->findById($loan->getBookId());
             $bookTitle = $book ? $book->getTitle() : 'Unknown Book';
             $bookId = $loan->getBookId();
             $userId = $loan->getUserId();
@@ -204,7 +217,7 @@ class LoanController extends BaseController
                 $userId,
                 'user',
                 'loan_confirmed',
-                       '✅ Loan Confirmed - ' . $bookTitle,  
+                '✅ Loan Confirmed - ' . $bookTitle,  
                 'Your loan for book: "' . $bookTitle . '" has been confirmed. Please complete payment.',
                 BASE_URL . '/books/' . $bookId
             );
@@ -277,33 +290,53 @@ class LoanController extends BaseController
             return;
         }
 
+        $finePerDay = $this->settingsService->getFinePerDay();
+        $gracePeriod = $this->settingsService->getGracePeriodDays();
+        $fine = $loan->calculateFine($finePerDay, $gracePeriod);
+
         try {
             $this->db->beginTransaction();
-            $loan->returnBook();
-            $this->loanRepo->save($loan);
 
-            $book = $this->bookRepo->findById($loan->getBookId());
-            if ($book) {
-                $book->setAvailableQuantity($book->getAvailableQuantity() + 1);
-                $this->bookRepo->save($book);
+            if ($fine > 0) {
+                $loan->markAwaitingPayment();
+                $this->loanRepo->save($loan);
+
+                $this->createNotification(
+                    $loan->getUserId(),
+                    'user',
+                    'fine_due',
+                    '⚠️ Overdue Fine Due',
+                    "Your borrowed book is overdue. Please pay a fine of {$fine} MMK before returning.",
+                    BASE_URL . '/payments'
+                );
+
+                $_SESSION['warning_message'] = "Book is overdue. Fine of {$fine} MMK must be paid first.";
+            } else {
+                $loan->returnBook();
+                $this->loanRepo->save($loan);
+
+                $book = $this->bookRepo->findById($loan->getBookId());
+                if ($book) {
+                    $book->setAvailableQuantity($book->getAvailableQuantity() + 1);
+                    $this->bookRepo->save($book);
+                }
+
+                $this->createNotification(
+                    $loan->getUserId(),
+                    'user',
+                    'loan_returned',
+                    'Book returned',
+                    'Your borrowed book has been returned successfully.',
+                    BASE_URL . '/user-dashboard'
+                );
+
+                $_SESSION['success_message'] = 'Book returned successfully.';
             }
 
             $this->db->commit();
-
-            $userId = $loan->getUserId();
-            $this->createNotification(
-                $userId,
-                'user',
-                'loan_returned',
-                'Book returned',
-                'Your borrowed book has been returned successfully.',
-                BASE_URL . '/user-dashboard'
-            );
-
-            $_SESSION['success_message'] = 'Book returned successfully.';
         } catch (\Exception $e) {
             $this->db->rollBack();
-            $_SESSION['error_message'] = 'Failed to return book: ' . $e->getMessage();
+            $_SESSION['error_message'] = 'Failed to process return: ' . $e->getMessage();
         }
 
         $this->redirect(BASE_URL . '/librarian/loans');

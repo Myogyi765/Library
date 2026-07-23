@@ -32,7 +32,7 @@ class VerificationController extends BaseController
         $this->userRepository = $userRepository;
     }
 
-
+    
     public function verifyEmail(): void
     {
         $token = $_GET['token'] ?? '';
@@ -68,29 +68,45 @@ class VerificationController extends BaseController
         ]);
     }
 
-
+    
     public function showVerifyPhone(): void
     {
-        if (!$this->authenticator->isAuthenticated()) {
-            $_SESSION['login_errors'] = ['Please login to verify your phone.'];
-            $this->redirect(BASE_URL . '/home');
-            return;
+        $user = null;
+
+        // 1️⃣ If logged in, get user from authenticator
+        if ($this->authenticator->isAuthenticated()) {
+            $user = $this->authenticator->getCurrentUser();
+        } 
+        // 2️⃣ If just registered (not logged in), get from session
+        elseif (isset($_SESSION['just_registered']) && isset($_SESSION['register_user_id'])) {
+            $user = $this->userRepository->findById((int)$_SESSION['register_user_id']);
+            // Keep just_registered so that verifyPhone can still use it
         }
 
-        $user = $this->authenticator->getCurrentUser();
-
         if (!$user) {
-            $_SESSION['login_errors'] = ['User not found.'];
-            $this->redirect(BASE_URL . '/home');
+            $_SESSION['login_errors'] = ['Please login to verify your phone.'];
+            $this->redirect(BASE_URL . '/login');
             return;
         }
 
         if ($user->isPhoneVerified()) {
             $_SESSION['success_message'] = 'Your phone is already verified.';
+            if (isset($_SESSION['just_registered'])) {
+                $this->authenticator->login($user);
+                unset($_SESSION['just_registered']);
+            }
             $this->redirect(BASE_URL . '/user-dashboard');
             return;
         }
 
+        $phone = $user->getPhone()?->getValue() ?? '';
+        if (empty($phone)) {
+            $_SESSION['error_message'] = 'No phone number registered. Please update your profile.';
+            $this->redirect(BASE_URL . '/profile');
+            return;
+        }
+
+        // Generate code if not recently sent (60s cooldown)
         if (!isset($_SESSION['verification_code_sent']) || $_SESSION['verification_code_sent'] < time() - 60) {
             $code = $this->verificationService->generateVerificationCode();
             $expiresAt = (new DateTime())->modify('+15 minutes')->format('Y-m-d H:i:s');
@@ -99,15 +115,26 @@ class VerificationController extends BaseController
             $user->setVerificationExpiresAt($expiresAt);
             $this->userRepository->save($user);
 
+            // Send SMS
             $this->verificationService->sendVerificationSMS($user, $code);
+
+            // ✅ Always store code in session for debugging (no env check)
+            $_SESSION['verification_code'] = $code;
+            $_SESSION['verification_phone'] = $phone;
 
             $_SESSION['verification_code_sent'] = time();
             $_SESSION['verification_message'] = 'A verification code has been sent to your phone.';
         }
 
-        $this->view('verify-phone');
+        $debugCode = $_SESSION['verification_code'] ?? null;
+
+        $this->view('verify-phone', [
+            'phone'     => $phone,
+            'debugCode' => $debugCode,
+        ]);
     }
 
+    
     public function verifyPhone(): void
     {
         $code = $_POST['code'] ?? '';
@@ -119,19 +146,28 @@ class VerificationController extends BaseController
         }
 
         try {
+            // 1️⃣ Get user via service (checks DB)
             $user = $this->verificationService->verifyPhone($code);
 
             if (!$user) {
                 throw new \RuntimeException('Invalid or expired verification code.');
             }
 
+            // 2️⃣ Update user status
             $user->verifyPhone();
             $user->setStatus(UserStatus::active());
             $user->setVerificationCode(null);
             $user->setVerificationExpiresAt(null);
             $this->userRepository->save($user);
 
-            $this->authenticator->login($user);
+            // 3️⃣ Log in the user (if not already)
+            if (!$this->authenticator->isAuthenticated()) {
+                $this->authenticator->login($user);
+            }
+
+            // 4️⃣ Clear session flags
+            unset($_SESSION['verification_code'], $_SESSION['verification_phone']);
+            unset($_SESSION['just_registered'], $_SESSION['register_user_id']);
 
             $_SESSION['success_message'] = 'Your phone has been verified successfully! Welcome to the Library Management System.';
             $this->redirect(BASE_URL . '/user-dashboard');
@@ -150,20 +186,31 @@ class VerificationController extends BaseController
         }
     }
 
-
+    
     public function resendVerification(): void
     {
-        if (!$this->authenticator->isAuthenticated()) {
-            $_SESSION['info_message'] = 'Please login to resend verification.';
-            $this->redirect(BASE_URL . '/home');
+        $user = null;
+
+        // 1️⃣ If logged in, get user from authenticator
+        if ($this->authenticator->isAuthenticated()) {
+            $user = $this->authenticator->getCurrentUser();
+        } 
+        // 2️⃣ If just registered (not logged in), get from session
+        elseif (isset($_SESSION['just_registered']) && isset($_SESSION['register_user_id'])) {
+            $user = $this->userRepository->findById((int)$_SESSION['register_user_id']);
+            // Keep just_registered so that showVerifyPhone can still use it
+        }
+
+        if (!$user) {
+            $_SESSION['error_message'] = 'User not found. Please login to resend verification.';
+            $this->redirect(BASE_URL . '/login');
             return;
         }
 
-        $user = $this->authenticator->getCurrentUser();
-
-        if (!$user) {
-            $_SESSION['error_message'] = 'User not found.';
-            $this->redirect(BASE_URL . '/home');
+        // Prevent excessive resend (60s cooldown)
+        if (isset($_SESSION['last_resend_time']) && $_SESSION['last_resend_time'] > time() - 60) {
+            $_SESSION['error_message'] = 'Please wait 60 seconds before requesting a new code.';
+            $this->redirect(BASE_URL . ($user->getLoginMethod() === 'phone' ? '/verify-phone' : '/verify'));
             return;
         }
 
@@ -182,17 +229,29 @@ class VerificationController extends BaseController
                 $_SESSION['success_message'] = 'Verification email has been resent successfully.';
             } else {
                 $this->verificationService->sendVerificationSMS($user, $code);
+                // ✅ Always store in session for debug (no env check)
+                $_SESSION['verification_code'] = $code;
+                $_SESSION['verification_phone'] = $user->getPhone()?->getValue();
                 $_SESSION['success_message'] = 'Verification code has been resent successfully.';
+            }
+
+            $_SESSION['last_resend_time'] = time();
+            $_SESSION['verification_code_sent'] = time();
+
+            // Redirect to appropriate verification page
+            if ($user->getLoginMethod() === 'phone') {
+                $this->redirect(BASE_URL . '/verify-phone');
+            } else {
+                $this->redirect(BASE_URL . '/verify');
             }
 
         } catch (\Exception $e) {
             $_SESSION['error_message'] = 'Failed to resend verification: ' . $e->getMessage();
+            $this->redirect(BASE_URL . '/user-dashboard');
         }
-
-        $this->redirect(BASE_URL . '/user-dashboard');
     }
 
-
+    
     public function verifyEmailWithCode(): void
     {
         $code = $_POST['code'] ?? '';
@@ -218,7 +277,9 @@ class VerificationController extends BaseController
             $user->setVerificationExpiresAt(null);
             $this->userRepository->save($user);
 
-            $this->authenticator->login($user);
+            if (!$this->authenticator->isAuthenticated()) {
+                $this->authenticator->login($user);
+            }
 
             $_SESSION['success_message'] = 'Your email has been verified successfully!';
             $this->redirect(BASE_URL . '/user-dashboard');
@@ -229,8 +290,8 @@ class VerificationController extends BaseController
         }
     }
 
+    // ─── Password Reset Methods ───────────────────────────────────────
 
-    
     public function showForgotForm(): void
     {
         $this->view('auth/forgot-password', [
@@ -238,7 +299,6 @@ class VerificationController extends BaseController
         ]);
     }
 
-    
     public function sendResetLink(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -287,7 +347,6 @@ class VerificationController extends BaseController
         $this->redirect(BASE_URL . '/login');
     }
 
-    
     public function showResetForm(): void
     {
         $token = $_GET['token'] ?? '';
@@ -322,7 +381,6 @@ class VerificationController extends BaseController
         ]);
     }
 
-    
     public function updatePassword(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

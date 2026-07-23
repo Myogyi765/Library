@@ -120,9 +120,9 @@ $defaultRoleIcon = 'fa-user-cog';
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
-                    <button onclick="openRoleModal()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white text-sm font-medium rounded-xl shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all duration-200">
+                    <!-- <button onclick="openRoleModal()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white text-sm font-medium rounded-xl shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all duration-200">
                         <i class="fas fa-user-tag"></i> New Role
-                    </button>
+                    </button> -->
                     <span class="text-xs text-gray-700 dark:text-gray-500 bg-white/50 dark:bg-gray-700/50 px-3 py-1.5 rounded-full border border-gray-200/50 dark:border-gray-600/50">
                         <i class="far fa-clock mr-1"></i> <?= date('M d, Y H:i') ?>
                     </span>

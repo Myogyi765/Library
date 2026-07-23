@@ -14,6 +14,7 @@ use App\User\Exception\UserNotFoundException;
 use App\User\Infrastructure\Security\UserAuthenticator;
 use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Book\Domain\Repository\BookRepositoryInterface;
+use App\Admin\Application\Service\SettingsService; 
 
 class AuthController extends BaseController
 {
@@ -23,6 +24,7 @@ class AuthController extends BaseController
     private UserAuthenticator $authenticator;
     private LoanRepositoryInterface $loanRepository;
     private BookRepositoryInterface $bookRepository;
+    private SettingsService $settingsService;
 
     public function __construct(
         RegisterUser $registerUser,
@@ -30,7 +32,8 @@ class AuthController extends BaseController
         LogoutUser $logoutUser,
         UserAuthenticator $authenticator,
         LoanRepositoryInterface $loanRepository,
-        BookRepositoryInterface $bookRepository
+        BookRepositoryInterface $bookRepository,
+        SettingsService $settingsService 
     ) {
         parent::__construct(null);
 
@@ -40,8 +43,8 @@ class AuthController extends BaseController
         $this->authenticator = $authenticator;
         $this->loanRepository = $loanRepository;
         $this->bookRepository = $bookRepository;
+        $this->settingsService = $settingsService;
     }
-
 
     public function showRegister(): void
     {
@@ -66,7 +69,18 @@ class AuthController extends BaseController
             $_SESSION['register_success'] = 'Account created successfully! Please check your email/phone for verification.';
             $_SESSION['just_registered'] = true;
 
-            $this->redirect(BASE_URL . '/verify');
+            // ✅ Store user ID for verification page (even if not logged in)
+            // The DTO may have a public 'id' property, or you may need to add a getId() method.
+            $_SESSION['register_user_id'] = $userDTO->id ?? null;
+
+            // ✅ Redirect based on registration method
+            $method = $request->getMethod(); // 'email' or 'phone'
+            if ($method === 'phone') {
+                $this->redirect(BASE_URL . '/verify-phone');
+            } else {
+                $this->redirect(BASE_URL . '/verify');
+            }
+
         } catch (DuplicateEmailException $e) {
             $_SESSION['register_errors']['email'] = $e->getMessage();
             $_SESSION['register_old'] = $_POST;
@@ -111,20 +125,45 @@ class AuthController extends BaseController
             }
         }
 
-        $userId = $_SESSION['user_id'] ?? $user->getId();
+        $userId = $_SESSION['user_id'] ?? ($user ? $user->getId() : null);
+        if (!$userId) {
+            $this->redirect(BASE_URL . '/login');
+            return;
+        }
+
         $loans = $this->loanRepository->findActiveByUserId($userId);
+
+        $finePerDay = $this->settingsService->getFinePerDay();
+        $gracePeriod = $this->settingsService->getGracePeriodDays();
 
         $books = [];
         foreach ($loans as $loan) {
-            $book = $this->bookRepository->findById($loan->getBookId());
-            if ($book) {
-                $books[$loan->getBookId()] = $book;
+            $bookId = $loan->getBookId();
+            if (!isset($books[$bookId])) {
+                $book = $this->bookRepository->findById($bookId);
+                if ($book) {
+                    $books[$bookId] = $book;
+                }
             }
+        }
+
+        $enrichedLoans = [];
+        foreach ($loans as $loan) {
+            $fine = $loan->calculateFine($finePerDay, $gracePeriod);
+            $overdueDays = $loan->getOverdueDays();
+            $isOverdue = $loan->isOverdue();
+
+            $enrichedLoans[] = [
+                'loan' => $loan,
+                'fine' => $fine,
+                'overdue_days' => $overdueDays,
+                'is_overdue' => $isOverdue,
+            ];
         }
 
         $this->view('user-dashboard', [
             'user' => $user,
-            'loans' => $loans,
+            'loans' => $enrichedLoans,
             'books' => $books,
             'pageTitle' => 'My Dashboard'
         ]);

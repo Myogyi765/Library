@@ -21,14 +21,12 @@ class UserAuthenticator
         $this->authorization = $authorization;
     }
 
-    
     public function canLogin(User $user): bool
     {
         $status = $user->getStatus()->getValue();
         return $status === 'active';
     }
 
-    
     public function getLoginError(User $user): ?string
     {
         $status = $user->getStatus()->getValue();
@@ -43,12 +41,10 @@ class UserAuthenticator
         };
     }
 
-    
     public function authenticate(string $identifier, string $password): bool
     {
         $user = null;
 
-        // 1️⃣ Check if identifier is a valid email
         if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
             try {
                 $user = $this->userRepository->findByEmail(new Email($identifier));
@@ -56,7 +52,6 @@ class UserAuthenticator
                 $user = null;
             }
         }
-        // 2️⃣ Otherwise, check if it looks like a phone number
         elseif ($this->isPhoneNumber($identifier)) {
             try {
                 $user = $this->userRepository->findByPhone(new Phone($identifier));
@@ -65,31 +60,26 @@ class UserAuthenticator
             }
         }
 
-        // If no user found with either identifier, return false
         if (!$user) {
             $_SESSION['login_errors']['general'] = 'Invalid email/phone or password.';
             return false;
         }
 
-        // 3️⃣ Verify password
         if (!$user->getPassword()->verify($password)) {
             $_SESSION['login_errors']['general'] = 'Invalid email/phone or password.';
             return false;
         }
 
-        // 4️⃣ Check if user can login (status = active)
         if (!$this->canLogin($user)) {
             $error = $this->getLoginError($user);
             $_SESSION['login_errors']['general'] = $error ?? 'Your account is not active.';
             return false;
         }
 
-        // 5️⃣ Login successful
         $this->login($user);
         return true;
     }
 
-    
     private function isPhoneNumber(string $value): bool
     {
         return preg_match('/^(09|\+95)[0-9]{7,10}$/', $value) === 1;
@@ -121,6 +111,8 @@ class UserAuthenticator
         $_SESSION['user_identifier'] = $user->getIdentifier() ?? $user->getEmail()->getValue();
         $_SESSION['user_authenticated'] = true;
         $_SESSION['logged_in'] = true;
+
+        $_SESSION['user_profile_image'] = $user->getProfileImage();
 
         $this->authorization->loadUserPermissions($user->getId());
         session_regenerate_id(true);

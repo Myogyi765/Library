@@ -18,6 +18,7 @@ use App\User\Presentation\Controller\BorrowController as UserBorrowController;
 use App\User\Presentation\Controller\HomeController; 
 use App\Invoice\Presentation\Controller\InvoiceController as UserInvoiceController;
 use App\Admin\Application\Service\DashboardStatisticsService;
+use App\Admin\Application\Service\SettingsService; // NEW
 
 use App\Circulation\Application\Handler\BorrowBookHandler;
 use App\Invoice\Domain\Repository\InvoiceRepositoryInterface;
@@ -78,6 +79,7 @@ return function ($container) {
         );
     });
 
+    // FIXED: Added SettingsService as 7th argument
     $container->singleton(AuthController::class, function ($c) {
         return new AuthController(
             $c->get(RegisterUser::class),
@@ -85,7 +87,8 @@ return function ($container) {
             $c->get(LogoutUser::class),
             $c->get(UserAuthenticator::class),
             $c->get('loan.repository'),
-            $c->get('book.repository')
+            $c->get('book.repository'),
+            $c->get(SettingsService::class) // NEW
         );
     });
 
@@ -119,17 +122,18 @@ return function ($container) {
         );
     });
 
+    // FIXED: Added SettingsService as 6th argument
     $container->singleton(DashboardController::class, function ($c) {
         return new DashboardController(
             $c->get(UserAuthenticator::class),
             $c->get(VerificationService::class),
             $c->get(UserRepositoryInterface::class),
             $c->get(LoanRepositoryInterface::class),  
-            $c->get(BookRepositoryInterface::class)   
+            $c->get(BookRepositoryInterface::class),
+            $c->get(SettingsService::class) // NEW
         );
     });
 
-    
     $container->singleton(UserBorrowController::class, function ($c) {
         return new UserBorrowController(
             $c->get(BorrowBookHandler::class),

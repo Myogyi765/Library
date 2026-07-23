@@ -94,13 +94,20 @@ class VerificationService implements VerificationServiceInterface
         }
     }
 
+    
     public function sendVerificationSMS(User $user, string $code): void
     {
-        error_log("Verification SMS to: " . $user->getPhone()->getValue() . " | Code: " . $code);
+        $phone = $user->getPhone()?->getValue();
+        if (!$phone) {
+            error_log("❌ No phone number for user ID " . $user->getId());
+            return;
+        }
+
+        error_log("📱 [SMS] To: {$phone} | Code: {$code}");
+
+        
     }
 
-
-    
     public function sendPasswordResetEmail(User $user, string $resetLink): void
     {
         $mail = new PHPMailer(true);
@@ -190,7 +197,6 @@ class VerificationService implements VerificationServiceInterface
         }
     }
 
-
     public function verifyEmail(string $token): ?User
     {
         $user = $this->userRepository->findByEmailVerificationToken($token);
@@ -231,8 +237,10 @@ class VerificationService implements VerificationServiceInterface
         return $user !== null && $user->isVerificationValid();
     }
 
+    
     public function verifyEmailByCode(string $code): ?User
     {
+        // We reuse the same repository method because both email and phone codes are stored in the same `verificationCode` column.
         $user = $this->userRepository->findByPhoneVerificationCode($code);
         if ($user === null) {
             return null;
@@ -240,7 +248,6 @@ class VerificationService implements VerificationServiceInterface
         if (!$user->isVerificationValid()) {
             return null;
         }
-        
         $user->setVerificationCode(null);
         $user->setVerificationToken(null);
         $user->setVerificationExpiresAt(null);

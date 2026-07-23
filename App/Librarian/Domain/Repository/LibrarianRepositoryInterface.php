@@ -11,4 +11,5 @@ interface LibrarianRepositoryInterface
     public function findByEmail(Email $email): ?Librarian;
     public function findAll(): array;
     public function delete(Librarian $librarian): void;
+    
 }

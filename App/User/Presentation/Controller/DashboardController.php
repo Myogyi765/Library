@@ -10,6 +10,7 @@ use App\User\Domain\Service\VerificationServiceInterface;
 use App\User\Infrastructure\Security\UserAuthenticator;
 use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Book\Domain\Repository\BookRepositoryInterface;
+use App\Admin\Application\Service\SettingsService; 
 
 class DashboardController extends BaseController
 {
@@ -18,13 +19,15 @@ class DashboardController extends BaseController
     private UserRepositoryInterface $userRepository;
     private LoanRepositoryInterface $loanRepository;
     private BookRepositoryInterface $bookRepository;
+    private SettingsService $settingsService; 
 
     public function __construct(
         UserAuthenticator $authenticator,
         VerificationServiceInterface $verificationService,
         UserRepositoryInterface $userRepository,
         LoanRepositoryInterface $loanRepository,
-        BookRepositoryInterface $bookRepository
+        BookRepositoryInterface $bookRepository,
+        SettingsService $settingsService
     ) {
         parent::__construct();
         $this->authenticator = $authenticator;
@@ -32,6 +35,7 @@ class DashboardController extends BaseController
         $this->userRepository = $userRepository;
         $this->loanRepository = $loanRepository;
         $this->bookRepository = $bookRepository;
+        $this->settingsService = $settingsService; 
     }
 
     public function userDashboard(): void
@@ -71,24 +75,44 @@ class DashboardController extends BaseController
 
         $loans = [];
         $books = [];
+        $enrichedLoans = [];
+
         if ($user) {
             $userId = $user->getId();
             $loans = $this->loanRepository->findByUserId($userId) ?? [];
 
+            $finePerDay = $this->settingsService->getFinePerDay();
+            $gracePeriod = $this->settingsService->getGracePeriodDays();
+
+            $booksById = [];
             foreach ($loans as $loan) {
                 $bookId = $loan->getBookId();
-                if (!isset($books[$bookId])) {
+                if (!isset($booksById[$bookId])) {
                     $book = $this->bookRepository->findById($bookId);
                     if ($book) {
-                        $books[$bookId] = $book;
+                        $booksById[$bookId] = $book;
                     }
                 }
+            }
+            $books = $booksById;
+
+            foreach ($loans as $loan) {
+                $fine = $loan->calculateFine($finePerDay, $gracePeriod);
+                $overdueDays = $loan->getOverdueDays();
+                $isOverdue = $loan->isOverdue();
+
+                $enrichedLoans[] = [
+                    'loan' => $loan,
+                    'fine' => $fine,
+                    'overdue_days' => $overdueDays,
+                    'is_overdue' => $isOverdue,
+                ];
             }
         }
 
         $this->view('user-dashboard', [
             'user' => $user,
-            'loans' => $loans,
+            'loans' => $enrichedLoans,  
             'books' => $books,
             'pageTitle' => 'My Dashboard'
         ]);

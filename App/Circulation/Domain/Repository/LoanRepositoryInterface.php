@@ -23,4 +23,5 @@ interface LoanRepositoryInterface
     public function findRecent(int $limit): array;
 
      public function findByUserId(int $userId): array;
+     public function findAllWithDetails(): array;
 }

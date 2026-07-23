@@ -41,7 +41,8 @@ return function ($container) {
             $c->get(LoanRepositoryInterface::class),
             $c->get(PaymentRepositoryInterface::class),
             $c->get(Authorization::class),
-            $c->get(DashboardStatisticsService::class)
+            $c->get(DashboardStatisticsService::class),
+            $c->get(SettingsService::class) 
         );
     });
 
@@ -84,7 +85,7 @@ return function ($container) {
         );
     });
 
-        $container->singleton(RefundController::class, function ($c) {
+    $container->singleton(RefundController::class, function ($c) {
         return new RefundController(
             $c->get(UserAuthenticator::class),
             $c->get(PaymentRepositoryInterface::class),

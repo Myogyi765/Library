@@ -68,6 +68,7 @@ class UserController extends BaseController
         ];
 
         $this->view('librarian-dashboard', [
+               'page'      => 'users',
             'pageTitle' => 'Manage Users',
             'content'   => BASE_PATH . '/view/librarian/users/index.php',
             ...$viewData

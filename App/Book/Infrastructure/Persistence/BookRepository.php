@@ -14,7 +14,6 @@ class BookRepository implements BookRepositoryInterface
         $this->db = $db;
     }
 
-
     public function save(Book $book): Book
     {
         if ($book->getId() === null) {
@@ -171,21 +170,18 @@ class BookRepository implements BookRepositoryInterface
         return (int)$stmt->fetchColumn();
     }
 
-   public function getLatestBooks(int $limit): array
-{
-    $sql = "SELECT * FROM books ORDER BY created_at DESC LIMIT :limit";
-    $stmt = $this->db->prepare($sql);
-    
-    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-    $stmt->execute();
-    
-    $books = [];
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $books[] = $this->hydrate($row);
+    public function getLatestBooks(int $limit): array
+    {
+        $sql = "SELECT * FROM books ORDER BY created_at DESC LIMIT :limit";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        $books = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $books[] = $this->hydrate($row);
+        }
+        return $books;
     }
-    return $books;
-}
-
 
     public function findAllPaginated(int $offset, int $limit): array
     {
@@ -215,8 +211,8 @@ class BookRepository implements BookRepositoryInterface
 
         if (!empty($search)) {
             $sql .= " AND (title LIKE ? OR author LIKE ?)";
-            $params[] = '%' . $search . '%';
-            $params[] = '%' . $search . '%';
+            $params[] = $search . '%';
+            $params[] = $search . '%';
         }
 
         if ($categoryId && $categoryId > 0) {
@@ -246,8 +242,8 @@ class BookRepository implements BookRepositoryInterface
 
         if (!empty($search)) {
             $sql .= " AND (title LIKE ? OR author LIKE ?)";
-            $params[] = '%' . $search . '%';
-            $params[] = '%' . $search . '%';
+            $params[] = $search . '%';
+            $params[] = $search . '%';
         }
 
         if ($categoryId && $categoryId > 0) {

@@ -58,6 +58,13 @@ class RegisterUser
             }
             $phoneObj = new Phone($phone);
             $this->domainService->ensureUniquePhone($phoneObj);
+
+            $dummyEmail = 'phone_' . uniqid() . '@library.system';
+            $emailObj = new Email($dummyEmail);
+            while ($this->repository->findByEmail($emailObj) !== null) {
+                $dummyEmail = 'phone_' . uniqid() . '@library.system';
+                $emailObj = new Email($dummyEmail);
+            }
         } else {
             throw new \InvalidArgumentException('Invalid registration method.');
         }
@@ -69,59 +76,52 @@ class RegisterUser
             throw new \RuntimeException('Default role "user" not found in database.');
         }
 
-        $tempUser = new User(
-            null,
-            $name,
-            $emailObj ?? new Email('placeholder@example.com'),
-            $passwordObj,
-            UserStatus::pending(),
-            $phoneObj ?? new Phone('+95000000000'),
-            $roleId,
-            'user',
-            false,
-            false,
-            $method,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
+        $token = $this->verificationService->generateVerificationToken(
+            new User(
+                null,
+                $name,
+                $emailObj,
+                $passwordObj,
+                UserStatus::pending(),
+                $phoneObj,
+                $roleId,
+                'user',
+                false,
+                false,
+                $method
+            )
         );
-
-        $token = $this->verificationService->generateVerificationToken($tempUser);
         $code = $this->verificationService->generateVerificationCode();
         $expiresAt = (new DateTime('+15 minutes'))->format('Y-m-d H:i:s');
 
         $user = new User(
             null,
             $name,
-            $emailObj ?? new Email('placeholder@example.com'),
+            $emailObj,
             $passwordObj,
             UserStatus::pending(),
             $phoneObj,
             $roleId,
             'user',
-            false,
-            false,
+            false,         
+            false,          
             $method,
-            null,
-            null,
-            null,
-            null,
+            null,          
+            new DateTime(), 
+            new DateTime(), 
+            null,          
             $token,
             $code,
             $expiresAt,
-            null,
-            null,
-            null
+            null,      
+            null,           
+            null            
         );
 
         $savedUser = $this->repository->save($user);
+        if (!$savedUser || !$savedUser->getId()) {
+            throw new \RuntimeException('Failed to save user.');
+        }
 
         if ($method === 'email') {
             $this->verificationService->sendVerificationEmail(

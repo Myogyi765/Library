@@ -1,7 +1,6 @@
 <?php
 // view/librarian/loans/index.php
-// This file is included by dashboard-content.php when $page === 'loans'
-// Variables available: $loans, $users, $books, BASE_URL
+// Variables available: $loans (enriched array), BASE_URL
 ?>
 <div class="flex items-center justify-between mb-6">
     <div>
@@ -23,6 +22,13 @@
     </div>
     <?php unset($_SESSION['success_message']); ?>
 <?php endif; ?>
+<?php if (isset($_SESSION['warning_message'])): ?>
+    <div class="bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-700 text-yellow-700 dark:text-yellow-300 px-6 py-4 rounded-xl mb-6 flex items-center justify-between">
+        <div><i class="fas fa-exclamation-triangle mr-2"></i><?= htmlspecialchars($_SESSION['warning_message']) ?></div>
+        <button onclick="this.parentElement.style.display='none'" class="text-yellow-700 dark:text-yellow-300 hover:text-yellow-900"><i class="fas fa-times"></i></button>
+    </div>
+    <?php unset($_SESSION['warning_message']); ?>
+<?php endif; ?>
 <?php if (isset($_SESSION['error_message'])): ?>
     <div class="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-6 py-4 rounded-xl mb-6 flex items-center justify-between">
         <div><i class="fas fa-exclamation-circle mr-2"></i><?= htmlspecialchars($_SESSION['error_message']) ?></div>
@@ -42,16 +48,26 @@
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Book</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Borrowed</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Due Date</th>
+                    <!-- NEW: Overdue column -->
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Overdue</th>
+                    <!-- NEW: Fine column -->
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Fine (MMK)</th>
                     <th class="px-4 py-3 text-center text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Status</th>
                     <th class="px-6 py-3 text-right text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (!empty($loans)): ?>
-                    <?php foreach ($loans as $loan): 
-                        $user = $users[$loan->getUserId()] ?? null;
-                        $book = $books[$loan->getBookId()] ?? null;
+                    <?php foreach ($loans as $item): 
+                        $loan = $item['loan'];
                         $status = $loan->getStatus()->getValue();
+                        $fine = $item['fine'] ?? 0;
+                        $overdueDays = $item['overdue_days'] ?? 0;
+                        $isOverdue = $item['is_overdue'] ?? false;
+                        $userName = $item['user_name'] ?? 'Unknown';
+                        $bookTitle = $item['book_title'] ?? 'Unknown';
+                        $borrowedAt = $loan->getBorrowedAt() ? $loan->getBorrowedAt()->format('Y-m-d') : '—';
+                        $dueDate = $loan->getDueDate() ? $loan->getDueDate()->format('Y-m-d') : '—';
                         
                         $statusColor = match($status) {
                             'pending'           => 'purple',
@@ -62,18 +78,34 @@
                             'overdue'           => 'red',
                             default             => 'gray'
                         };
-                        
-                        $borrowedAt = $loan->getBorrowedAt() ? $loan->getBorrowedAt()->format('Y-m-d') : '—';
-                        $dueDate = $loan->getDueDate() ? $loan->getDueDate()->format('Y-m-d') : '—';
                     ?>
                         <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition">
                             <td class="px-4 py-3"><?= $loan->getId() ?></td>
-                            <td class="px-4 py-3"><?= htmlspecialchars($user ? $user->getName() : 'Unknown') ?></td>
-                            <td class="px-4 py-3"><?= htmlspecialchars($book ? $book->getTitle() : 'Unknown') ?></td>
+                            <td class="px-4 py-3"><?= htmlspecialchars($userName) ?></td>
+                            <td class="px-4 py-3"><?= htmlspecialchars($bookTitle) ?></td>
                             <td class="px-4 py-3"><?= $borrowedAt ?></td>
                             <td class="px-4 py-3"><?= $dueDate ?></td>
+                            <!-- Overdue column -->
+                            <td class="px-4 py-3">
+                                <?php if ($isOverdue && $status === 'active'): ?>
+                                    <span class="text-red-600 dark:text-red-400 font-bold"><?= $overdueDays ?> days</span>
+                                <?php elseif ($status === 'awaiting_payment' && $fine > 0): ?>
+                                    <span class="text-orange-600 dark:text-orange-400">Fine due</span>
+                                <?php elseif ($status === 'returned'): ?>
+                                    <span class="text-gray-400">—</span>
+                                <?php else: ?>
+                                    <span class="text-gray-400">—</span>
+                                <?php endif; ?>
+                            </td>
+                            <!-- Fine column -->
+                            <td class="px-4 py-3 text-right font-medium">
+                                <?php if ($fine > 0): ?>
+                                    <span class="text-red-600 dark:text-red-400"><?= number_format($fine) ?></span>
+                                <?php else: ?>
+                                    <span class="text-gray-400">0</span>
+                                <?php endif; ?>
+                            </td>
                             <td class="px-4 py-3 text-center">
-                                <!-- ✅ Fixed alignment and forced inline-block with no wrapping -->
                                 <span class="inline-block whitespace-nowrap px-2 py-1 text-xs rounded-full bg-<?= $statusColor ?>-100 text-<?= $statusColor ?>-800 dark:bg-<?= $statusColor ?>-900/30 dark:text-<?= $statusColor ?>-300">
                                     <?= ucfirst(str_replace('_', ' ', $status)) ?>
                                 </span>
@@ -100,10 +132,9 @@
                                                 <i class="fas fa-undo-alt"></i>
                                             </button>
                                         </form>
-                                        <!-- Edit icon -->
-                                        <a href="<?= BASE_URL ?>/librarian/loans/edit/<?= $loan->getId() ?>" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
+                                        <!-- Edit icon REMOVED -->
+                                    <?php elseif ($status === 'awaiting_payment'): ?>
+                                        <span class="text-gray-400" title="Awaiting payment"><i class="fas fa-clock"></i></span>
                                     <?php endif; ?>
                                     <!-- Delete icon (always visible) -->
                                     <a href="<?= BASE_URL ?>/librarian/loans/delete/<?= $loan->getId() ?>" 
@@ -118,7 +149,7 @@
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">No loans recorded.</td>
+                        <td colspan="9" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">No loans recorded.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

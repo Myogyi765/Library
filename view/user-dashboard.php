@@ -15,7 +15,8 @@ $pageTitle = 'User Dashboard';
 // Include header
 include __DIR__ . '/layout/header.php';
 
-// Data passed from controller: $loans, $books
+// Data passed from controller: $loans (enriched array), $books, $user
+// $loans is an array of arrays with keys: 'loan', 'fine', 'overdue_days', 'is_overdue'
 $loans = $loans ?? [];
 $books = $books ?? [];
 $user = $user ?? null;
@@ -26,17 +27,17 @@ foreach ($books as $book) {
     $booksById[$book->getId()] = $book;
 }
 
-// Calculate stats
+// Calculate stats from enriched loans
 $totalBorrowed = count($loans);
 $activeLoans = 0;
 $overdueLoans = 0;
-$now = new \DateTime();
 
-foreach ($loans as $loan) {
+foreach ($loans as $item) {
+    $loan = $item['loan'];
     $statusString = $loan->getStatus()->getValue();
     if ($statusString === 'active') {
         $activeLoans++;
-        if ($loan->getDueDate() < $now) {
+        if ($item['is_overdue']) {
             $overdueLoans++;
         }
     }
@@ -424,7 +425,7 @@ try {
             </div>
         <?php endif; ?>
 
-        <!-- ===== BORROWED BOOKS (with Book Cover Image – FIXED) ===== -->
+        <!-- ===== BORROWED BOOKS (with Book Cover Image, Overdue Days, Fine) ===== -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white">
@@ -444,6 +445,10 @@ try {
                                 <th>Author</th>
                                 <th>Borrowed Date</th>
                                 <th>Due Date</th>
+                                <!-- NEW: Overdue Days -->
+                                <th>Overdue Days</th>
+                                <!-- NEW: Fine (MMK) -->
+                                <th>Fine (MMK)</th>
                                 <th>Status</th>
                                 <th>Days Left</th>
                                 <th>Invoice</th>
@@ -451,15 +456,16 @@ try {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                            <?php foreach ($loans as $loan): 
-                                // ---- FIX: Use associative array $booksById ----
+                            <?php foreach ($loans as $item): 
+                                $loan = $item['loan'];
                                 $book = $booksById[$loan->getBookId()] ?? null;
                                 $dueDate = $loan->getDueDate();
-                                $isOverdue = $now > $dueDate;
-                                $daysLeft = $now->diff($dueDate)->days;
+                                $isOverdue = $item['is_overdue'];
+                                $overdueDays = $item['overdue_days'] ?? 0;
+                                $fine = $item['fine'] ?? 0;
                                 $statusString = $loan->getStatus()->getValue();
 
-                                // ---- Get Book Cover Image (as in Catalog) ----
+                                // ---- Get Book Cover Image ----
                                 $coverImage = null;
                                 if ($book) {
                                     if (method_exists($book, 'getCoverImage')) {
@@ -468,10 +474,8 @@ try {
                                         $coverImage = $book->getImage();
                                     }
                                 }
-                                // Build cover URL (similar to catalog)
                                 $coverUrl = '';
                                 if ($coverImage) {
-                                    // If it's already a full URL, use it as is; otherwise prepend BASE_URL
                                     if (strpos($coverImage, 'http') === 0) {
                                         $coverUrl = $coverImage;
                                     } else {
@@ -523,6 +527,14 @@ try {
                                     $badgeClass = 'returned';
                                     $badgeIcon = 'fa-circle';
                                 }
+
+                                // Calculate days left (only for active, non-overdue)
+                                $daysLeft = '—';
+                                if ($statusString === 'active' && !$isOverdue && $dueDate) {
+                                    $now = new \DateTime();
+                                    $diff = $now->diff($dueDate);
+                                    $daysLeft = $diff->days . ' days';
+                                }
                             ?>
                                 <tr>
                                     <!-- Book Cover -->
@@ -555,6 +567,24 @@ try {
                                     <td class="text-gray-800 dark:text-gray-300">
                                         <?= $dueDate ? $dueDate->format('M d, Y') : '—' ?>
                                     </td>
+                                    <!-- Overdue Days -->
+                                    <td>
+                                        <?php if ($isOverdue && $statusString === 'active'): ?>
+                                            <span class="text-red-600 dark:text-red-400 font-bold"><?= $overdueDays ?> days</span>
+                                        <?php elseif ($statusString === 'awaiting_payment' && $fine > 0): ?>
+                                            <span class="text-orange-600 dark:text-orange-400">Fine due</span>
+                                        <?php else: ?>
+                                            <span class="text-gray-400">—</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <!-- Fine (MMK) -->
+                                    <td>
+                                        <?php if ($fine > 0): ?>
+                                            <span class="text-red-600 dark:text-red-400 font-bold"><?= number_format($fine) ?></span>
+                                        <?php else: ?>
+                                            <span class="text-gray-400">0</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <span class="status-badge <?= $badgeClass ?>">
                                             <i class="fas <?= $badgeIcon ?>"></i>
@@ -566,7 +596,7 @@ try {
                                             <?php if ($isOverdue): ?>
                                                 <span class="text-red-600 dark:text-red-400 font-bold">Overdue!</span>
                                             <?php else: ?>
-                                                <span class="text-gray-700 dark:text-gray-300"><?= $daysLeft ?> days</span>
+                                                <span class="text-gray-700 dark:text-gray-300"><?= $daysLeft ?></span>
                                             <?php endif; ?>
                                         <?php else: ?>
                                             <span class="text-gray-400">—</span>

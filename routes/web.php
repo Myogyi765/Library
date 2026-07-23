@@ -129,6 +129,7 @@ $router->get('/login', [LoginController::class, 'showLogin']);
 $router->get('/verify', [VerificationController::class, 'verifyEmail']);
 $router->get('/verify-phone', [VerificationController::class, 'showVerifyPhone']);
 $router->get('/resend-verification', [VerificationController::class, 'resendVerification']);
+$router->get('/resend-phone-code', [VerificationController::class, 'resendVerification']); // ✅ Added for phone-specific resend
 $router->get('/logout', [LoginController::class, 'logout']);
 
 $router->get('/forgot-password', [VerificationController::class, 'showForgotForm']);
