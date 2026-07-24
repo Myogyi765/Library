@@ -296,7 +296,7 @@ $search = $search ?? '';
             </form>
             <a href="<?= BASE_URL ?>/admin/users/create" 
                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition">
-                <i class="fas fa-plus"></i> Add
+                <i class="fas fa-plus"></i> Add User 
             </a>
         </div>
     </div>

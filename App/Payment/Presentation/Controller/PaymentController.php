@@ -12,6 +12,7 @@ use App\Shared\Base\BaseController;
 use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\Admin\Application\Service\SettingsService;
 use App\Payment\Domain\Entity\Payment;
+use App\Payment\Domain\Repository\PaymentRepositoryInterface;
 
 class PaymentController extends BaseController
 {
@@ -19,18 +20,21 @@ class PaymentController extends BaseController
     private FileUploadService $fileUpload;
     private LoanRepositoryInterface $loanRepo;
     private SettingsService $settingsService;
+    private PaymentRepositoryInterface $paymentRepo;
 
     public function __construct(
         SubmitPaymentHandler $handler,
         FileUploadService $fileUpload,
         LoanRepositoryInterface $loanRepo,
-        SettingsService $settingsService
+        SettingsService $settingsService,
+        PaymentRepositoryInterface $paymentRepo
     ) {
         parent::__construct();
         $this->handler = $handler;
         $this->fileUpload = $fileUpload;
         $this->loanRepo = $loanRepo;
         $this->settingsService = $settingsService;
+        $this->paymentRepo = $paymentRepo;
     }
 
     public function showSubmitForm(int $loanId): void
@@ -50,7 +54,18 @@ class PaymentController extends BaseController
         }
 
         $status = $loan->getStatus()->getValue();
-        if ($status !== 'awaiting_payment') {
+
+        // Check if loan is overdue and active (overdue fine payment)
+        $isOverdue = $loan->isOverdue();
+        $fine = 0;
+        if ($isOverdue && $status === 'active') {
+            $finePerDay = $this->settingsService->getFinePerDay();
+            $gracePeriod = $this->settingsService->getGracePeriodDays();
+            $fine = $loan->calculateFine($finePerDay, $gracePeriod);
+        }
+
+        // Allow payment if status is 'awaiting_payment' OR (overdue + active)
+        if ($status !== 'awaiting_payment' && !($isOverdue && $status === 'active')) {
             $statusMessages = [
                 'pending'   => 'Your borrow request is still pending approval by the librarian.',
                 'active'    => 'You have already borrowed this book.',
@@ -64,13 +79,42 @@ class PaymentController extends BaseController
             return;
         }
 
+        // Determine the amount to display and the payment type
         $borrowingFee = $loan->getBorrowingFee() ?? $this->settingsService->getBorrowingFee();
+        $amountToPay = ($isOverdue && $fine > 0) ? $fine : $borrowingFee;
+
+        // ─── Check for existing payment ──────────────────────────────
+        // For fine payments: block ONLY if pending_approval.
+        // For borrowing fee: block if pending_approval, approved, or completed.
+        $existingPayment = $this->paymentRepo->findByLoanId($loanId);
+        if ($existingPayment) {
+            $paymentStatus = $existingPayment->getStatus()->getValue();
+
+            if ($isOverdue && $fine > 0) {
+                // Fine payment: allow if payment is already approved or completed
+                if ($paymentStatus === 'pending_approval') {
+                    $_SESSION['error_message'] = 'A payment for this loan is already in progress.';
+                    $this->redirect(BASE_URL . '/books/' . $loan->getBookId());
+                    return;
+                }
+            } else {
+                // Normal borrowing fee: block if any active/approved/completed payment exists
+                if (in_array($paymentStatus, ['pending_approval', 'approved', 'completed'])) {
+                    $_SESSION['error_message'] = 'A payment for this loan is already in progress.';
+                    $this->redirect(BASE_URL . '/books/' . $loan->getBookId());
+                    return;
+                }
+            }
+        }
+
         $idempotencyKey = $this->generateUuid();
 
         $this->view('payment/submit', [
             'loan'           => $loan,
-            'borrowingFee'   => $borrowingFee,
+            'borrowingFee'   => $amountToPay,
             'idempotencyKey' => $idempotencyKey,
+            'isOverdue'      => $isOverdue,
+            'fine'           => $fine,
         ]);
     }
 
@@ -78,6 +122,27 @@ class PaymentController extends BaseController
     {
         try {
             $request = new SubmitPaymentRequest($_POST, $_FILES);
+
+            $loan = $this->loanRepo->findById($request->getLoanId());
+            if (!$loan) {
+                throw new \InvalidArgumentException('Loan not found.');
+            }
+
+            // Calculate expected amount (borrowing fee or overdue fine)
+            $isOverdue = $loan->isOverdue();
+            $fine = 0;
+            if ($isOverdue && $loan->getStatus()->getValue() === 'active') {
+                $finePerDay = $this->settingsService->getFinePerDay();
+                $gracePeriod = $this->settingsService->getGracePeriodDays();
+                $fine = $loan->calculateFine($finePerDay, $gracePeriod);
+            }
+            $expectedAmount = ($isOverdue && $fine > 0) ? $fine : ($loan->getBorrowingFee() ?? $this->settingsService->getBorrowingFee());
+
+            // Validate submitted amount
+            $submittedAmount = $request->getAmount();
+            if (abs($submittedAmount - $expectedAmount) > 0.01) {
+                throw new \InvalidArgumentException('Invalid payment amount. Expected: ' . number_format($expectedAmount, 2));
+            }
 
             $screenshotPath = null;
             if ($request->hasFile('screenshot')) {
@@ -87,7 +152,7 @@ class PaymentController extends BaseController
             $command = new SubmitPaymentCommand(
                 $request->getLoanId(),
                 (int) ($_SESSION['user_id'] ?? 0),
-                $request->getAmount(),
+                $submittedAmount,
                 $request->getPaymentMethod(),
                 $request->getTransactionReference(),
                 $screenshotPath,
@@ -100,12 +165,12 @@ class PaymentController extends BaseController
                 $_SESSION['payment_id'] = $payment->getId();
 
                 $this->createNotification(
-                    null,                  
-                    'librarian',            
+                    null,
+                    'librarian',
                     'payment_submitted',
                     'Payment submitted',
                     'A user has submitted a payment for review.',
-                    BASE_URL . '/librarian/dashboard?page=payments' 
+                    BASE_URL . '/librarian/dashboard?page=payments'
                 );
             }
 

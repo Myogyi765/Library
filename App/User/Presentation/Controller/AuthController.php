@@ -8,6 +8,8 @@ use App\User\Application\Request\RegisterRequest;
 use App\User\Application\UseCase\LoginUser;
 use App\User\Application\UseCase\LogoutUser;
 use App\User\Application\UseCase\RegisterUser;
+use App\User\Domain\Repository\UserRepositoryInterface;
+use App\User\Domain\ValueObject\Phone;
 use App\User\Exception\DuplicateEmailException;
 use App\User\Exception\DuplicatePhoneException;
 use App\User\Exception\UserNotFoundException;
@@ -22,6 +24,7 @@ class AuthController extends BaseController
     private LoginUser $loginUser;
     private LogoutUser $logoutUser;
     private UserAuthenticator $authenticator;
+    private UserRepositoryInterface $userRepository;
     private LoanRepositoryInterface $loanRepository;
     private BookRepositoryInterface $bookRepository;
     private SettingsService $settingsService;
@@ -31,6 +34,7 @@ class AuthController extends BaseController
         LoginUser $loginUser,
         LogoutUser $logoutUser,
         UserAuthenticator $authenticator,
+        UserRepositoryInterface $userRepository,
         LoanRepositoryInterface $loanRepository,
         BookRepositoryInterface $bookRepository,
         SettingsService $settingsService 
@@ -41,6 +45,7 @@ class AuthController extends BaseController
         $this->loginUser = $loginUser;
         $this->logoutUser = $logoutUser;
         $this->authenticator = $authenticator;
+        $this->userRepository = $userRepository;
         $this->loanRepository = $loanRepository;
         $this->bookRepository = $bookRepository;
         $this->settingsService = $settingsService;
@@ -68,13 +73,9 @@ class AuthController extends BaseController
 
             $_SESSION['register_success'] = 'Account created successfully! Please check your email/phone for verification.';
             $_SESSION['just_registered'] = true;
-
-            // ✅ Store user ID for verification page (even if not logged in)
-            // The DTO may have a public 'id' property, or you may need to add a getId() method.
             $_SESSION['register_user_id'] = $userDTO->id ?? null;
 
-            // ✅ Redirect based on registration method
-            $method = $request->getMethod(); // 'email' or 'phone'
+            $method = $request->getMethod();
             if ($method === 'phone') {
                 $this->redirect(BASE_URL . '/verify-phone');
             } else {
@@ -85,14 +86,39 @@ class AuthController extends BaseController
             $_SESSION['register_errors']['email'] = $e->getMessage();
             $_SESSION['register_old'] = $_POST;
             $this->redirect(BASE_URL . '/register');
+
         } catch (DuplicatePhoneException $e) {
+            try {
+                $phoneValue = trim($_POST['phone'] ?? '');
+                if (!empty($phoneValue)) {
+                    $phoneVO = new Phone($phoneValue);
+                    $existingUser = $this->userRepository->findByPhone($phoneVO);
+                    
+                    if ($existingUser && $existingUser->getStatus()->getValue() === 'pending') {
+                        $_SESSION['pending_user_id'] = $existingUser->getId();
+                        $_SESSION['pending_identifier'] = $phoneValue;
+                        $_SESSION['pending_method'] = 'phone';
+                        $_SESSION['login_errors']['general'] = 
+                            'This phone number is already registered but pending verification. ' .
+                            'Please verify your phone to activate your account.';
+                        
+                        unset($_SESSION['register_errors']['phone']);
+                        $this->redirect(BASE_URL . '/verify-phone');
+                        return;
+                    }
+                }
+            } catch (\Exception $ex) {
+            }
+            
             $_SESSION['register_errors']['phone'] = $e->getMessage();
             $_SESSION['register_old'] = $_POST;
             $this->redirect(BASE_URL . '/register');
+
         } catch (\InvalidArgumentException $e) {
             $_SESSION['register_errors']['general'] = $e->getMessage();
             $_SESSION['register_old'] = $_POST;
             $this->redirect(BASE_URL . '/register');
+
         } catch (\Exception $e) {
             $_SESSION['register_errors']['general'] = 'Registration failed: ' . $e->getMessage();
             $_SESSION['register_old'] = $_POST;

@@ -3,6 +3,181 @@
 // This file is included by dashboard-content.php when $page === 'refunds'
 // Variables available: $refunds, $currentFilter, BASE_URL
 ?>
+<style>
+    /* ─── Table styles – matches Payment Records table ─── */
+    .refund-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    .refund-table thead th {
+        background: #f8fafc;
+        color: #1e293b;
+        font-weight: 600;
+        padding: 12px 16px;
+        border-bottom: 2px solid #e2e8f0;
+        text-align: left;
+        vertical-align: middle;
+    }
+    .dark .refund-table thead th {
+        background: #1e293b;
+        color: #e2e8f0;
+        border-bottom-color: #334155;
+    }
+    .refund-table tbody tr {
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.15s;
+    }
+    .dark .refund-table tbody tr {
+        border-bottom-color: #1e293b;
+    }
+    .refund-table tbody tr:hover {
+        background: #f1f5f9;
+    }
+    .dark .refund-table tbody tr:hover {
+        background: #1e293b;
+    }
+    .refund-table tbody td {
+        padding: 12px 16px;
+        vertical-align: middle;
+    }
+
+    /* ─── Fixed column widths ─── */
+    .refund-table .col-id {
+        width: 5%;
+        text-align: center;
+        font-weight: 600;
+        color: #6b7280;
+    }
+    .dark .refund-table .col-id {
+        color: #9ca3af;
+    }
+    .refund-table .col-user {
+        width: 18%;
+    }
+    .refund-table .col-loan {
+        width: 8%;
+        text-align: center;
+    }
+    .refund-table .col-amount {
+        width: 12%;
+        text-align: right;
+        font-weight: 600;
+    }
+    .refund-table .col-method {
+        width: 10%;
+        text-align: center;
+    }
+    .refund-table .col-status {
+        width: 12%;
+        text-align: center;
+    }
+    .refund-table .col-reason {
+        width: 18%;
+        word-break: break-word;
+    }
+    .refund-table .col-refunded_at {
+        width: 12%;
+        text-align: center;
+    }
+    .refund-table .col-actions {
+        width: 8%;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    /* ─── Badges ─── */
+    .refund-table .badge {
+        display: inline-block;
+        padding: 0.2rem 0.7rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    .refund-table .badge-completed {
+        background: #dcfce7;
+        color: #166534;
+    }
+    .dark .refund-table .badge-completed {
+        background: #14532d;
+        color: #86efac;
+    }
+    .refund-table .badge-pending {
+        background: #fef9c3;
+        color: #854d0e;
+    }
+    .dark .refund-table .badge-pending {
+        background: #713f12;
+        color: #fde047;
+    }
+    .refund-table .badge-none {
+        background: #f1f5f9;
+        color: #475569;
+    }
+    .dark .refund-table .badge-none {
+        background: #334155;
+        color: #94a3b8;
+    }
+
+    /* ─── Action buttons ─── */
+    .refund-table .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        transition: all 0.15s;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 1rem;
+        margin: 0 2px;
+    }
+    .refund-table .action-btn:hover {
+        background: rgba(0,0,0,0.05);
+        transform: scale(1.1);
+    }
+    .dark .refund-table .action-btn:hover {
+        background: rgba(255,255,255,0.08);
+    }
+    .refund-table .action-btn.approve { color: #22c55e; }
+    .refund-table .action-btn.approve:hover { background: #f0fdf4; color: #16a34a; }
+    .dark .refund-table .action-btn.approve { color: #4ade80; }
+    .dark .refund-table .action-btn.approve:hover { background: #1e293b; color: #86efac; }
+
+    .refund-table .action-btn.reject { color: #ef4444; }
+    .refund-table .action-btn.reject:hover { background: #fef2f2; color: #dc2626; }
+    .dark .refund-table .action-btn.reject { color: #f87171; }
+    .dark .refund-table .action-btn.reject:hover { background: #1e293b; color: #fca5a5; }
+
+    .refund-table .action-btn.view { color: #3b82f6; }
+    .refund-table .action-btn.view:hover { background: #eff6ff; color: #2563eb; }
+    .dark .refund-table .action-btn.view { color: #60a5fa; }
+    .dark .refund-table .action-btn.view:hover { background: #1e293b; color: #93c5fd; }
+
+    .refund-table .completed-text {
+        color: #16a34a;
+        font-weight: 500;
+    }
+    .dark .refund-table .completed-text {
+        color: #4ade80;
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 768px) {
+        .refund-table thead th, .refund-table tbody td {
+            padding: 8px 10px;
+            font-size: 0.8rem;
+        }
+        .refund-table .col-reason {
+            max-width: 120px;
+        }
+    }
+</style>
+
 <!-- ============================================================ -->
 <!-- 🔹 REFUNDS PAGE – Manage refund requests                    -->
 <!-- ============================================================ -->
@@ -46,22 +221,21 @@
     </a>
 </div>
 
-<!-- ===== SIMPLE TABLE – No fixed widths, all data visible ===== -->
+<!-- ===== REFUND TABLE – Styled like Payment Records ===== -->
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
     <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-            <!-- ===== SIMPLE HEADER ===== -->
-            <thead class="bg-gray-50 dark:bg-gray-900/50">
+        <table class="refund-table">
+            <thead>
                 <tr>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">#</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">User</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Loan</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Amount</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Method</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Refund Status</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Refund Reason</th>
-                    <th class="px-3 py-3 text-left text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Refunded At</th>
-                    <th class="px-3 py-3 text-center text-xs font-semibold uppercase text-gray-800 dark:text-gray-400">Actions</th>
+                    <th class="col-id">#</th>
+                    <th class="col-user">User</th>
+                    <th class="col-loan">Loan</th>
+                    <th class="col-amount">Amount</th>
+                    <th class="col-method">Method</th>
+                    <th class="col-status">Refund Status</th>
+                    <th class="col-reason">Refund Reason</th>
+                    <th class="col-refunded_at">Refunded At</th>
+                    <th class="col-actions">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -80,55 +254,55 @@
                             $refundedAt = $refund['refunded_at'] ?? null;
 
                             $refundLabel = ucfirst(str_replace('_', ' ', $refundStatus));
-                            $refundColor = match($refundStatus) {
-                                'completed' => 'text-green-600 dark:text-green-400',
-                                'pending' => 'text-yellow-600 dark:text-yellow-400',
-                                default => 'text-gray-400 dark:text-gray-500'
+                            $badgeClass = match($refundStatus) {
+                                'completed' => 'badge-completed',
+                                'pending'   => 'badge-pending',
+                                default     => 'badge-none'
                             };
                         ?>
-                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
-                            <td class="px-3 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">#<?= $id ?></td>
-                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300">
-                                <span class="font-medium"><?= htmlspecialchars($userName) ?></span>
+                        <tr>
+                            <td class="col-id">#<?= $id ?></td>
+                            <td class="col-user">
+                                <div class="font-medium text-gray-900 dark:text-white"><?= htmlspecialchars($userName) ?></div>
                                 <?php if ($userEmail): ?>
-                                    <br><span class="text-xs text-gray-400"><?= htmlspecialchars($userEmail) ?></span>
+                                    <div class="text-xs text-gray-400"><?= htmlspecialchars($userEmail) ?></div>
                                 <?php endif; ?>
                             </td>
-                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">#<?= $refund['loan_id'] ?? '?' ?></td>
-                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 font-semibold whitespace-nowrap"><?= number_format($amount, 2) ?> MMK</td>
-                            <td class="px-3 py-3">
-                                <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 whitespace-nowrap">
+                            <td class="col-loan">#<?= $refund['loan_id'] ?? '?' ?></td>
+                            <td class="col-amount"><?= number_format($amount, 2) ?> MMK</td>
+                            <td class="col-method">
+                                <span class="badge badge-none" style="background:#dbeafe;color:#1e40af; dark:background:#1e3a5f; dark:color:#93c5fd;">
                                     <?= htmlspecialchars(ucfirst($paymentMethod)) ?>
                                 </span>
                             </td>
-                            <td class="px-3 py-3">
-                                <span class="<?= $refundColor ?> font-medium whitespace-nowrap"><?= $refundLabel ?></span>
+                            <td class="col-status">
+                                <span class="badge <?= $badgeClass ?>"><?= $refundLabel ?></span>
                             </td>
-                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 break-words max-w-[200px]">
+                            <td class="col-reason text-gray-700 dark:text-gray-300 break-words max-w-[200px]">
                                 <?= htmlspecialchars($refundReason) ?>
                             </td>
-                            <td class="px-3 py-3 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
+                            <td class="col-refunded_at text-gray-700 dark:text-gray-300 text-sm">
                                 <?= $refundedAt ? date('d M Y, H:i', strtotime($refundedAt)) : '—' ?>
                             </td>
-                            <td class="px-3 py-3 text-center space-x-1 whitespace-nowrap">
+                            <td class="col-actions">
                                 <?php if ($refundStatus === 'pending'): ?>
                                     <form action="<?= BASE_URL ?>/librarian/refunds/<?= $id ?>/approve" method="POST" class="inline">
-                                        <button type="submit" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 transition" title="Approve Refund" onclick="return confirm('Approve this refund?')">
-                                            <i class="fas fa-check-circle text-base"></i>
+                                        <button type="submit" class="action-btn approve" title="Approve Refund" onclick="return confirm('Approve this refund?')">
+                                            <i class="fas fa-check-circle"></i>
                                         </button>
                                     </form>
                                     <form action="<?= BASE_URL ?>/librarian/refunds/<?= $id ?>/reject" method="POST" class="inline">
-                                        <button type="submit" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition" title="Reject Refund" onclick="return confirm('Reject this refund?')">
-                                            <i class="fas fa-times-circle text-base"></i>
+                                        <button type="submit" class="action-btn reject" title="Reject Refund" onclick="return confirm('Reject this refund?')">
+                                            <i class="fas fa-times-circle"></i>
                                         </button>
                                     </form>
                                 <?php elseif ($refundStatus === 'completed'): ?>
-                                    <span class="text-xs text-green-600 dark:text-green-400">Completed</span>
+                                    <span class="completed-text"><i class="fas fa-check-circle"></i> Done</span>
                                 <?php else: ?>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">—</span>
+                                    <span class="text-gray-400 dark:text-gray-500">—</span>
                                 <?php endif; ?>
-                                <a href="<?= BASE_URL ?>/librarian/payments/<?= $id ?>" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition" title="View Payment">
-                                    <i class="fas fa-eye text-base"></i>
+                                <a href="<?= BASE_URL ?>/librarian/payments/<?= $id ?>" class="action-btn view" title="View Payment">
+                                    <i class="fas fa-eye"></i>
                                 </a>
                             </td>
                         </tr>

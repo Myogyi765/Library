@@ -8,7 +8,7 @@ $maxBorrowDays    = $settings['max_borrow_days'] ?? 14;
 $maxBorrowLimit   = $settings['max_borrow_limit'] ?? 5;
 $gracePeriodDays  = $settings['grace_period_days'] ?? 3;
 $membershipFee    = $settings['membership_fee'] ?? 0;
-$lateReturnFee    = $settings['late_return_fee'] ?? 0;
+// ❌ $lateReturnFee line removed completely
 ?>
 
 <div class="container mx-auto px-4 py-8">
@@ -111,17 +111,8 @@ $lateReturnFee    = $settings['late_return_fee'] ?? 0;
                            class="w-full border rounded-lg px-4 py-2 dark:bg-gray-700 dark:border-gray-600">
                 </div>
 
-                <!-- Late Return Fee -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Late Return Fee (MMK)
-                    </label>
-                    <p class="text-xs text-gray-400 mb-1">Fixed fee for late returns</p>
-                    <input type="number" name="late_return_fee" 
-                           value="<?= htmlspecialchars($lateReturnFee) ?>"
-                           min="0" step="100"
-                           class="w-full border rounded-lg px-4 py-2 dark:bg-gray-700 dark:border-gray-600">
-                </div>
+                <!-- Late Return Fee – REMOVED completely -->
+               
             </div>
 
             <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex gap-3">

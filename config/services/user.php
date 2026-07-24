@@ -18,7 +18,7 @@ use App\User\Presentation\Controller\BorrowController as UserBorrowController;
 use App\User\Presentation\Controller\HomeController; 
 use App\Invoice\Presentation\Controller\InvoiceController as UserInvoiceController;
 use App\Admin\Application\Service\DashboardStatisticsService;
-use App\Admin\Application\Service\SettingsService; // NEW
+use App\Admin\Application\Service\SettingsService;
 
 use App\Circulation\Application\Handler\BorrowBookHandler;
 use App\Invoice\Domain\Repository\InvoiceRepositoryInterface;
@@ -79,16 +79,16 @@ return function ($container) {
         );
     });
 
-    // FIXED: Added SettingsService as 7th argument
     $container->singleton(AuthController::class, function ($c) {
         return new AuthController(
-            $c->get(RegisterUser::class),
-            $c->get(LoginUser::class),
-            $c->get(LogoutUser::class),
-            $c->get(UserAuthenticator::class),
-            $c->get('loan.repository'),
-            $c->get('book.repository'),
-            $c->get(SettingsService::class) // NEW
+            $c->get(RegisterUser::class),              
+            $c->get(LoginUser::class),                  
+            $c->get(LogoutUser::class),                
+            $c->get(UserAuthenticator::class),      
+            $c->get(UserRepositoryInterface::class),   
+            $c->get('loan.repository'),              
+            $c->get('book.repository'),                 
+            $c->get(SettingsService::class)             
         );
     });
 
@@ -122,7 +122,6 @@ return function ($container) {
         );
     });
 
-    // FIXED: Added SettingsService as 6th argument
     $container->singleton(DashboardController::class, function ($c) {
         return new DashboardController(
             $c->get(UserAuthenticator::class),
@@ -130,7 +129,7 @@ return function ($container) {
             $c->get(UserRepositoryInterface::class),
             $c->get(LoanRepositoryInterface::class),  
             $c->get(BookRepositoryInterface::class),
-            $c->get(SettingsService::class) // NEW
+            $c->get(SettingsService::class)
         );
     });
 

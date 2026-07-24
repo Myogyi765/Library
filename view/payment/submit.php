@@ -4,7 +4,11 @@ $pageTitle = 'Submit Payment Proof';
 include BASE_PATH . '/view/layout/header.php';
 
 $loan = $loan ?? null;
-$borrowingFee = $borrowingFee ?? 5000; 
+$borrowingFee = $borrowingFee ?? 5000;
+$isOverdue = $isOverdue ?? false;
+$fine = $fine ?? 0;
+$paymentType = $paymentType ?? ($isOverdue && $fine > 0 ? 'fine' : 'borrowing');
+
 if (!$loan) {
     echo '<div class="container mx-auto px-4 py-8"><div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-6 rounded-xl text-center">Loan not found.</div></div>';
     include BASE_PATH . '/view/layout/footer.php';
@@ -80,7 +84,6 @@ if (!$loan) {
         border: 1px solid var(--border-color);
         border-radius: 1rem;
         padding: 0.75rem 1.25rem;
-        /* ✅ No color defined here – will be set by Tailwind or inline style */
         transition: all 0.3s ease;
         width: 100%;
         font-size: 1rem;
@@ -97,13 +100,12 @@ if (!$loan) {
         cursor: not-allowed;
     }
 
-    /* ✅ Fix for amount input text color */
     .amount-input {
-        color: #000000 !important;  /* Light mode – black */
+        color: #000000 !important;
     }
 
     html.dark .amount-input {
-        color: #ffffff !important;  /* Dark mode – white */
+        color: #ffffff !important;
     }
 
     .btn-submit {
@@ -186,6 +188,19 @@ if (!$loan) {
         box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
 
+    .overdue-warning {
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        border-radius: 1rem;
+        padding: 1rem 1.5rem;
+        color: #991b1b;
+    }
+    .dark .overdue-warning {
+        background: #7f1d1d;
+        border-color: #f87171;
+        color: #fca5a5;
+    }
+
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(6px); }
         to { opacity: 1; transform: translateY(0); }
@@ -238,7 +253,13 @@ if (!$loan) {
             </div>
             <div>
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Submit Payment Proof</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Complete your payment to borrow this book</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <?php if ($isOverdue && $fine > 0): ?>
+                        Pay your overdue fine to clear the penalty
+                    <?php else: ?>
+                        Complete your payment to borrow this book
+                    <?php endif; ?>
+                </p>
             </div>
         </div>
 
@@ -247,6 +268,20 @@ if (!$loan) {
                 <i class="fas fa-exclamation-circle text-red-500"></i>
                 <span><?= htmlspecialchars($_SESSION['error_message']) ?></span>
                 <?php unset($_SESSION['error_message']); ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Overdue Warning -->
+        <?php if ($isOverdue && $fine > 0): ?>
+            <div class="overdue-warning mb-6 flex items-start gap-3">
+                <i class="fas fa-exclamation-triangle text-xl mt-0.5"></i>
+                <div>
+                    <p class="font-bold text-base">Overdue Fine Due</p>
+                    <p class="text-sm">
+                        This book is <strong><?= $loan->getOverdueDays() ?></strong> days overdue.
+                        Please pay the fine of <strong><?= number_format($fine, 2) ?> MMK</strong> to clear the penalty.
+                    </p>
+                </div>
             </div>
         <?php endif; ?>
 
@@ -284,12 +319,18 @@ if (!$loan) {
             <input type="hidden" name="loan_id" value="<?= $loan->getId() ?>">
             <input type="hidden" name="payment_method" id="paymentMethodInput" value="kpay">
             <input type="hidden" name="idempotency_key" value="<?= htmlspecialchars($idempotencyKey ?? '') ?>">
+            
+            <!-- ✅ Explicit payment type – helps backend differentiate -->
+            <input type="hidden" name="payment_type" value="<?= $paymentType ?>">
 
             <div>
                 <label class="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
-                    Payment Amount (MMK)
+                    <?php if ($isOverdue && $fine > 0): ?>
+                        Overdue Fine (MMK)
+                    <?php else: ?>
+                        Payment Amount (MMK)
+                    <?php endif; ?>
                 </label>
-                <!-- ✅ FIX: Added class "amount-input" and removed Tailwind text classes -->
                 <input
                     type="number"
                     name="amount"

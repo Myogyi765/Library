@@ -113,7 +113,7 @@ include __DIR__ . '/../layout/header.php';
                         <label for="phone-input" class="form-label"><i class="fas fa-phone mr-1"></i> Phone Number</label>
                         <div class="input-wrapper">
                             <i class="fas fa-phone"></i>
-                            <input type="tel" name="phone" id="phone-input" placeholder="+1234567890"
+                            <input type="tel" name="phone" id="phone-input" placeholder="+95"
                                    class="field-input" autocomplete="tel"
                                    value="<?= htmlspecialchars($_SESSION['register_old']['phone'] ?? '') ?>">
                         </div>

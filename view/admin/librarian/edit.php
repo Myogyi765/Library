@@ -84,16 +84,20 @@ if (!$librarian) {
                        class="form-control" disabled readonly>
             </div>
 
-            <!-- Department -->
+            <!-- Department – Fixed to Department 1, 2, 3 -->
             <div class="form-group">
                 <label for="department" class="form-label"><i class="fas fa-building text-blue-500 mr-1"></i> Department</label>
                 <select name="department" id="department" class="form-control">
                     <?php
-                    $dept = $librarian->getDepartment()->getValue();
-                    $depts = ['General', 'Fiction', 'Non-Fiction', 'Reference', 'Children', 'Periodicals'];
-                    foreach ($depts as $d):
+                    // Get current department value, default to empty if not set
+                    $currentDept = '';
+                    if ($librarian->getDepartment()) {
+                        $currentDept = $librarian->getDepartment()->getValue();
+                    }
+                    $departments = ['Department 1', 'Department 2', 'Department 3'];
+                    foreach ($departments as $dept):
                     ?>
-                        <option value="<?= $d ?>" <?= $d === $dept ? 'selected' : '' ?>><?= $d ?></option>
+                        <option value="<?= $dept ?>" <?= $dept === $currentDept ? 'selected' : '' ?>><?= $dept ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>

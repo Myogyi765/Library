@@ -48,9 +48,7 @@
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Book</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Borrowed</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Due Date</th>
-                    <!-- NEW: Overdue column -->
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Overdue</th>
-                    <!-- NEW: Fine column -->
                     <th class="px-4 py-3 text-right text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Fine (MMK)</th>
                     <th class="px-4 py-3 text-center text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Status</th>
                     <th class="px-6 py-3 text-right text-xs font-semibold text-gray-800 dark:text-gray-400 uppercase">Actions</th>
@@ -69,15 +67,23 @@
                         $borrowedAt = $loan->getBorrowedAt() ? $loan->getBorrowedAt()->format('Y-m-d') : '—';
                         $dueDate = $loan->getDueDate() ? $loan->getDueDate()->format('Y-m-d') : '—';
                         
-                        $statusColor = match($status) {
-                            'pending'           => 'purple',
-                            'awaiting_payment'  => 'orange',
-                            'active'            => 'green',
-                            'returned'          => 'blue',
-                            'rejected'          => 'gray',
-                            'overdue'           => 'red',
-                            default             => 'gray'
-                        };
+                        // Determine display status and badge color
+                        if ($status === 'active' && $isOverdue) {
+                            $displayStatus = 'Overdue';
+                            $badgeColor = 'red';
+                        } elseif ($status === 'awaiting_payment') {
+                            $displayStatus = 'Awaiting Payment';
+                            $badgeColor = 'orange';
+                        } else {
+                            $displayStatus = ucfirst(str_replace('_', ' ', $status));
+                            $badgeColor = match($status) {
+                                'pending'   => 'purple',
+                                'active'    => 'green',
+                                'returned'  => 'blue',
+                                'rejected'  => 'gray',
+                                default     => 'gray'
+                            };
+                        }
                     ?>
                         <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition">
                             <td class="px-4 py-3"><?= $loan->getId() ?></td>
@@ -105,11 +111,13 @@
                                     <span class="text-gray-400">0</span>
                                 <?php endif; ?>
                             </td>
+                            <!-- Status column -->
                             <td class="px-4 py-3 text-center">
-                                <span class="inline-block whitespace-nowrap px-2 py-1 text-xs rounded-full bg-<?= $statusColor ?>-100 text-<?= $statusColor ?>-800 dark:bg-<?= $statusColor ?>-900/30 dark:text-<?= $statusColor ?>-300">
-                                    <?= ucfirst(str_replace('_', ' ', $status)) ?>
+                                <span class="inline-block whitespace-nowrap px-2 py-1 text-xs rounded-full bg-<?= $badgeColor ?>-100 text-<?= $badgeColor ?>-800 dark:bg-<?= $badgeColor ?>-900/30 dark:text-<?= $badgeColor ?>-300">
+                                    <?= $displayStatus ?>
                                 </span>
                             </td>
+                            <!-- Actions column -->
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-3 flex-nowrap">
                                     <?php if ($status === 'pending'): ?>
@@ -126,13 +134,12 @@
                                             </button>
                                         </form>
                                     <?php elseif ($status === 'active'): ?>
-                                        <!-- Return icon -->
+                                        <!-- Return icon – always shown for active loans, including overdue -->
                                         <form action="<?= BASE_URL ?>/librarian/loans/return/<?= $loan->getId() ?>" method="POST" class="inline">
                                             <button type="submit" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" title="Return Book">
                                                 <i class="fas fa-undo-alt"></i>
                                             </button>
                                         </form>
-                                        <!-- Edit icon REMOVED -->
                                     <?php elseif ($status === 'awaiting_payment'): ?>
                                         <span class="text-gray-400" title="Awaiting payment"><i class="fas fa-clock"></i></span>
                                     <?php endif; ?>

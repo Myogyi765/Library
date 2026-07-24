@@ -34,16 +34,18 @@ class LoginController extends BaseController
 
     public function login(): void
     {
-        $email = trim($_POST['email'] ?? '');
+        $identifier = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
+        $method = $_POST['login_method'] ?? 'email'; // ✅ Get the selected tab (email or phone)
 
-        if (empty($email) || empty($password)) {
-            $_SESSION['login_errors']['general'] = 'Email and password are required.';
+        if (empty($identifier) || empty($password)) {
+            $_SESSION['login_errors']['general'] = 'Email/Phone and password are required.';
             $this->redirect(BASE_URL . '/login');
             return;
         }
 
-        $success = $this->userAuth->authenticate($email, $password);
+        // ✅ Pass the method to the authenticator
+        $success = $this->userAuth->authenticate($identifier, $password, $method);
 
         if ($success) {
             $userId = $_SESSION['user_id'] ?? null;
@@ -57,6 +59,18 @@ class LoginController extends BaseController
             $_SESSION['success'] = 'Login successful.';
             $this->redirect($redirect);
         } else {
+            // Check if the user is pending and redirect to verification page
+            if (isset($_SESSION['pending_user_id']) && isset($_SESSION['pending_method'])) {
+                $method = $_SESSION['pending_method'];
+                if ($method === 'phone') {
+                    $this->redirect(BASE_URL . '/verify-phone');
+                } else {
+                    $this->redirect(BASE_URL . '/verify');
+                }
+                return;
+            }
+
+            // Fallback: keep the generic error
             if (!isset($_SESSION['login_errors']['general'])) {
                 $_SESSION['login_errors']['general'] = 'Login failed. Please check your credentials.';
             }

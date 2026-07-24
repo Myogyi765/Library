@@ -58,7 +58,8 @@ return function ($container) {
             $c->get(SubmitPaymentHandler::class),
             $c->get(FileUploadService::class),
             $c->get(LoanRepositoryInterface::class),
-            $c->get(SettingsService::class)
+            $c->get(SettingsService::class),
+            $c->get(PaymentRepositoryInterface::class) 
         );
     });
 

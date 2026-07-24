@@ -6,12 +6,9 @@ class Department
     private string $value;
 
     private const ALLOWED = [
-        'General',       
-        'Fiction',
-        'Non-Fiction',
-        'Science',
-        'History',
-       
+        'Department 1',
+        'Department 2',
+        'Department 3',
     ];
 
     public function __construct(string $value)

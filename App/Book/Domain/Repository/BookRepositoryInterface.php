@@ -13,6 +13,8 @@ interface BookRepositoryInterface
 
     public function decrementQuantity(int $bookId, int $amount = 1): void;
 
+    public function incrementQuantity(int $bookId, int $amount = 1): void;
+
     public function count(): int;
     public function getTotalAvailableQuantity(): int;
     public function getTotalBorrowedQuantity(): int;

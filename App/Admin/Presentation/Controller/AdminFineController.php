@@ -53,7 +53,6 @@ class AdminFineController extends BaseController
                 'max_borrow_limit',
                 'grace_period_days',
                 'membership_fee',
-                'late_return_fee',
             ];
             
             $settings = [];

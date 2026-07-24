@@ -41,22 +41,36 @@ class UserAuthenticator
         };
     }
 
-    public function authenticate(string $identifier, string $password): bool
+    
+    public function authenticate(string $identifier, string $password, ?string $method = null): bool
     {
         $user = null;
 
-        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+        if ($method === 'email') {
             try {
                 $user = $this->userRepository->findByEmail(new Email($identifier));
             } catch (\Exception $e) {
                 $user = null;
             }
-        }
-        elseif ($this->isPhoneNumber($identifier)) {
+        } elseif ($method === 'phone') {
             try {
                 $user = $this->userRepository->findByPhone(new Phone($identifier));
             } catch (\Exception $e) {
                 $user = null;
+            }
+        } else {
+            if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+                try {
+                    $user = $this->userRepository->findByEmail(new Email($identifier));
+                } catch (\Exception $e) {
+                    $user = null;
+                }
+            } elseif ($this->isPhoneNumber($identifier)) {
+                try {
+                    $user = $this->userRepository->findByPhone(new Phone($identifier));
+                } catch (\Exception $e) {
+                    $user = null;
+                }
             }
         }
 
@@ -67,6 +81,19 @@ class UserAuthenticator
 
         if (!$user->getPassword()->verify($password)) {
             $_SESSION['login_errors']['general'] = 'Invalid email/phone or password.';
+            return false;
+        }
+
+        if ($method !== null && $user->getLoginMethod() !== $method) {
+            $_SESSION['login_errors']['general'] = "This account is registered with {$user->getLoginMethod()}. Please use that method.";
+            return false;
+        }
+
+        $status = $user->getStatus()->getValue();
+        if ($status === 'pending') {
+            $_SESSION['pending_user_id'] = $user->getId();
+            $_SESSION['pending_method'] = $user->getLoginMethod();
+            $_SESSION['login_errors']['general'] = 'Your account is pending verification. Please verify your ' . ($user->getLoginMethod() === 'email' ? 'email' : 'phone') . '.';
             return false;
         }
 

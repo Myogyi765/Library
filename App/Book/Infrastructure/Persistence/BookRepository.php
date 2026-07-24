@@ -152,6 +152,17 @@ class BookRepository implements BookRepositoryInterface
         }
     }
 
+    public function incrementQuantity(int $bookId, int $amount = 1): void
+    {
+        $sql = "UPDATE books 
+                SET available_quantity = available_quantity + ? 
+                WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$amount, $bookId]);
+
+        error_log("✅ Book quantity increased for book ID: {$bookId}, amount: {$amount}");
+    }
+
     public function count(): int
     {
         $stmt = $this->db->query("SELECT COUNT(*) FROM books");
@@ -203,7 +214,6 @@ class BookRepository implements BookRepositoryInterface
         return (int)$stmt->fetchColumn();
     }
 
-    
     public function findFilteredPaginated(?string $search, ?int $categoryId, int $offset, int $limit): array
     {
         $sql = "SELECT * FROM books WHERE 1=1";
@@ -211,8 +221,9 @@ class BookRepository implements BookRepositoryInterface
 
         if (!empty($search)) {
             $sql .= " AND (title LIKE ? OR author LIKE ?)";
-            $params[] = $search . '%';
-            $params[] = $search . '%';
+            $searchTerm = '%' . $search . '%';   
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
         }
 
         if ($categoryId && $categoryId > 0) {
@@ -234,7 +245,6 @@ class BookRepository implements BookRepositoryInterface
         return $books;
     }
 
-    
     public function countFiltered(?string $search, ?int $categoryId): int
     {
         $sql = "SELECT COUNT(*) FROM books WHERE 1=1";
@@ -242,8 +252,9 @@ class BookRepository implements BookRepositoryInterface
 
         if (!empty($search)) {
             $sql .= " AND (title LIKE ? OR author LIKE ?)";
-            $params[] = $search . '%';
-            $params[] = $search . '%';
+            $searchTerm = '%' . $search . '%'; 
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
         }
 
         if ($categoryId && $categoryId > 0) {

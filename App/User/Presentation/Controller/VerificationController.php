@@ -9,6 +9,7 @@ use App\User\Domain\Repository\UserRepositoryInterface;
 use App\User\Domain\Service\VerificationServiceInterface;
 use App\User\Domain\ValueObject\UserStatus;
 use App\User\Domain\ValueObject\Email;
+use App\User\Domain\ValueObject\Phone;
 use App\User\Domain\ValueObject\Password;
 use App\User\Exception\UserNotFoundException;
 use App\User\Infrastructure\Security\UserAuthenticator;
@@ -32,7 +33,7 @@ class VerificationController extends BaseController
         $this->userRepository = $userRepository;
     }
 
-    
+
     public function verifyEmail(): void
     {
         $token = $_GET['token'] ?? '';
@@ -68,19 +69,19 @@ class VerificationController extends BaseController
         ]);
     }
 
-    
+
     public function showVerifyPhone(): void
     {
         $user = null;
 
-        // 1️⃣ If logged in, get user from authenticator
         if ($this->authenticator->isAuthenticated()) {
             $user = $this->authenticator->getCurrentUser();
         } 
-        // 2️⃣ If just registered (not logged in), get from session
         elseif (isset($_SESSION['just_registered']) && isset($_SESSION['register_user_id'])) {
             $user = $this->userRepository->findById((int)$_SESSION['register_user_id']);
-            // Keep just_registered so that verifyPhone can still use it
+        }
+        elseif (isset($_SESSION['pending_user_id'])) {
+            $user = $this->userRepository->findById((int)$_SESSION['pending_user_id']);
         }
 
         if (!$user) {
@@ -95,6 +96,7 @@ class VerificationController extends BaseController
                 $this->authenticator->login($user);
                 unset($_SESSION['just_registered']);
             }
+            unset($_SESSION['pending_user_id']);
             $this->redirect(BASE_URL . '/user-dashboard');
             return;
         }
@@ -106,7 +108,6 @@ class VerificationController extends BaseController
             return;
         }
 
-        // Generate code if not recently sent (60s cooldown)
         if (!isset($_SESSION['verification_code_sent']) || $_SESSION['verification_code_sent'] < time() - 60) {
             $code = $this->verificationService->generateVerificationCode();
             $expiresAt = (new DateTime())->modify('+15 minutes')->format('Y-m-d H:i:s');
@@ -115,10 +116,8 @@ class VerificationController extends BaseController
             $user->setVerificationExpiresAt($expiresAt);
             $this->userRepository->save($user);
 
-            // Send SMS
             $this->verificationService->sendVerificationSMS($user, $code);
 
-            // ✅ Always store code in session for debugging (no env check)
             $_SESSION['verification_code'] = $code;
             $_SESSION['verification_phone'] = $phone;
 
@@ -134,7 +133,6 @@ class VerificationController extends BaseController
         ]);
     }
 
-    
     public function verifyPhone(): void
     {
         $code = $_POST['code'] ?? '';
@@ -146,28 +144,25 @@ class VerificationController extends BaseController
         }
 
         try {
-            // 1️⃣ Get user via service (checks DB)
             $user = $this->verificationService->verifyPhone($code);
 
             if (!$user) {
                 throw new \RuntimeException('Invalid or expired verification code.');
             }
 
-            // 2️⃣ Update user status
             $user->verifyPhone();
             $user->setStatus(UserStatus::active());
             $user->setVerificationCode(null);
             $user->setVerificationExpiresAt(null);
             $this->userRepository->save($user);
 
-            // 3️⃣ Log in the user (if not already)
             if (!$this->authenticator->isAuthenticated()) {
                 $this->authenticator->login($user);
             }
 
-            // 4️⃣ Clear session flags
             unset($_SESSION['verification_code'], $_SESSION['verification_phone']);
             unset($_SESSION['just_registered'], $_SESSION['register_user_id']);
+            unset($_SESSION['pending_user_id']);
 
             $_SESSION['success_message'] = 'Your phone has been verified successfully! Welcome to the Library Management System.';
             $this->redirect(BASE_URL . '/user-dashboard');
@@ -186,19 +181,18 @@ class VerificationController extends BaseController
         }
     }
 
-    
     public function resendVerification(): void
     {
         $user = null;
 
-        // 1️⃣ If logged in, get user from authenticator
         if ($this->authenticator->isAuthenticated()) {
             $user = $this->authenticator->getCurrentUser();
         } 
-        // 2️⃣ If just registered (not logged in), get from session
         elseif (isset($_SESSION['just_registered']) && isset($_SESSION['register_user_id'])) {
             $user = $this->userRepository->findById((int)$_SESSION['register_user_id']);
-            // Keep just_registered so that showVerifyPhone can still use it
+        }
+        elseif (isset($_SESSION['pending_user_id'])) {
+            $user = $this->userRepository->findById((int)$_SESSION['pending_user_id']);
         }
 
         if (!$user) {
@@ -207,7 +201,6 @@ class VerificationController extends BaseController
             return;
         }
 
-        // Prevent excessive resend (60s cooldown)
         if (isset($_SESSION['last_resend_time']) && $_SESSION['last_resend_time'] > time() - 60) {
             $_SESSION['error_message'] = 'Please wait 60 seconds before requesting a new code.';
             $this->redirect(BASE_URL . ($user->getLoginMethod() === 'phone' ? '/verify-phone' : '/verify'));
@@ -229,7 +222,6 @@ class VerificationController extends BaseController
                 $_SESSION['success_message'] = 'Verification email has been resent successfully.';
             } else {
                 $this->verificationService->sendVerificationSMS($user, $code);
-                // ✅ Always store in session for debug (no env check)
                 $_SESSION['verification_code'] = $code;
                 $_SESSION['verification_phone'] = $user->getPhone()?->getValue();
                 $_SESSION['success_message'] = 'Verification code has been resent successfully.';
@@ -238,7 +230,6 @@ class VerificationController extends BaseController
             $_SESSION['last_resend_time'] = time();
             $_SESSION['verification_code_sent'] = time();
 
-            // Redirect to appropriate verification page
             if ($user->getLoginMethod() === 'phone') {
                 $this->redirect(BASE_URL . '/verify-phone');
             } else {
@@ -251,7 +242,6 @@ class VerificationController extends BaseController
         }
     }
 
-    
     public function verifyEmailWithCode(): void
     {
         $code = $_POST['code'] ?? '';
@@ -290,7 +280,6 @@ class VerificationController extends BaseController
         }
     }
 
-    // ─── Password Reset Methods ───────────────────────────────────────
 
     public function showForgotForm(): void
     {
@@ -299,6 +288,7 @@ class VerificationController extends BaseController
         ]);
     }
 
+    
     public function sendResetLink(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -306,45 +296,154 @@ class VerificationController extends BaseController
             return;
         }
 
-        $email = trim($_POST['email'] ?? '');
-
-        if (empty($email)) {
-            $_SESSION['error_message'] = 'Please enter your email address.';
+        $input = trim($_POST['email'] ?? '');
+        if (empty($input)) {
+            $_SESSION['error_message'] = 'Please enter your email address or phone number.';
             $this->redirect(BASE_URL . '/forgot-password');
             return;
         }
 
-        try {
-            $emailVO = new Email($email);
-        } catch (\InvalidArgumentException $e) {
-            $_SESSION['error_message'] = 'Invalid email address.';
+        $isEmail = filter_var($input, FILTER_VALIDATE_EMAIL);
+        $isPhone = preg_match('/^(09|\+95)[0-9]{7,10}$/', $input);
+
+        if (!$isEmail && !$isPhone) {
+            $_SESSION['error_message'] = 'Invalid email address or phone number format.';
             $this->redirect(BASE_URL . '/forgot-password');
             return;
         }
 
-        $user = $this->userRepository->findByEmail($emailVO);
-
-        if (!$user) {
-            $_SESSION['success_message'] = 'If your email is registered, you will receive a reset link.';
-            $this->redirect(BASE_URL . '/login');
-            return;
-        }
-
+        $user = null;
         try {
+            if ($isEmail) {
+                $emailVO = new Email($input);
+                $user = $this->userRepository->findByEmail($emailVO);
+            } elseif ($isPhone) {
+                $phoneVO = new Phone($input);
+                $user = $this->userRepository->findByPhone($phoneVO);
+            }
+
+            if (!$user) {
+                $_SESSION['success_message'] = 'If your account is registered, you will receive a reset link/code.';
+                $this->redirect(BASE_URL . '/login');
+                return;
+            }
+
+            $storedMethod = $user->getLoginMethod();
+            if (($storedMethod === 'email' && !$isEmail) || ($storedMethod === 'phone' && !$isPhone)) {
+                $_SESSION['error_message'] = 'The provided identifier does not match your registered login method.';
+                $this->redirect(BASE_URL . '/forgot-password');
+                return;
+            }
+
             $token = $this->verificationService->generateVerificationToken($user);
-            $resetLink = BASE_URL . '/reset-password?token=' . urlencode($token) . '&email=' . urlencode($email);
+            $code = $this->verificationService->generateVerificationCode();
+            $expiresAt = (new DateTime('+15 minutes'))->format('Y-m-d H:i:s');
 
             $user->setVerificationToken($token);
+            $user->setVerificationCode($code);
+            $user->setVerificationExpiresAt($expiresAt);
             $this->userRepository->save($user);
 
-            $this->verificationService->sendPasswordResetEmail($user, $resetLink);
+            if ($isEmail) {
+                $resetLink = BASE_URL . '/reset-password?token=' . urlencode($token) . '&email=' . urlencode($input);
+                $this->verificationService->sendPasswordResetEmail($user, $resetLink);
+                $_SESSION['success_message'] = 'Password reset link has been sent to your email.';
+                $this->redirect(BASE_URL . '/login');
+            } else {
+                $this->verificationService->sendPasswordResetSMS($user, $code); 
+                $_SESSION['reset_phone'] = $input;
+                $_SESSION['reset_token'] = $token; 
+                $_SESSION['reset_code'] = $code;  
+                $_SESSION['success_message'] = 'An OTP code has been sent to your phone. Please enter it to reset your password.';
+                $this->redirect(BASE_URL . '/reset-password-phone');
+                return;
+            }
 
-            $_SESSION['success_message'] = 'Password reset link has been sent to your email.';
         } catch (\Exception $e) {
-            $_SESSION['error_message'] = 'Failed to send reset link: ' . $e->getMessage();
+            $_SESSION['error_message'] = 'Failed to send reset: ' . $e->getMessage();
+            $this->redirect(BASE_URL . '/forgot-password');
+        }
+    }
+
+    
+    public function showResetPhoneForm(): void
+    {
+        if (!isset($_SESSION['reset_phone'])) {
+            $_SESSION['error_message'] = 'Please request a password reset first.';
+            $this->redirect(BASE_URL . '/forgot-password');
+            return;
         }
 
-        $this->redirect(BASE_URL . '/login');
+        $this->view('auth/reset-password-phone', [
+            'pageTitle' => 'Reset Password via Phone',
+            'phone'     => $_SESSION['reset_phone'],
+            'token'     => $_SESSION['reset_token'] ?? '',
+        ]);
+    }
+
+    
+    public function resetPhonePassword(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect(BASE_URL . '/forgot-password');
+            return;
+        }
+
+        $phone = trim($_POST['phone'] ?? '');
+        $code = trim($_POST['code'] ?? '');
+        $password = trim($_POST['password'] ?? '');
+        $passwordConfirm = trim($_POST['password_confirm'] ?? '');
+
+        if (empty($phone) || empty($code) || empty($password)) {
+            $_SESSION['error_message'] = 'All fields are required.';
+            $this->redirect(BASE_URL . '/reset-password-phone');
+            return;
+        }
+
+        if (strlen($password) < 6) {
+            $_SESSION['error_message'] = 'Password must be at least 6 characters.';
+            $this->redirect(BASE_URL . '/reset-password-phone');
+            return;
+        }
+
+        if ($password !== $passwordConfirm) {
+            $_SESSION['error_message'] = 'Passwords do not match.';
+            $this->redirect(BASE_URL . '/reset-password-phone');
+            return;
+        }
+
+        try {
+            $phoneVO = new Phone($phone);
+            $user = $this->userRepository->findByPhone($phoneVO);
+
+            if (!$user) {
+                $_SESSION['error_message'] = 'User not found.';
+                $this->redirect(BASE_URL . '/forgot-password');
+                return;
+            }
+
+            if (!$user->matchesVerificationCode($code) || !$user->isVerificationValid()) {
+                $_SESSION['error_message'] = 'Invalid or expired verification code.';
+                $this->redirect(BASE_URL . '/reset-password-phone');
+                return;
+            }
+
+            $passwordVO = new Password($password);
+            $user->setPassword($passwordVO);
+            $user->setVerificationCode(null);
+            $user->setVerificationToken(null);
+            $user->setVerificationExpiresAt(null);
+            $this->userRepository->save($user);
+
+            unset($_SESSION['reset_phone'], $_SESSION['reset_token'], $_SESSION['reset_code']);
+
+            $_SESSION['success_message'] = 'Password updated successfully. Please login with your new password.';
+            $this->redirect(BASE_URL . '/login');
+
+        } catch (\Exception $e) {
+            $_SESSION['error_message'] = 'Failed to reset password: ' . $e->getMessage();
+            $this->redirect(BASE_URL . '/reset-password-phone');
+        }
     }
 
     public function showResetForm(): void

@@ -75,17 +75,19 @@ try {
 ?>
 
 <style>
-    /* ─── LOAN TABLE (Admin Style) ─── */
+    /* ─── LOAN TABLE ─── */
     .loan-table {
-        width: 100%;
+       
+        table-layout: fixed;
         border-collapse: collapse;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        word-wrap: break-word;
     }
     .loan-table thead th {
         background: #f8fafc;
         color: #1e293b;
         font-weight: 600;
-        padding: 12px 16px;
+        padding: 8px 10px;
         border-bottom: 2px solid #e2e8f0;
         text-align: center;
         vertical-align: middle;
@@ -96,15 +98,19 @@ try {
         border-bottom-color: #334155;
     }
     .loan-table tbody td {
-        padding: 12px 16px;
+        padding: 8px 10px;
         vertical-align: middle;
         text-align: center;
     }
     .loan-table tbody tr {
         transition: background 0.15s;
+        border-bottom: 1px solid #f1f5f9;
     }
     .loan-table tbody tr:hover {
         background: #f8fafc;
+    }
+    .dark .loan-table tbody tr {
+        border-bottom-color: #1e293b;
     }
     .dark .loan-table tbody tr:hover {
         background: #1e293b;
@@ -118,12 +124,26 @@ try {
         text-align: left;
     }
 
+    /* ─── FIXED COLUMN WIDTHS – book title narrower ─── */
+    .loan-table .col-cover { width: 8%; }
+    .loan-table .col-book { width: 14%; }   /* reduced from 20% */
+    .loan-table .col-author { width: 14%; }
+    .loan-table .col-borrowed { width: 11%; }
+    .loan-table .col-due { width: 11%; }
+    .loan-table .col-overdue { width: 9%; }
+    .loan-table .col-fine { width: 9%; }
+    .loan-table .col-status { width: 10%; }
+    .loan-table .col-daysleft { width: 9%; }
+    .loan-table .col-invoice { width: 7%; }
+    .loan-table .col-refund { width: 7%; }
+    .loan-table .col-actions { width: 9%; }
+
     /* ─── Book Cover Image ─── */
     .book-cover-thumb {
-        width: 50px;
-        height: 70px;
+        width: 40px;
+        height: 56px;
         object-fit: cover;
-        border-radius: 6px;
+        border-radius: 4px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         border: 1px solid #e2e8f0;
         background: #f8fafc;
@@ -133,16 +153,17 @@ try {
         background: #0f172a;
     }
     .book-cover-placeholder {
-        width: 50px;
-        height: 70px;
+        width: 40px;
+        height: 56px;
         display: flex;
         align-items: center;
         justify-content: center;
         background: #f1f5f9;
-        border-radius: 6px;
+        border-radius: 4px;
         color: #94a3b8;
-        font-size: 1.5rem;
+        font-size: 1rem;
         border: 1px solid #e2e8f0;
+        margin: 0 auto;
     }
     .dark .book-cover-placeholder {
         background: #1e293b;
@@ -150,92 +171,56 @@ try {
         color: #64748b;
     }
 
-    /* Status Badges */
+    /* ─── Status Badges ─── */
     .status-badge {
         display: inline-flex;
         align-items: center;
         gap: 0.3rem;
-        padding: 0.2rem 0.7rem;
+        padding: 0.15rem 0.6rem;
         border-radius: 9999px;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 500;
         border: none;
     }
-    .status-badge i { font-size: 0.6rem; }
+    .status-badge i { font-size: 0.5rem; }
     
-    .status-badge.active { 
-        background: #dcfce7; 
-        color: #166534; 
-    }
-    .dark .status-badge.active { 
-        background: #14532d; 
-        color: #86efac; 
-    }
+    .status-badge.active { background: #dcfce7; color: #166534; }
+    .dark .status-badge.active { background: #14532d; color: #86efac; }
     
-    .status-badge.returned { 
-        background: #f1f5f9; 
-        color: #475569; 
-    }
-    .dark .status-badge.returned { 
-        background: #334155; 
-        color: #94a3b8; 
-    }
+    .status-badge.returned { background: #f1f5f9; color: #475569; }
+    .dark .status-badge.returned { background: #334155; color: #94a3b8; }
     
-    .status-badge.overdue { 
-        background: #fee2e2; 
-        color: #991b1b; 
-    }
-    .dark .status-badge.overdue { 
-        background: #7f1d1d; 
-        color: #fca5a5; 
-    }
+    .status-badge.overdue { background: #fee2e2; color: #991b1b; }
+    .dark .status-badge.overdue { background: #7f1d1d; color: #fca5a5; }
     
-    .status-badge.pending { 
-        background: #fef3c7; 
-        color: #92400e; 
-    }
-    .dark .status-badge.pending { 
-        background: #78350f; 
-        color: #fcd34d; 
-    }
+    .status-badge.pending { background: #fef3c7; color: #92400e; }
+    .dark .status-badge.pending { background: #78350f; color: #fcd34d; }
     
-    .status-badge.awaiting_payment { 
-        background: #ffedd5; 
-        color: #9a3412; 
-    }
-    .dark .status-badge.awaiting_payment { 
-        background: #7c2d12; 
-        color: #fdba74; 
-    }
+    .status-badge.awaiting_payment { background: #ffedd5; color: #9a3412; }
+    .dark .status-badge.awaiting_payment { background: #7c2d12; color: #fdba74; }
     
-    .status-badge.rejected { 
-        background: #f1f5f9; 
-        color: #475569; 
-    }
-    .dark .status-badge.rejected { 
-        background: #334155; 
-        color: #94a3b8; 
-    }
+    .status-badge.rejected { background: #f1f5f9; color: #475569; }
+    .dark .status-badge.rejected { background: #334155; color: #94a3b8; }
 
-    /* Action Icons */
+    /* ─── Action Icons ─── */
     .action-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 28px;
-        height: 28px;
-        border-radius: 6px;
+        width: 26px;
+        height: 26px;
+        border-radius: 4px;
         transition: all 0.15s;
         background: transparent;
         border: none;
         cursor: pointer;
         text-decoration: none;
-        font-size: 0.9rem;
-        margin: 0 2px;
+        font-size: 0.85rem;
+        margin: 0 1px;
         color: #3b82f6;
     }
     .action-btn:hover {
-        transform: scale(1.15);
+        transform: scale(1.1);
         background: rgba(0,0,0,0.05);
     }
     .dark .action-btn:hover {
@@ -256,28 +241,59 @@ try {
     .dark .action-btn.pending-refund { color: #fbbf24; }
     .dark .action-btn.pending-refund:hover { background: #1e293b; color: #fcd34d; }
 
-    /* Responsive */
-    @media (max-width: 640px) {
+    .action-btn.pay-fine { color: #f59e0b; }
+    .action-btn.pay-fine:hover { background: #fffbeb; color: #d97706; }
+    .dark .action-btn.pay-fine { color: #fbbf24; }
+    .dark .action-btn.pay-fine:hover { background: #1e293b; color: #fcd34d; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 768px) {
         .loan-table thead th, .loan-table tbody td {
-            padding: 8px 10px;
-            font-size: 0.8rem;
+            padding: 6px 8px;
+            font-size: 0.75rem;
         }
         .action-btn {
-            width: 24px;
-            height: 24px;
-            font-size: 0.8rem;
+            width: 22px;
+            height: 22px;
+            font-size: 0.75rem;
         }
         .book-cover-thumb, .book-cover-placeholder {
-            width: 40px;
-            height: 56px;
+            width: 35px;
+            height: 49px;
         }
         .book-cover-placeholder {
-            font-size: 1.2rem;
+            font-size: 1rem;
+        }
+        .status-badge {
+            font-size: 0.6rem;
+            padding: 0.1rem 0.4rem;
+        }
+    }
+    @media (max-width: 640px) {
+        .loan-table thead th, .loan-table tbody td {
+            padding: 4px 6px;
+            font-size: 0.7rem;
+        }
+        .action-btn {
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+        }
+        .book-cover-thumb, .book-cover-placeholder {
+            width: 30px;
+            height: 42px;
+        }
+        .status-badge {
+            font-size: 0.55rem;
+            padding: 0.1rem 0.3rem;
+        }
+        .status-badge i {
+            display: none;
         }
     }
 </style>
 
-<!-- ─── FULL PAGE WRAPPER WITH DARK MODE BACKGROUND ─── -->
+<!-- ─── FULL PAGE WRAPPER ─── -->
 <main class="min-h-screen w-full bg-gray-50 dark:bg-gray-900">
     <div class="container mx-auto px-4 py-8">
 
@@ -381,7 +397,7 @@ try {
 
         <!-- ===== MY PROFILE ===== -->
         <?php if ($hasViewProfile || $hasEditProfile): ?>
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 mb-8  mx-auto">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 mb-8">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
                     <i class="fas fa-user-circle text-blue-600 dark:text-blue-400 mr-2"></i>
                     My Profile
@@ -425,7 +441,7 @@ try {
             </div>
         <?php endif; ?>
 
-        <!-- ===== BORROWED BOOKS (with Book Cover Image, Overdue Days, Fine) ===== -->
+        <!-- ===== BORROWED BOOKS TABLE ===== -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white">
@@ -440,22 +456,21 @@ try {
                     <table class="loan-table">
                         <thead>
                             <tr>
-                                <th>Cover</th>
-                                <th>Book</th>
-                                <th>Author</th>
-                                <th>Borrowed Date</th>
-                                <th>Due Date</th>
-                                <!-- NEW: Overdue Days -->
-                                <th>Overdue Days</th>
-                                <!-- NEW: Fine (MMK) -->
-                                <th>Fine (MMK)</th>
-                                <th>Status</th>
-                                <th>Days Left</th>
-                                <th>Invoice</th>
-                                <th>Refund</th>
+                                <th class="col-cover hidden sm:table-cell">Cover</th>
+                                <th class="col-book">Book</th>
+                                <th class="col-author hidden md:table-cell">Author</th>
+                                <th class="col-borrowed hidden md:table-cell">Borrowed Date</th>
+                                <th class="col-due hidden md:table-cell">Due Date</th>
+                                <th class="col-overdue hidden md:table-cell">Overdue Days</th>
+                                <th class="col-fine hidden md:table-cell">Fine (MMK)</th>
+                                <th class="col-status">Status</th>
+                                <th class="col-daysleft">Days Left</th>
+                                <th class="col-invoice hidden lg:table-cell">Invoice</th>
+                                <th class="col-refund hidden lg:table-cell">Refund</th>
+                                <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody>
                             <?php foreach ($loans as $item): 
                                 $loan = $item['loan'];
                                 $book = $booksById[$loan->getBookId()] ?? null;
@@ -502,13 +517,13 @@ try {
                                     }
                                 }
 
-                                // Determine status badge class
+                                // ---- Status badge logic ----
                                 $badgeClass = '';
                                 $badgeIcon = 'fa-circle';
                                 if ($statusString === 'returned') {
                                     $badgeClass = 'returned';
                                     $badgeIcon = 'fa-check-circle';
-                                } elseif ($isOverdue && $statusString === 'active') {
+                                } elseif ($statusString === 'active' && $isOverdue) {
                                     $badgeClass = 'overdue';
                                     $badgeIcon = 'fa-exclamation-circle';
                                 } elseif ($statusString === 'active') {
@@ -537,8 +552,7 @@ try {
                                 }
                             ?>
                                 <tr>
-                                    <!-- Book Cover -->
-                                    <td>
+                                    <td class="col-cover hidden sm:table-cell">
                                         <?php if ($coverUrl): ?>
                                             <img src="<?= $coverUrl ?>" 
                                                  alt="<?= htmlspecialchars($book ? $book->getTitle() : 'Book Cover') ?>"
@@ -553,22 +567,19 @@ try {
                                             </div>
                                         <?php endif; ?>
                                     </td>
-                                    <!-- Book (left aligned) -->
-                                    <td class="font-medium text-gray-900 dark:text-white">
+                                    <td class="col-book font-medium text-gray-900 dark:text-white">
                                         <?= htmlspecialchars($book ? $book->getTitle() : 'Unknown') ?>
                                     </td>
-                                    <!-- Author (left aligned) -->
-                                    <td class="text-gray-800 dark:text-gray-300">
+                                    <td class="col-author text-gray-800 dark:text-gray-300 hidden md:table-cell">
                                         <?= htmlspecialchars($book ? $book->getAuthor() : 'Unknown') ?>
                                     </td>
-                                    <td class="text-gray-800 dark:text-gray-300">
+                                    <td class="col-borrowed text-gray-800 dark:text-gray-300 hidden md:table-cell">
                                         <?= $loan->getBorrowedAt() ? $loan->getBorrowedAt()->format('M d, Y') : '—' ?>
                                     </td>
-                                    <td class="text-gray-800 dark:text-gray-300">
+                                    <td class="col-due text-gray-800 dark:text-gray-300 hidden md:table-cell">
                                         <?= $dueDate ? $dueDate->format('M d, Y') : '—' ?>
                                     </td>
-                                    <!-- Overdue Days -->
-                                    <td>
+                                    <td class="col-overdue hidden md:table-cell">
                                         <?php if ($isOverdue && $statusString === 'active'): ?>
                                             <span class="text-red-600 dark:text-red-400 font-bold"><?= $overdueDays ?> days</span>
                                         <?php elseif ($statusString === 'awaiting_payment' && $fine > 0): ?>
@@ -577,21 +588,24 @@ try {
                                             <span class="text-gray-400">—</span>
                                         <?php endif; ?>
                                     </td>
-                                    <!-- Fine (MMK) -->
-                                    <td>
+                                    <td class="col-fine hidden md:table-cell">
                                         <?php if ($fine > 0): ?>
                                             <span class="text-red-600 dark:text-red-400 font-bold"><?= number_format($fine) ?></span>
                                         <?php else: ?>
                                             <span class="text-gray-400">0</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td>
+                                    <td class="col-status">
                                         <span class="status-badge <?= $badgeClass ?>">
                                             <i class="fas <?= $badgeIcon ?>"></i>
-                                            <?= ucfirst(str_replace('_', ' ', $statusString)) ?>
+                                            <?php if ($statusString === 'active' && $isOverdue): ?>
+                                                Overdue
+                                            <?php else: ?>
+                                                <?= ucfirst(str_replace('_', ' ', $statusString)) ?>
+                                            <?php endif; ?>
                                         </span>
                                     </td>
-                                    <td>
+                                    <td class="col-daysleft">
                                         <?php if ($statusString === 'active'): ?>
                                             <?php if ($isOverdue): ?>
                                                 <span class="text-red-600 dark:text-red-400 font-bold">Overdue!</span>
@@ -602,7 +616,7 @@ try {
                                             <span class="text-gray-400">—</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td>
+                                    <td class="col-invoice hidden lg:table-cell">
                                         <?php if ($invoiceLink): ?>
                                             <a href="<?= $invoiceLink ?>" class="action-btn invoice" title="View Invoice">
                                                 <i class="fas fa-file-invoice"></i>
@@ -611,7 +625,7 @@ try {
                                             <span class="text-gray-400">—</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td>
+                                    <td class="col-refund hidden lg:table-cell">
                                         <?php if ($payment && $payment->getStatus()->isApproved()): ?>
                                             <?php if ($refundStatus === 'completed'): ?>
                                                 <span class="action-btn refunded" title="Refunded">
@@ -627,6 +641,19 @@ try {
                                         <?php else: ?>
                                             <span class="text-gray-400">—</span>
                                         <?php endif; ?>
+                                    </td>
+                                    <td class="col-actions">
+                                        <div class="flex items-center justify-center gap-1 flex-nowrap">
+                                            <?php if (($statusString === 'active' && $isOverdue) || ($statusString === 'awaiting_payment' && $fine > 0)): ?>
+                                                <a href="<?= BASE_URL ?>/payment/submit/<?= $loan->getId() ?>" 
+                                                   class="action-btn pay-fine" 
+                                                   title="Pay <?= $statusString === 'awaiting_payment' ? 'Fine' : 'Overdue Fine' ?>">
+                                                    <i class="fas fa-money-bill-wave"></i>
+                                                </a>
+                                            <?php else: ?>
+                                                <span class="text-gray-400">—</span>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

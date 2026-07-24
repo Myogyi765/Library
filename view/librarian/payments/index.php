@@ -151,7 +151,7 @@
                                 <?php endif; ?>
                             </td>
                             <!-- ✅ Refund Column - "None" as pill, centered -->
-                            <td class="px-2 py-3 hidden sm:table-cell text-center align-middle">
+                            <td class=" py-3 hidden sm:table-cell text-center align-middle">
                                 <?php if ($refundStatus === 'none'): ?>
                                     <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
                                         None

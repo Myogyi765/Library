@@ -10,9 +10,19 @@ if (!$payment) {
     return;
 }
 
-// Get user details if users array is passed from controller
-$user = $users[$payment->getUserId()] ?? null;
-$userName = $user ? $user->getName() : 'User #' . $payment->getUserId();
+// ✅ Use the user data passed from the controller
+$user = $user ?? null;
+$userName = $userName ?? null;
+
+// Determine the display name with proper fallback
+if ($user) {
+    $displayName = $user->getName();
+} elseif ($userName) {
+    $displayName = $userName;
+} else {
+    $displayName = 'User #' . $payment->getUserId();
+}
+
 $amountValue = $payment->getAmount()->getAmount();
 $status = $payment->getStatus()->getValue();
 $refundStatus = $payment->getRefundStatus() ?? 'none';
@@ -29,7 +39,7 @@ $screenshotUrl = $screenshotPath ? BASE_URL . '/' . ltrim($screenshotPath, '/') 
 
         <dl class="grid grid-cols-2 gap-4">
             <dt class="text-gray-500">User</dt>
-            <dd><?= htmlspecialchars($userName) ?></dd>
+            <dd><?= htmlspecialchars($displayName) ?></dd>
 
             <dt class="text-gray-500">Amount</dt>
             <dd><?= number_format($amountValue, 2) ?> MMK</dd>

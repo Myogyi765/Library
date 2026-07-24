@@ -59,7 +59,7 @@ include __DIR__ . '/../layout/header.php';
                 <?php unset($_SESSION['login_errors']['general']); ?>
             <?php endif; ?>
 
-            <form action="<?= BASE_URL ?>/login" method="POST" class="auth-form" autocomplete="on">
+            <form action="<?= BASE_URL ?>/login" method="POST" class="auth-form" autocomplete="on" id="loginForm">
 
                 <!-- ===== Login Method Tabs ===== -->
                 <div class="form-group">
@@ -136,7 +136,7 @@ include __DIR__ . '/../layout/header.php';
 </div>
 
 <style>
-    /* ─── Existing styles (unchanged) ─── */
+    /* ─── Your existing styles – unchanged ─── */
     :root {
         --bg-body: #eef4ff;
         --bg-card: rgba(255,255,255,0.95);
@@ -278,7 +278,6 @@ include __DIR__ . '/../layout/header.php';
         gap: 0.9rem;
     }
 
-    /* ─── Tab Bar ─── */
     .tab-bar {
         display: flex;
         gap: 0.25rem;
@@ -322,7 +321,6 @@ include __DIR__ . '/../layout/header.php';
         margin-right: 0.3rem;
     }
 
-    /* ─── Form elements ─── */
     .form-group {
         display: flex;
         flex-direction: column;
@@ -515,67 +513,92 @@ include __DIR__ . '/../layout/header.php';
             });
         });
 
-        // ─── Tab Switching (Email / Phone) ───
+        // ─── DOM References ───
         const tabs = document.querySelectorAll('.tab-btn');
         const identifierInput = document.getElementById('login-identifier');
         const identifierLabel = document.getElementById('identifier-label');
+        const identifierHint = document.getElementById('identifier-hint');
         const identifierIcon = document.getElementById('identifier-icon');
         const identifierInputIcon = document.getElementById('identifier-input-icon');
-        const identifierHint = document.getElementById('identifier-hint');
         const loginMethodInput = document.getElementById('loginMethod');
+        const loginForm = document.getElementById('loginForm');
 
-        // Store old values to restore when switching (optional)
         let lastEmail = '';
         let lastPhone = '';
 
+        // ─── Function to switch tabs ───
+        function switchTab(tabId) {
+            // 1️⃣ Update active class
+            tabs.forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+
+            // 2️⃣ Save current value before switching
+            const currentVal = identifierInput.value;
+            if (tabId === 'email') {
+                lastPhone = currentVal;
+            } else {
+                lastEmail = currentVal;
+            }
+
+            // 3️⃣ Update UI elements
+            if (tabId === 'email') {
+                identifierLabel.innerHTML = '<i class="fas fa-envelope" id="identifier-icon"></i> Email Address';
+                identifierInput.placeholder = 'your@email.com';
+                identifierInput.autocomplete = 'email';
+                identifierInputIcon.className = 'fas fa-user input-icon';
+                identifierHint.textContent = 'Enter your registered email address';
+                if (lastEmail) identifierInput.value = lastEmail;
+                loginMethodInput.value = 'email';
+            } else {
+                identifierLabel.innerHTML = '<i class="fas fa-phone" id="identifier-icon"></i> Phone Number';
+                identifierInput.placeholder = '09xxxxxxxxx';
+                identifierInput.autocomplete = 'tel';
+                identifierInputIcon.className = 'fas fa-phone input-icon';
+                identifierHint.textContent = 'Enter your registered phone number (e.g., 09 ---------)';
+                if (lastPhone) identifierInput.value = lastPhone;
+                loginMethodInput.value = 'phone';
+            }
+
+            // 4️⃣ Clear any error state
+            identifierInput.classList.remove('is-invalid');
+            const errorEl = identifierInput.closest('.form-group').querySelector('.field-error');
+            if (errorEl) errorEl.style.display = 'none';
+        }
+
+        // ─── Event: Tab clicks ───
         tabs.forEach(tab => {
-            tab.addEventListener('click', function() {
-                // Update active tab
-                tabs.forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-
-                const tabId = this.dataset.tab;
-                loginMethodInput.value = tabId;
-
-                // Save current value before switching
-                const currentVal = identifierInput.value;
-                if (tabId === 'email') {
-                    lastPhone = currentVal;
-                } else {
-                    lastEmail = currentVal;
-                }
-
-                // Update UI
-                if (tabId === 'email') {
-                    identifierLabel.innerHTML = '<i class="fas fa-envelope" id="identifier-icon"></i> Email Address';
-                    identifierInput.placeholder = 'your@email.com';
-                    identifierInput.autocomplete = 'email';
-                    identifierInputIcon.className = 'fas fa-user input-icon';
-                    identifierHint.textContent = 'Enter your registered email address';
-                    // Restore previously typed email
-                    if (lastEmail) identifierInput.value = lastEmail;
-                } else {
-                    identifierLabel.innerHTML = '<i class="fas fa-phone" id="identifier-icon"></i> Phone Number';
-                    identifierInput.placeholder = '09xxxxxxxxx';
-                    identifierInput.autocomplete = 'tel';
-                    identifierInputIcon.className = 'fas fa-phone input-icon';
-                    identifierHint.textContent = 'Enter your registered phone number (e.g., 09 ---------)';
-                    if (lastPhone) identifierInput.value = lastPhone;
-                }
-
-                // Clear any previous error state on this field
-                identifierInput.classList.remove('is-invalid');
-                const errorEl = identifierInput.closest('.form-group').querySelector('.field-error');
-                if (errorEl) errorEl.style.display = 'none';
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                switchTab(this.dataset.tab);
             });
         });
 
-        // Initial state: email active
-        // Ensure hidden field is set
-        loginMethodInput.value = 'email';
+        // ─── Initial state: Email tab active ───
+        switchTab('email');
 
-        // On submit, we could add client validation that the field is not empty
-        // The browser already does required? Not set; we rely on backend.
+        // ─── (Optional) Client-side validation on form submit ───
+        // This will warn the user if they enter a phone number in the Email tab
+        // or an email address in the Phone tab, but it does not block submission.
+        // The backend will still reject it, but this gives immediate feedback.
+        loginForm.addEventListener('submit', function(e) {
+            const method = loginMethodInput.value;
+            const value = identifierInput.value.trim();
+
+            if (method === 'email' && value.match(/^[0-9+\-\(\)\s]+$/)) {
+                // Looks like a phone number, but Email tab is selected
+                if (!confirm('You are trying to log in with a phone number using the Email tab. Please switch to the Phone tab for phone login. Do you want to continue anyway?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            } else if (method === 'phone' && value.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
+                // Looks like an email, but Phone tab is selected
+                if (!confirm('You are trying to log in with an email address using the Phone tab. Please switch to the Email tab for email login. Do you want to continue anyway?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            return true;
+        });
     })();
 </script>
 

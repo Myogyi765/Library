@@ -273,6 +273,7 @@ class LoanController extends BaseController
         $this->redirect(BASE_URL . '/librarian/dashboard?page=loans');
     }
 
+    
     public function returnBook($id): void
     {
         $loanId = (int) $id;
@@ -301,13 +302,16 @@ class LoanController extends BaseController
                 $loan->markAwaitingPayment();
                 $this->loanRepo->save($loan);
 
+                $_SESSION['pending_fine_loan_id'] = $loan->getId();
+                $_SESSION['pending_fine_amount'] = $fine;
+
                 $this->createNotification(
                     $loan->getUserId(),
                     'user',
                     'fine_due',
                     '⚠️ Overdue Fine Due',
-                    "Your borrowed book is overdue. Please pay a fine of {$fine} MMK before returning.",
-                    BASE_URL . '/payments'
+                    "Your borrowed book is overdue. Please pay a fine of {$fine} MMK.",
+                    BASE_URL . '/payment/submit/' . $loan->getId() . '?type=fine'
                 );
 
                 $_SESSION['warning_message'] = "Book is overdue. Fine of {$fine} MMK must be paid first.";

@@ -10,8 +10,7 @@ use App\Payment\Domain\Repository\PaymentRepositoryInterface;
 use App\Circulation\Domain\Repository\LoanRepositoryInterface;
 use App\User\Domain\Repository\UserRepositoryInterface;
 use App\Book\Domain\Repository\BookRepositoryInterface;
-
-
+use App\Invoice\Domain\Entity\Invoice;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\SvgWriter;
 use Endroid\QrCode\Encoding\Encoding;
@@ -48,19 +47,46 @@ class InvoiceController extends BaseController
             return;
         }
 
-        $invoice = $this->invoiceRepo->findById($id);
+        $invoice = $this->invoiceRepo->findByPaymentId($id);
+
+        if ($invoice === null) {
+            $invoice = $this->invoiceRepo->findById($id);
+        }
+
+        if ($invoice === null) {
+            $payment = $this->paymentRepo->findById($id);
+            if ($payment) {
+                $status = $payment->getStatus()->getValue();
+                if (in_array($status, ['approved', 'completed'])) {
+                    $loan = $this->loanRepo->findById($payment->getLoanId());
+                    if ($loan) {
+                        $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad((string)$payment->getId(), 6, '0', STR_PAD_LEFT);
+                        $invoice = new Invoice(
+                            $invoiceNumber,
+                            $payment->getId(),
+                            $loan->getId(),
+                            $payment->getUserId(),
+                            $loan->getBookId(),
+                            $payment->getAmount()->getAmount(),
+                            'MMK',
+                            $payment->getPaymentMethod(),
+                            $payment->getTransactionReference(),
+                            $loan->getBorrowedAt() ?? new \DateTimeImmutable(),
+                            $loan->getDueDate() ?? (new \DateTimeImmutable())->modify('+14 days')
+                        );
+                        $this->invoiceRepo->save($invoice);
+                    }
+                }
+            }
+        }
+
         if ($invoice === null) {
             $this->renderNotFound('Invoice not found.');
             return;
         }
 
         $payment = $this->paymentRepo->findById($invoice->getPaymentId());
-        if ($payment === null) {
-            $this->renderNotFound('Payment not found.');
-            return;
-        }
-
-        if ($payment->getUserId() !== $userId) {
+        if ($payment === null || $payment->getUserId() !== $userId) {
             $this->renderForbidden('You do not have permission to view this invoice.');
             return;
         }
@@ -84,7 +110,7 @@ class InvoiceController extends BaseController
             );
 
             $qrResult = Builder::create()
-                ->writer(new SvgWriter()) 
+                ->writer(new SvgWriter())
                 ->data($qrData)
                 ->encoding(new Encoding('UTF-8'))
                 ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
@@ -108,7 +134,7 @@ class InvoiceController extends BaseController
             'borrowed_at'    => $loan->getBorrowedAt(),
             'due_date'       => $loan->getDueDate(),
             'invoice'        => $invoice,
-            'qrCode'         => $qrCode, 
+            'qrCode'         => $qrCode,
         ];
 
         $this->view('payment/invoice', $invoiceData);

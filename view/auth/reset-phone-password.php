@@ -10,8 +10,18 @@ if (!defined('BASE_URL')) {
     define('BASE_URL', $protocol . '://' . $host . $scriptDir);
 }
 
-$pageTitle = 'Forgot Password';
+$pageTitle = 'Reset Password via Phone';
 include __DIR__ . '/../layout/header.php';
+
+$phone = $_SESSION['reset_phone'] ?? '';
+$token = $_SESSION['reset_token'] ?? '';
+
+// If no phone in session, redirect to forgot password
+if (empty($phone)) {
+    $_SESSION['error_message'] = 'Please request a password reset first.';
+    header('Location: ' . BASE_URL . '/forgot-password');
+    exit;
+}
 ?>
 
 <div class="auth-shell">
@@ -31,26 +41,21 @@ include __DIR__ . '/../layout/header.php';
                 <rect x="92" y="44" width="16" height="18" rx="4" fill="#f59e0b" />
                 <path d="M88 48 L82 52 M112 48 L118 52" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
                 <path d="M130 18 Q148 2 160 14 Q170 24 158 34 Q148 40 136 36 L130 44 L134 34 Q128 28 130 18Z" fill="#fff" stroke="#cbd5e1" stroke-width="1.5" />
-                <text x="146" y="24" font-size="9" fill="#334155" font-family="sans-serif" text-anchor="middle">🔐</text>
+                <text x="146" y="24" font-size="9" fill="#334155" font-family="sans-serif" text-anchor="middle">📱</text>
             </svg>
-            <h2>Reset Your Password</h2>
-            <p>Enter your registered email address or phone number to reset your password.</p>
-            <div class="auth-benefits">
-                <span><span class="benefit-icon">✓</span> Secure</span>
-                <span><span class="benefit-icon">✓</span> Fast</span>
-                <span><span class="benefit-icon">✓</span> Reliable</span>
-            </div>
+            <h2>Reset Password via Phone</h2>
+            <p>Enter the OTP code sent to your phone and create a new password.</p>
         </div>
     </div>
 
-    <!-- ─── RIGHT SIDE: Forgot Password Card ─── -->
+    <!-- ─── RIGHT SIDE: Reset Password via Phone Card ─── -->
     <div class="auth-form-panel">
         <div class="glass-card">
             <div class="icon-wrap">
-                <i class="fas fa-key text-white text-2xl"></i>
+                <i class="fas fa-phone text-white text-2xl"></i>
             </div>
-            <h2>Forgot Password?</h2>
-            <p class="subtitle">Enter your email or phone to reset your password</p>
+            <h2>Phone Reset</h2>
+            <p class="subtitle">Enter OTP code and new password</p>
 
             <?php if (isset($_SESSION['error_message'])): ?>
                 <div class="alert-error">
@@ -60,35 +65,55 @@ include __DIR__ . '/../layout/header.php';
                 <?php unset($_SESSION['error_message']); ?>
             <?php endif; ?>
 
-            <?php if (isset($_SESSION['success_message'])): ?>
-                <div class="alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <span><?= htmlspecialchars($_SESSION['success_message']) ?></span>
-                </div>
-                <?php unset($_SESSION['success_message']); ?>
-            <?php endif; ?>
+            <form action="<?= BASE_URL ?>/reset-password-phone/update" method="POST" class="auth-form" autocomplete="off">
 
-            <form action="<?= BASE_URL ?>/forgot-password/send" method="POST" class="auth-form" autocomplete="off">
+                <!-- Phone (hidden) -->
+                <input type="hidden" name="phone" value="<?= htmlspecialchars($phone) ?>">
 
-                <!-- Email or Phone -->
+                <!-- OTP Code -->
                 <div class="form-group">
-                    <label for="email" class="form-label"><i class="fas fa-envelope"></i> Email or Phone Number</label>
+                    <label for="code" class="form-label"><i class="fas fa-shield-alt"></i> OTP Code</label>
                     <div class="input-wrapper">
-                        <i class="fas fa-user input-icon"></i>
-                        <input type="text" name="email" id="email" required
-                               placeholder="Enter your email or phone number (e.g., 09...)"
+                        <i class="fas fa-key input-icon"></i>
+                        <input type="text" name="code" id="code" required
+                               placeholder="Enter 6-digit OTP code"
+                               maxlength="6"
+                               pattern="[0-9]{6}"
                                class="field-input" autocomplete="off">
                     </div>
-                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Enter either your registered email or phone number.</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">We sent a 6-digit code to <strong><?= htmlspecialchars($phone) ?></strong></p>
+                </div>
+
+                <!-- New Password -->
+                <div class="form-group">
+                    <label for="password" class="form-label"><i class="fas fa-lock"></i> New Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" name="password" id="password" required
+                               placeholder="Enter new password (min 6 chars)"
+                               minlength="6"
+                               class="field-input" autocomplete="new-password">
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="form-group">
+                    <label for="password_confirm" class="form-label"><i class="fas fa-check-circle"></i> Confirm Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-check input-icon"></i>
+                        <input type="password" name="password_confirm" id="password_confirm" required
+                               placeholder="Confirm your new password"
+                               class="field-input" autocomplete="new-password">
+                    </div>
                 </div>
 
                 <button type="submit" class="submit-btn">
-                    <i class="fas fa-paper-plane"></i> Send Reset Link / Code
+                    <i class="fas fa-save"></i> Reset Password
                 </button>
 
                 <p class="auth-footer">
-                    <a href="<?= BASE_URL ?>/login" class="auth-link auth-link-strong">
-                        <i class="fas fa-arrow-left"></i> Back to Login
+                    <a href="<?= BASE_URL ?>/forgot-password" class="auth-link auth-link-strong">
+                        <i class="fas fa-arrow-left"></i> Back to Forgot Password
                     </a>
                 </p>
 
@@ -187,25 +212,6 @@ include __DIR__ . '/../layout/header.php';
         max-width: 420px;
         color: var(--text-secondary);
         line-height: 1.6;
-    }
-
-    .auth-benefits {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 0.75rem 1rem;
-        margin-top: 1rem;
-        color: var(--text-secondary);
-        font-size: 0.95rem;
-    }
-
-    .benefit-icon {
-        color: #16a34a;
-        font-weight: 700;
-    }
-
-    .dark .benefit-icon {
-        color: #4ade80;
     }
 
     .glass-card {
@@ -353,19 +359,6 @@ include __DIR__ . '/../layout/header.php';
         background: var(--error-bg);
         border: 1px solid var(--error-border);
         color: var(--error-text);
-        padding: 0.7rem 1rem;
-        border-radius: 0.8rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.85rem;
-        margin-bottom: 1.2rem;
-    }
-
-    .alert-success {
-        background: var(--success-bg);
-        border: 1px solid var(--success-border);
-        color: var(--success-text);
         padding: 0.7rem 1rem;
         border-radius: 0.8rem;
         display: flex;

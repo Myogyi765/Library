@@ -101,11 +101,6 @@ class SettingsService
         return (int) $this->get('membership_fee', 0); 
     }
 
-    
-    public function getLateReturnFee(): int 
-    { 
-        return (int) $this->get('late_return_fee', 0); 
-    }
 
     
     public function isRefundEnabled(): bool

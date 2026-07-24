@@ -5,8 +5,11 @@ namespace App\User\Infrastructure\Service;
 use App\User\Domain\Entity\User;
 use App\User\Domain\Service\VerificationServiceInterface;
 use App\User\Infrastructure\Persistence\UserRepository;
+use App\User\Domain\ValueObject\Email;
+use App\User\Domain\ValueObject\Phone;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+use DateTime;
 
 class VerificationService implements VerificationServiceInterface
 {
@@ -54,7 +57,7 @@ class VerificationService implements VerificationServiceInterface
             $baseUrl = rtrim($_ENV['APP_URL'] ?? 'http://localhost', '/');
             $verifyLink = $baseUrl . '/verify-email?token=' . urlencode($token);
 
-            $viewPath = __DIR__ . '/../../../../view/emails/vertification.php';
+            $viewPath = __DIR__ . '/../../../../view/emails/verification.php';
             
             if (file_exists($viewPath)) {
                 ob_start();
@@ -105,7 +108,6 @@ class VerificationService implements VerificationServiceInterface
 
         error_log("📱 [SMS] To: {$phone} | Code: {$code}");
 
-        
     }
 
     public function sendPasswordResetEmail(User $user, string $resetLink): void
@@ -197,6 +199,53 @@ class VerificationService implements VerificationServiceInterface
         }
     }
 
+
+    
+    public function sendPasswordResetSMS(User $user, string $code): void
+    {
+        $phone = $user->getPhone()?->getValue();
+        if (!$phone) {
+            error_log("❌ No phone number for user ID " . $user->getId());
+            throw new \RuntimeException('No phone number registered for this user.');
+        }
+
+        error_log("📱 [SMS - Password Reset] To: {$phone} | Code: {$code}");
+
+    }
+
+    
+    public function verifyPasswordResetCode(string $identifier, string $code): ?User
+    {
+        $user = null;
+
+        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            try {
+                $user = $this->userRepository->findByEmail(new Email($identifier));
+            } catch (\Exception $e) {
+                return null;
+            }
+        } elseif (preg_match('/^(09|\+95)[0-9]{7,10}$/', $identifier)) {
+            try {
+                $user = $this->userRepository->findByPhone(new Phone($identifier));
+            } catch (\Exception $e) {
+                return null;
+            }
+        } else {
+            return null;
+        }
+
+        if (!$user) {
+            return null;
+        }
+
+        if ($user->getVerificationCode() === $code && $user->isVerificationValid()) {
+            return $user;
+        }
+
+        return null;
+    }
+
+
     public function verifyEmail(string $token): ?User
     {
         $user = $this->userRepository->findByEmailVerificationToken($token);
@@ -240,7 +289,6 @@ class VerificationService implements VerificationServiceInterface
     
     public function verifyEmailByCode(string $code): ?User
     {
-        // We reuse the same repository method because both email and phone codes are stored in the same `verificationCode` column.
         $user = $this->userRepository->findByPhoneVerificationCode($code);
         if ($user === null) {
             return null;

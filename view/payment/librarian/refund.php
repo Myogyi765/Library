@@ -9,7 +9,19 @@ if (!$payment) {
     return;
 }
 
-$user = $users[$payment->getUserId()] ?? null;
+// ✅ Use the user data passed from the controller
+$user = $user ?? null;
+$userName = $userName ?? null;
+
+// Determine the display name with proper fallback
+if ($user) {
+    $displayName = $user->getName();
+} elseif ($userName) {
+    $displayName = $userName;
+} else {
+    $displayName = 'User #' . $payment->getUserId();
+}
+
 $amount = $payment->getAmount()->getAmount();
 ?>
 
@@ -33,7 +45,7 @@ $amount = $payment->getAmount()->getAmount();
                 </div>
                 <div>
                     <span class="text-gray-500 dark:text-gray-400">User</span>
-                    <p class="font-semibold text-gray-900 dark:text-white"><?= htmlspecialchars($user ? $user->getName() : 'Unknown') ?></p>
+                    <p class="font-semibold text-gray-900 dark:text-white"><?= htmlspecialchars($displayName) ?></p>
                 </div>
                 <div>
                     <span class="text-gray-500 dark:text-gray-400">Amount</span>

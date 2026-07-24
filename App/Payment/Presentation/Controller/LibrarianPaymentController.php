@@ -20,6 +20,7 @@ use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\SvgWriter;
 use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
 use Endroid\QrCode\Encoding\Encoding;
+use App\Circulation\Domain\ValueObject\LoanStatus;
 
 class LibrarianPaymentController extends BaseController
 {
@@ -75,7 +76,7 @@ class LibrarianPaymentController extends BaseController
                 $payments = $this->paymentRepo->findAllWithDetails();
                 break;
         }
-            $page = 'payments';
+        $page = 'payments';
 
         $pageTitle = 'Payments';
         $content = BASE_PATH . '/view/librarian/payments/index.php';
@@ -105,9 +106,19 @@ class LibrarianPaymentController extends BaseController
             $cmd = new ApprovePaymentCommand($id, $_SESSION['user_id'] ?? 0);
             $this->approveHandler->handle($cmd);
 
-            $this->sendApprovalNotification($id);
+            $payment = $this->paymentRepo->findById($id);
+            if (!$payment) {
+                throw new \Exception('Payment not found after approval.');
+            }
+            $loan = $this->loanRepo->findById($payment->getLoanId());
 
-            $this->redirect(BASE_URL . '/librarian/payments/invoice/' . $id);
+            if ($loan && $loan->getStatus()->getValue() === 'returned') {
+                $_SESSION['success_message'] = 'Fine payment approved and book returned successfully.';
+                $this->redirect(BASE_URL . '/librarian/payments');
+            } else {
+                $this->sendApprovalNotification($id);
+                $this->redirect(BASE_URL . '/librarian/payments/invoice/' . $id);
+            }
         } catch (\Exception $e) {
             $_SESSION['flash_error'] = $e->getMessage();
             $this->redirect(BASE_URL . '/librarian/payments');
@@ -291,13 +302,30 @@ class LibrarianPaymentController extends BaseController
         $refundStatus = $payment->getRefundStatus() ?? 'none';
         $status = $payment->getStatus()->getValue();
 
+        if ($refundStatus === 'completed') {
+            $_SESSION['error_message'] = 'This payment has already been refunded.';
+            $this->redirect(BASE_URL . '/librarian/payments');
+            return;
+        }
+
         if ($refundStatus !== 'none' || !in_array($status, ['completed', 'approved'])) {
             $_SESSION['error_message'] = 'This payment cannot be refunded.';
             $this->redirect(BASE_URL . '/librarian/payments');
             return;
         }
 
-        $this->view('payment/librarian/refund', ['payment' => $payment]);
+        $user = $this->userRepo->findById($payment->getUserId());
+        $userName = $user ? $user->getName() : 'User #' . $payment->getUserId();
+
+        if (!$user) {
+            error_log("⚠️ Refund Form: User not found for payment ID {$id}, user_id = " . $payment->getUserId());
+        }
+
+        $this->view('payment/librarian/refund', [
+            'payment'   => $payment,
+            'user'      => $user,
+            'userName'  => $userName,
+        ]);
     }
 
     public function processRefund($id): void
@@ -319,18 +347,61 @@ class LibrarianPaymentController extends BaseController
         $refundStatus = $payment->getRefundStatus() ?? 'none';
         $status = $payment->getStatus()->getValue();
 
+        if ($refundStatus === 'completed') {
+            $_SESSION['error_message'] = 'This payment has already been refunded.';
+            $this->redirect(BASE_URL . '/librarian/payments');
+            return;
+        }
+
         if ($refundStatus !== 'none' || !in_array($status, ['completed', 'approved'])) {
             $_SESSION['error_message'] = 'Invalid refund request.';
             $this->redirect(BASE_URL . '/librarian/payments');
             return;
         }
 
+        $reason = $_POST['refund_reason'] ?? 'No reason provided';
+
         $payment->setRefundStatus('completed');
         $payment->setRefundedAt(new \DateTimeImmutable());
-        $payment->setRefundReason($_POST['refund_reason'] ?? 'No reason provided');
+        $payment->setRefundReason($reason);
         $this->paymentRepo->save($payment);
+
+        $this->sendRefundNotification($payment->getId());
 
         $_SESSION['success_message'] = 'Refund processed successfully!';
         $this->redirect(BASE_URL . '/librarian/payments');
+    }
+
+    private function sendRefundNotification(int $paymentId): void
+    {
+        try {
+            $payment = $this->paymentRepo->findById($paymentId);
+            if (!$payment) {
+                return;
+            }
+
+            $loan = $this->loanRepo->findById($payment->getLoanId());
+            if (!$loan) {
+                return;
+            }
+
+            $book = $this->bookRepo->findById($loan->getBookId());
+            $bookTitle = $book ? $book->getTitle() : 'Unknown Book';
+
+            $userId = $loan->getUserId();
+
+            $this->notificationService->createNotification(
+                $userId,
+                'user',
+                'refund_completed',
+                '✅ Refund Completed',
+                'Your refund for book: "' . $bookTitle . '" has been processed successfully.',
+                BASE_URL . '/user-dashboard'
+            );
+
+            error_log("✅ Refund notification sent to User ID: {$userId} for Payment ID: {$paymentId}");
+        } catch (\Exception $e) {
+            error_log("❌ Failed to send refund notification: " . $e->getMessage());
+        }
     }
 }

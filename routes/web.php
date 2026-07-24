@@ -129,13 +129,17 @@ $router->get('/login', [LoginController::class, 'showLogin']);
 $router->get('/verify', [VerificationController::class, 'verifyEmail']);
 $router->get('/verify-phone', [VerificationController::class, 'showVerifyPhone']);
 $router->get('/resend-verification', [VerificationController::class, 'resendVerification']);
-$router->get('/resend-phone-code', [VerificationController::class, 'resendVerification']); // ✅ Added for phone-specific resend
+$router->get('/resend-phone-code', [VerificationController::class, 'resendVerification']);
 $router->get('/logout', [LoginController::class, 'logout']);
 
 $router->get('/forgot-password', [VerificationController::class, 'showForgotForm']);
 $router->post('/forgot-password/send', [VerificationController::class, 'sendResetLink']);
 $router->get('/reset-password', [VerificationController::class, 'showResetForm']);
 $router->post('/reset-password/update', [VerificationController::class, 'updatePassword']);
+
+// Phone password reset routes
+$router->get('/reset-password-phone', [VerificationController::class, 'showResetPhoneForm']);
+$router->post('/reset-password-phone/update', [VerificationController::class, 'resetPhonePassword']);
 
 $router->post('/verify-phone', [VerificationController::class, 'verifyPhone']);
 $router->post('/register', [AuthController::class, 'register']);
@@ -158,6 +162,13 @@ $router->post('/api/notifications/read', [NotificationController::class, 'markRe
 
 // ─── USER ROUTES ────────────────────────────────────────────────
 $router->get('/user-dashboard', [AuthController::class, 'userDashboard'], $userMiddleware);
+
+// ✅ Add this route to handle /payments redirect (for overdue fine notifications)
+$router->get('/payments', function () {
+    header('Location: ' . BASE_URL . '/user-dashboard');
+    exit;
+});
+
 $router->get('/profile', [ProfileController::class, 'profile'], array_merge($userMiddleware, [$authorizationCheck('view_profile')]));
 $router->get('/profile/edit', [ProfileController::class, 'editProfile'], array_merge($userMiddleware, [$authorizationCheck('edit_profile')]));
 $router->post('/profile/update', [ProfileController::class, 'updateProfile'], 
@@ -175,7 +186,10 @@ $router->get('/payment/submit/{loan}', [PaymentController::class, 'showSubmitFor
 $router->get('/payment/success', [PaymentController::class, 'success'], $userMiddleware);
 $router->post('/payment/submit', [PaymentController::class, 'submit'], array_merge($userMiddleware, [$authorizationCheck('create_payments')]));
 $router->post('/books/borrow/{id}', [BorrowController::class, 'borrow'], array_merge($userMiddleware, [$authorizationCheck('borrow_books')]));
+
+// Invoice routes – both paths work
 $router->get('/invoice/{id}', [UserInvoiceController::class, 'show'], $userMiddleware);
+$router->get('/payment/invoice/{id}', [UserInvoiceController::class, 'show'], $userMiddleware); // ✅ Added for compatibility with notification links
 
 
 // ─── ADMIN ROUTES (Separate Module) ────────────────────────────
@@ -219,11 +233,11 @@ $router->post('/admin/roles/update/{id}', [AdminRoleController::class, 'update']
 $router->get('/admin/fines', [AdminFineController::class, 'index'], $adminMiddleware);
 $router->post('/admin/fines/update', [AdminFineController::class, 'update'], $adminMiddleware);
 
-// ─── ADMIN BOOKS (Fixed with {id} parameters) ──────────────
+// ─── ADMIN BOOKS ────────────────────────────────────────────────
 $router->get('/admin/books', [AdminBookController::class, 'index'], $adminMiddleware);
-$router->get('/admin/books/show/{id}', [AdminBookController::class, 'show'], $adminMiddleware);   // ✅ Fixed: added {id}
+$router->get('/admin/books/show/{id}', [AdminBookController::class, 'show'], $adminMiddleware);
 $router->get('/admin/books/create', [AdminBookController::class, 'create'], $adminMiddleware);
-$router->get('/admin/books/edit/{id}', [AdminBookController::class, 'edit'], $adminMiddleware);   // ✅ Fixed: added {id}
+$router->get('/admin/books/edit/{id}', [AdminBookController::class, 'edit'], $adminMiddleware);
 $router->post('/admin/books/store', [AdminBookController::class, 'store'], $adminMiddleware);
 $router->post('/admin/books/update/{id}', [AdminBookController::class, 'update'], $adminMiddleware);
 $router->post('/admin/books/delete/{id}', [AdminBookController::class, 'delete'], $adminMiddleware);
@@ -419,6 +433,4 @@ $router->get('/dev/seed-notifications', function () {
 }, [AuthMiddleware::class]);
 
 
-$router->get('/book/{id}', [BookController::class, 'show'], 
-    [AuthMiddleware::class, $authorizationCheck('view_books')]
-);
+// ─── NOTE: Removed duplicate /book/{id} – only /books/{id} remains.

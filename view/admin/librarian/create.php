@@ -89,7 +89,7 @@ unset($_SESSION['old_name'], $_SESSION['old_email'], $_SESSION['old_department']
                 </div>
             </div>
 
-            <!-- Department -->
+            <!-- Department – Fixed to Department 1, 2, 3 -->
             <div class="space-y-1.5">
                 <label for="department" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     <i class="fas fa-building mr-2 text-blue-500 dark:text-blue-400"></i>Department
@@ -99,12 +99,10 @@ unset($_SESSION['old_name'], $_SESSION['old_email'], $_SESSION['old_department']
                         class="fas fa-building absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
                     <select name="department" id="department" required
                         class="w-full pl-10 pr-4 py-2.5 bg-white/80 dark:bg-gray-700/80 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 outline-none transition-all duration-200 hover:border-blue-400 dark:hover:border-blue-500 text-gray-900 dark:text-white appearance-none">
-                        <option value="Fiction" <?= $oldDepartment === 'Fiction' ? 'selected' : '' ?>>Fiction</option>
-                        <option value="Non-Fiction" <?= $oldDepartment === 'Non-Fiction' ? 'selected' : '' ?>>Non‑Fiction
-                        </option>
-                        <option value="Science" <?= $oldDepartment === 'Science' ? 'selected' : '' ?>>Science</option>
-                        <option value="History" <?= $oldDepartment === 'History' ? 'selected' : '' ?>>History</option>
-                        <option value="Children" <?= $oldDepartment === 'Children' ? 'selected' : '' ?>>Children</option>
+                        <option value="">Select Department</option>
+                        <option value="Department 1" <?= $oldDepartment === 'Department 1' ? 'selected' : '' ?>>Department 1</option>
+                        <option value="Department 2" <?= $oldDepartment === 'Department 2' ? 'selected' : '' ?>>Department 2</option>
+                        <option value="Department 3" <?= $oldDepartment === 'Department 3' ? 'selected' : '' ?>>Department 3</option>
                     </select>
                     <i
                         class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"></i>

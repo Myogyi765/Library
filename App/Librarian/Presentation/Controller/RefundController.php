@@ -52,24 +52,38 @@ class RefundController extends BaseController
                 u.email AS user_email
             FROM payments p
             LEFT JOIN users u ON p.user_id = u.id
+            WHERE p.refund_status IS NOT NULL 
+              AND p.refund_status != 'none'
             ORDER BY p.created_at DESC
         ";
 
-        $stmt = $db->prepare($sql);
-        $stmt->execute();
-        $allPayments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $refunds = array_filter($allPayments, function($p) {
-            return isset($p['refund_status']) && $p['refund_status'] !== 'none';
-        });
-
         if ($statusFilter !== 'all') {
-            $refunds = array_filter($refunds, function($p) use ($statusFilter) {
-                return ($p['refund_status'] ?? '') === $statusFilter;
-            });
+            $sql .= " AND p.refund_status = :status";
         }
 
-        $refunds = array_values($refunds);
+        $stmt = $db->prepare($sql);
+        if ($statusFilter !== 'all') {
+            $stmt->execute(['status' => $statusFilter]);
+        } else {
+            $stmt->execute();
+        }
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $refunds = [];
+        foreach ($results as $row) {
+            $refunds[] = [
+                'id'              => $row['id'] ?? null,
+                'user_id'         => $row['user_id'] ?? null,
+                'user_name'       => $row['user_name'] ?? 'Unknown',
+                'user_email'      => $row['user_email'] ?? '',
+                'loan_id'         => $row['loan_id'] ?? null,
+                'amount'          => $row['amount'] ?? 0,
+                'payment_method'  => $row['payment_method'] ?? '',
+                'refund_status'   => $row['refund_status'] ?? 'none',
+                'refund_reason'   => $row['refund_reason'] ?? '—',
+                'refunded_at'     => $row['refunded_at'] ?? null,
+            ];
+        }
 
         $page = 'refunds';
         $pageTitle = 'Refund Management';
@@ -88,6 +102,10 @@ class RefundController extends BaseController
     {
         $payment = $this->paymentRepo->findById($id);
         if ($payment) {
+            $payment->setRefundStatus('completed');
+            $payment->setRefundedAt(new \DateTimeImmutable());
+            $this->paymentRepo->save($payment);
+
             $userId = $payment->getUserId();
             $this->createNotification(
                 $userId,
@@ -108,6 +126,9 @@ class RefundController extends BaseController
     {
         $payment = $this->paymentRepo->findById($id);
         if ($payment) {
+            $payment->setRefundStatus('none');
+            $this->paymentRepo->save($payment);
+
             $userId = $payment->getUserId();
             $this->createNotification(
                 $userId,
