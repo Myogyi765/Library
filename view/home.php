@@ -240,10 +240,11 @@ if (file_exists($headerPath)) {
                     <i class="fas fa-book-open mr-1.5"></i>Browse Catalog
                 </a>
                 <?php if (!isset($_SESSION['user_id']) && !isset($_SESSION['user'])): ?>
-                    <button id="open-register-modal"
-                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-md text-sm">
+                    <!-- ✅ FIXED: Direct link to registration page -->
+                    <a href="<?php echo BASE_URL; ?>/register"
+                       class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-md text-sm">
                         <i class="fas fa-user-plus mr-1.5"></i>Join Now
-                    </button>
+                    </a>
                 <?php else: ?>
                     <a href="<?php echo BASE_URL; ?>/user-dashboard"
                     class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-lg transition shadow-md text-sm">
@@ -548,7 +549,7 @@ if (file_exists($headerPath)) {
 
                         <!-- Compact Action Button -->
                         <div class="px-3.5 pb-3.5">
-                            <a href="<?php echo BASE_URL; ?>/book/<?php echo $book['id']; ?>" 
+                            <a href="<?php echo BASE_URL; ?>/books/<?php echo $book['id']; ?>" 
                                class="inline-block w-full text-center bg-slate-50 hover:bg-blue-600 dark:bg-gray-700/60 dark:hover:bg-blue-600 text-slate-600 hover:text-white dark:text-slate-200 dark:hover:text-white font-semibold py-1.5 rounded-lg transition duration-300 text-xs border border-gray-100 dark:border-transparent">
                                 <i class="fas fa-eye mr-1 text-[10px]"></i> Details
                             </a>
@@ -643,14 +644,13 @@ if (file_exists($headerPath)) {
     <!-- ===================== 🌟 READER TESTIMONIALS ==================== -->
     <!-- ================================================================ -->
 
-    <section class="py-14 container mx-auto px-4">
+    <!-- <section class="py-14 container mx-auto px-4">
         <div class="text-center max-w-xl mx-auto mb-10">
             <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white mb-2">What Our Readers Say</h2>
             <p class="text-slate-500 dark:text-gray-400 text-sm">Real reviews from our awesome community of book lovers.</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Testimonial 1 -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-150 dark:border-gray-700 shadow-sm relative flex flex-col justify-between">
                 <div>
                     <div class="text-yellow-400 text-sm mb-3">★★★★★</div>
@@ -666,8 +666,6 @@ if (file_exists($headerPath)) {
                     </div>
                 </div>
             </div>
-
-            <!-- Testimonial 2 -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-150 dark:border-gray-700 shadow-sm relative flex flex-col justify-between">
                 <div>
                     <div class="text-yellow-400 text-sm mb-3">★★★★★</div>
@@ -684,7 +682,7 @@ if (file_exists($headerPath)) {
                 </div>
             </div>
 
-            <!-- Testimonial 3 -->
+           
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-150 dark:border-gray-700 shadow-sm relative flex flex-col justify-between">
                 <div>
                     <div class="text-yellow-400 text-sm mb-3">★★★★★</div>
@@ -701,7 +699,7 @@ if (file_exists($headerPath)) {
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
 
     <!-- ================================================================ -->
     <!-- ===================== 🌟 FAQ ACCORDIONS ========================= -->
@@ -779,10 +777,11 @@ if (file_exists($headerPath)) {
             <p class="text-blue-100 dark:text-slate-300 text-sm mb-6 max-w-lg mx-auto leading-relaxed">
                 Unlock instant access to thousands of titles. Join our reading circle and revolutionize how you manage your bookshelf.
             </p>
-            <button id="open-register-modal-footer" onclick="document.getElementById('open-register-modal')?.click()"
-                    class="px-8 py-3 bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition duration-300 inline-flex items-center gap-2 text-sm sm:text-base">
+            <!-- ✅ FIXED: Direct link to registration page -->
+            <a href="<?php echo BASE_URL; ?>/register"
+               class="px-8 py-3 bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition duration-300 inline-flex items-center gap-2 text-sm sm:text-base">
                 <i class="fas fa-user-plus"></i> Create Your Free Account
-            </button>
+            </a>
         </div>
     </section>
     <?php endif; ?>

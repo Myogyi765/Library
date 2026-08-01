@@ -47,12 +47,15 @@ class InvoiceController extends BaseController
             return;
         }
 
-        $invoice = $this->invoiceRepo->findByPaymentId($id);
+        // ✅ FIX: Search by Invoice ID first (most common usage)
+        $invoice = $this->invoiceRepo->findById($id);
 
+        // If not found, try as Payment ID (for backward compatibility)
         if ($invoice === null) {
-            $invoice = $this->invoiceRepo->findById($id);
+            $invoice = $this->invoiceRepo->findByPaymentId($id);
         }
 
+        // If still not found, try to create invoice from payment
         if ($invoice === null) {
             $payment = $this->paymentRepo->findById($id);
             if ($payment) {
@@ -100,14 +103,11 @@ class InvoiceController extends BaseController
         $user = $this->userRepo->findById($userId);
         $book = $this->bookRepo->findById($loan->getBookId());
 
+        // ✅ Generate QR Code with URL to scanner page
         $qrCode = null;
         try {
-            $qrData = sprintf(
-                "Loan ID: #%d\nUser: %s\nBook: %s",
-                $loan->getId(),
-                $user ? $user->getName() : 'Unknown',
-                $book ? $book->getTitle() : 'Unknown'
-            );
+            // Build a URL that the scanner can use to fetch the loan details
+            $qrData = BASE_URL . '/librarian/scan?loan_id=' . $loan->getId();
 
             $qrResult = Builder::create()
                 ->writer(new SvgWriter())

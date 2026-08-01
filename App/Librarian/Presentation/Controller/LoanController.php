@@ -42,8 +42,20 @@ class LoanController extends BaseController
     
     public function index(): void
     {
-        $loanData = $this->loanRepo->findAllWithDetails();
-        
+        // ✅ Ensure librarian access
+        $this->ensureLibrarian();
+
+        // ✅ Pagination parameters
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $perPage = 20; // adjustable
+        $offset = ($page - 1) * $perPage;
+
+        // ✅ Get total count and paginated data
+        $total = $this->loanRepo->count();
+        $loanData = $this->loanRepo->findAllWithDetailsPaginated($perPage, $offset);
+        $totalPages = ceil($total / $perPage);
+
+        // ✅ Enrich loans with fine/overdue info
         $finePerDay = $this->settingsService->getFinePerDay();
         $gracePeriod = $this->settingsService->getGracePeriodDays();
 
@@ -71,10 +83,14 @@ class LoanController extends BaseController
             ];
         }
 
-        $page = 'loans'; 
+            $page = 'loans';  
         $pageTitle = 'Loan Records';
         $viewData = [
-            'loans' => $enrichedLoans,  
+            'loans'        => $enrichedLoans,
+            'currentPage'  => $page,
+            'totalPages'   => $totalPages,
+            'total'        => $total,
+            'perPage'      => $perPage,
         ];
         $content = BASE_PATH . '/view/librarian/loans/index.php';
         include BASE_PATH . '/view/librarian-dashboard.php';
@@ -82,6 +98,7 @@ class LoanController extends BaseController
 
     public function create(): void
     {
+        $this->ensureLibrarian();
         $users = $this->userRepo->findAll();
         $books = $this->bookRepo->findAll();
         
@@ -96,6 +113,7 @@ class LoanController extends BaseController
 
     public function store(): void
     {
+        $this->ensureLibrarian();
         $userId = (int) ($_POST['user_id'] ?? 0);
         $bookId = (int) ($_POST['book_id'] ?? 0);
         
@@ -142,6 +160,7 @@ class LoanController extends BaseController
 
     public function edit($id): void
     {
+        $this->ensureLibrarian();
         $loanId = (int) $id;
         $loan = $this->loanRepo->findById($loanId);
         
@@ -163,6 +182,7 @@ class LoanController extends BaseController
 
     public function update($id): void
     {
+        $this->ensureLibrarian();
         $loanId = (int) $id;
         $loan = $this->loanRepo->findById($loanId);
         
@@ -187,6 +207,7 @@ class LoanController extends BaseController
 
     public function confirm($id): void
     {
+        $this->ensureLibrarian();
         $loan = $this->loanRepo->findById((int)$id);
         if (!$loan || !$loan->getStatus()->isPending()) {
             $_SESSION['error_message'] = 'Invalid loan or not pending.';
@@ -233,6 +254,7 @@ class LoanController extends BaseController
 
     public function reject($id): void
     {
+        $this->ensureLibrarian();
         $loanId = (int) $id;
         $loan = $this->loanRepo->findById($loanId);
 
@@ -276,6 +298,7 @@ class LoanController extends BaseController
     
     public function returnBook($id): void
     {
+        $this->ensureLibrarian();
         $loanId = (int) $id;
         $loan = $this->loanRepo->findById($loanId);
 
@@ -348,6 +371,7 @@ class LoanController extends BaseController
 
     public function delete($id): void
     {
+        $this->ensureLibrarian();
         $loanId = (int) $id;
         $loan = $this->loanRepo->findById($loanId);
 

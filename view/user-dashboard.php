@@ -20,6 +20,10 @@ include __DIR__ . '/layout/header.php';
 $loans = $loans ?? [];
 $books = $books ?? [];
 $user = $user ?? null;
+$currentPage = $currentPage ?? 1;
+$totalPages = $totalPages ?? 1;
+$totalLoans = $totalLoans ?? count($loans);
+$perPage = $perPage ?? 10;
 
 // ---- FIX: Convert $books to associative array by ID for easy lookup ----
 $booksById = [];
@@ -448,7 +452,9 @@ try {
                     <i class="fas fa-book-open text-blue-600 dark:text-blue-400 mr-2"></i>
                     My Borrowed Books
                 </h2>
-                <span class="text-sm text-gray-500 dark:text-gray-400"><?= $totalBorrowed ?> books</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400">
+                    <?= $totalLoans ?> total books
+                </span>
             </div>
 
             <?php if (!empty($loans)): ?>
@@ -660,6 +666,43 @@ try {
                         </tbody>
                     </table>
                 </div>
+
+                <!-- ✅ PAGINATION CONTROLS -->
+                <?php if ($totalPages > 1): ?>
+                <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between flex-wrap gap-3">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">
+                        စာမျက်နှာ <?= $currentPage ?> / <?= $totalPages ?>
+                        (စုစုပေါင်း <?= number_format($totalLoans) ?> မှတ်တမ်း)
+                    </span>
+                    <div class="flex gap-1">
+                        <?php if ($currentPage > 1): ?>
+                            <a href="?page=<?= $currentPage - 1 ?>" 
+                               class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        <?php endif; ?>
+
+                        <?php
+                        $start = max(1, $currentPage - 2);
+                        $end = min($totalPages, $currentPage + 2);
+                        for ($i = $start; $i <= $end; $i++):
+                        ?>
+                            <a href="?page=<?= $i ?>" 
+                               class="px-3 py-1 text-sm rounded transition <?= $i == $currentPage ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600' ?>">
+                                <?= $i ?>
+                            </a>
+                        <?php endfor; ?>
+
+                        <?php if ($currentPage < $totalPages): ?>
+                            <a href="?page=<?= $currentPage + 1 ?>" 
+                               class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
             <?php else: ?>
                 <div class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                     <i class="fas fa-book-open text-4xl mb-3 block"></i>

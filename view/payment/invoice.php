@@ -302,15 +302,19 @@ $logoPath = BASE_URL . '/images/logo.png';
             justify-content: space-between;
             padding: 2px 0;
             font-size: 12px;
+            gap: 10px; /* ✅ Added gap between label and value for better spacing */
         }
 
         .details-box .item .label {
             color: #64748b;
+            flex-shrink: 0; /* prevent label from shrinking */
         }
 
         .details-box .item .value {
             font-weight: 600;
             color: #1a1a2e;
+            text-align: right;
+            word-break: break-word;
         }
 
         .timeline {

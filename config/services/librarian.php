@@ -70,12 +70,14 @@ return function ($container) {
         );
     });
 
+    // ✅ Fixed: Added SettingsService as the 5th argument
     $container->singleton(ScanController::class, function ($c) {
         return new ScanController(
             $c->get(LoanRepositoryInterface::class),
             $c->get(BookRepositoryInterface::class),
             $c->get(UserRepositoryInterface::class),
-            $c->get(UserAuthenticator::class)
+            $c->get(UserAuthenticator::class),
+            $c->get(SettingsService::class)  // ✅ Added missing dependency
         );
     });
 

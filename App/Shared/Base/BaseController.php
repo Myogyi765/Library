@@ -145,4 +145,65 @@ class BaseController
         echo json_encode($data);
         exit;
     }
+
+    
+    protected function ensureAdmin(): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $role = $_SESSION['user_role'] ?? null;
+
+        if ($role !== 'admin') {
+            http_response_code(403);
+            echo '<h1>403 Forbidden</h1><p>Admin access required.</p>';
+            exit;
+        }
+    }
+
+    
+    protected function ensureLibrarian(): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $role = $_SESSION['user_role'] ?? null;
+
+        if ($role !== 'librarian' && $role !== 'admin') {
+            http_response_code(403);
+            echo '<h1>403 Forbidden</h1><p>Librarian access required.</p>';
+            exit;
+        }
+    }
+
+    
+    protected function ensureUser(): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $role = $_SESSION['user_role'] ?? null;
+
+        if ($role !== 'user' && $role !== 'librarian' && $role !== 'admin') {
+            http_response_code(403);
+            echo '<h1>403 Forbidden</h1><p>User access required.</p>';
+            exit;
+        }
+    }
+
+    
+    protected function ensureAuthenticated(): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (!isset($_SESSION['user_id']) && !isset($_SESSION['user'])) {
+            header('Location: ' . $this->buildRedirectUrl('/login'));
+            exit;
+        }
+    }
 }

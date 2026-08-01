@@ -154,7 +154,6 @@ class LoanRepository implements LoanRepositoryInterface
         return array_map([$this->mapper, 'toDomain'], $rows);
     }
 
-    
     public function findAllWithDetails(): array
     {
         $sql = "SELECT l.*, 
@@ -179,5 +178,51 @@ class LoanRepository implements LoanRepositoryInterface
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         return array_map([$this->mapper, 'toDomain'], $rows);
+    }
+
+    
+    public function findPaginatedByUserId(int $userId, int $limit, int $offset): array
+    {
+        $sql = "SELECT * FROM loans 
+                WHERE user_id = :user_id 
+                ORDER BY id DESC 
+                LIMIT :limit OFFSET :offset";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map([$this->mapper, 'toDomain'], $rows);
+    }
+
+    
+    public function countByUserId(int $userId): int
+    {
+        $sql = "SELECT COUNT(*) FROM loans WHERE user_id = :user_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':user_id' => $userId]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    
+    public function findAllWithDetailsPaginated(int $limit, int $offset): array
+    {
+        $sql = "SELECT l.*, 
+                       u.name AS user_name, 
+                       u.email AS user_email,
+                       b.title AS book_title, 
+                       b.author AS book_author,
+                       b.cover_image AS book_cover
+                FROM loans l
+                LEFT JOIN users u ON l.user_id = u.id
+                LEFT JOIN books b ON l.book_id = b.id
+                ORDER BY l.created_at DESC
+                LIMIT :limit OFFSET :offset";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

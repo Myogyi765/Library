@@ -198,6 +198,9 @@ $router->get('/admin/reports', [ReportController::class, 'index'], $adminMiddlew
 $router->get('/admin/reports/export/csv', [ReportController::class, 'exportCsv'], $adminMiddleware);
 $router->get('/admin/reports/export/pdf', [ReportController::class, 'exportPdf'], $adminMiddleware);
 
+// ✅ Admin Activities Route (ထပ်ထည့်ပါ)
+$router->get('/admin/activities', [ReportController::class, 'activities'], $adminMiddleware);
+
 // Admin Librarian
 $router->get('/admin/librarian', [AdminLibrarianController::class, 'index'], $adminMiddleware);
 $router->get('/admin/librarian/create', [AdminLibrarianController::class, 'create'], $adminMiddleware);
@@ -433,4 +436,3 @@ $router->get('/dev/seed-notifications', function () {
 }, [AuthMiddleware::class]);
 
 
-// ─── NOTE: Removed duplicate /book/{id} – only /books/{id} remains.

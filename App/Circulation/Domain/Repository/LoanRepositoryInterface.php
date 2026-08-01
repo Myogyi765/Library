@@ -14,14 +14,20 @@ interface LoanRepositoryInterface
     public function findLoansByUser(int $userId): array;
     public function findActiveByUserId(int $userId): array;
     public function findAll(): array;
+    public function delete(int $id): bool;
 
-      public function delete(int $id): bool;
-
-          public function count(): int;
+    // ─── COUNT METHODS ────────────────────────────────
+    public function count(): int;
     public function countByStatus(string $status): int;
     public function countOverdue(): int;
-    public function findRecent(int $limit): array;
+    public function countByUserId(int $userId): int;
 
-     public function findByUserId(int $userId): array;
-     public function findAllWithDetails(): array;
+    // ─── FIND METHODS ────────────────────────────────
+    public function findRecent(int $limit): array;
+    public function findByUserId(int $userId): array;
+    public function findAllWithDetails(): array;
+
+    // ─── PAGINATION METHODS (PERFORMANCE) ──────────────
+    public function findPaginatedByUserId(int $userId, int $limit, int $offset): array;
+    public function findAllWithDetailsPaginated(int $limit, int $offset): array;
 }

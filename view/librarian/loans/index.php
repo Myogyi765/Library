@@ -1,6 +1,6 @@
 <?php
 // view/librarian/loans/index.php
-// Variables available: $loans (enriched array), BASE_URL
+// Variables available: $loans (enriched array), BASE_URL, $currentPage, $totalPages, $total, $perPage
 ?>
 <div class="flex items-center justify-between mb-6">
     <div>
@@ -9,9 +9,9 @@
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400">Manage all library loans</p>
     </div>
-    <!-- <a href="<?= BASE_URL ?>/librarian/loans/create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition">
-        <i class="fas fa-plus"></i> Issue Book
-    </a> -->
+    <div class="text-sm text-gray-500 dark:text-gray-400">
+        Total <?= number_format($total ?? 0) ?> records
+    </div>
 </div>
 
 <!-- Flash Messages -->
@@ -162,4 +162,40 @@
             </tbody>
         </table>
     </div>
+
+    <!-- ✅ PAGINATION CONTROLS -->
+    <?php if (!empty($loans) && ($totalPages ?? 0) > 1): ?>
+    <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex-wrap gap-3">
+        <span class="text-sm text-gray-600 dark:text-gray-400">
+            Page <?= $currentPage ?? 1 ?> of <?= $totalPages ?? 1 ?>
+            (Total <?= number_format($total ?? 0) ?> records)
+        </span>
+        <div class="flex gap-1">
+            <?php if (($currentPage ?? 1) > 1): ?>
+                <a href="?page=<?= $currentPage - 1 ?>" 
+                   class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            <?php endif; ?>
+
+            <?php
+            $start = max(1, ($currentPage ?? 1) - 2);
+            $end = min($totalPages ?? 1, ($currentPage ?? 1) + 2);
+            for ($i = $start; $i <= $end; $i++):
+            ?>
+                <a href="?page=<?= $i ?>" 
+                   class="px-3 py-1 text-sm rounded transition <?= $i == ($currentPage ?? 1) ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600' ?>">
+                    <?= $i ?>
+                </a>
+            <?php endfor; ?>
+
+            <?php if (($currentPage ?? 1) < ($totalPages ?? 1)): ?>
+                <a href="?page=<?= $currentPage + 1 ?>" 
+                   class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>

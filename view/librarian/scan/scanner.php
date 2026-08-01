@@ -14,7 +14,7 @@ include BASE_PATH . '/view/layout/header.php';
 
         <!-- Scanner Area -->
         <div id="scanner-container" class="mb-6">
-            <div id="reader" style="width:100%; max-width:400px; margin:0 auto;"></div>
+            <div id="reader" style="width:100%; max-width:400px; min-height:300px; margin:0 auto; background:#f0f2f5; border-radius:8px;"></div>
             <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-3">
                 <i class="fas fa-camera mr-1"></i> Allow camera access when prompted.
             </p>
@@ -50,14 +50,33 @@ include BASE_PATH . '/view/layout/header.php';
     let html5QrCode;
 
     function onScanSuccess(decodedText, decodedResult) {
-        // decodedText will be the URL (e.g., http://localhost:8080/Library/public/librarian/scan?loan_id=1)
-        // Extract loan_id from URL
-        const url = new URL(decodedText);
-        const loanId = url.searchParams.get('loan_id');
+        // Try to extract loan_id from decoded text
+        let loanId = null;
+
+        // Check if decodedText is a URL with loan_id parameter
+        try {
+            const url = new URL(decodedText);
+            loanId = url.searchParams.get('loan_id');
+        } catch (e) {
+            // Not a URL - try to parse as number
+            const num = parseInt(decodedText, 10);
+            if (!isNaN(num)) {
+                loanId = num;
+            }
+        }
+
+        // If still no loanId, try to extract from text like "Loan ID: #7"
+        if (!loanId) {
+            const match = decodedText.match(/Loan ID:?\s*#?(\d+)/i);
+            if (match) {
+                loanId = match[1];
+            }
+        }
+
         if (loanId) {
             window.location.href = '<?= BASE_URL ?>/librarian/scan?loan_id=' + loanId;
         } else {
-            showError('Invalid QR Code – loan_id not found.');
+            showError('Invalid QR Code – Loan ID not found. Scanned: ' + decodedText.substring(0, 50));
         }
     }
 
@@ -70,10 +89,25 @@ include BASE_PATH . '/view/layout/header.php';
         const readerElement = document.getElementById('reader');
         if (!readerElement) return;
 
+        // Check if library loaded
+        if (typeof Html5Qrcode === 'undefined') {
+            document.getElementById('scanner-container').innerHTML = `
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-4 rounded-lg text-center">
+                    <i class="fas fa-exclamation-circle mr-2"></i> QR Scanner library failed to load. Please check your internet connection.
+                </div>
+            `;
+            return;
+        }
+
         html5QrCode = new Html5Qrcode("reader");
+        const config = { 
+            fps: 10, 
+            qrbox: { width: 250, height: 250 } 
+        };
+        
         html5QrCode.start(
             { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 250, height: 250 } },
+            config,
             onScanSuccess,
             onScanFailure
         ).catch(err => {
@@ -81,6 +115,7 @@ include BASE_PATH . '/view/layout/header.php';
             document.getElementById('scanner-container').innerHTML = `
                 <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300 p-4 rounded-lg text-center">
                     <i class="fas fa-exclamation-triangle mr-2"></i> Camera not available. Please use the manual input above.
+                    <br><small class="text-xs">Error: ${err.message}</small>
                 </div>
             `;
         });
@@ -100,15 +135,21 @@ include BASE_PATH . '/view/layout/header.php';
     // Show error on page
     function showError(message) {
         const resultDiv = document.getElementById('scan-result');
-        const msgSpan = document.getElementById('scan-message');
         resultDiv.classList.remove('hidden');
         resultDiv.innerHTML = `<div class="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
             <i class="fas fa-exclamation-circle mr-2"></i> ${message}
         </div>`;
+        
+        // Auto hide after 5 seconds
+        setTimeout(() => {
+            resultDiv.classList.add('hidden');
+        }, 5000);
     }
 
     // Start scanner on page load
-    document.addEventListener('DOMContentLoaded', startScanner);
+    document.addEventListener('DOMContentLoaded', function() {
+        startScanner();
+    });
 </script>
 
 <?php include BASE_PATH . '/view/layout/footer.php'; ?>

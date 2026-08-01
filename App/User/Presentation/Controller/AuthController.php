@@ -157,7 +157,13 @@ class AuthController extends BaseController
             return;
         }
 
-        $loans = $this->loanRepository->findActiveByUserId($userId);
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $perPage = 10;
+        $offset = ($page - 1) * $perPage;
+
+        $totalLoans = $this->loanRepository->countByUserId($userId);
+        $loans = $this->loanRepository->findPaginatedByUserId($userId, $perPage, $offset);
+        $totalPages = ceil($totalLoans / $perPage);
 
         $finePerDay = $this->settingsService->getFinePerDay();
         $gracePeriod = $this->settingsService->getGracePeriodDays();
@@ -191,6 +197,10 @@ class AuthController extends BaseController
             'user' => $user,
             'loans' => $enrichedLoans,
             'books' => $books,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'totalLoans' => $totalLoans,
+            'perPage' => $perPage,
             'pageTitle' => 'My Dashboard'
         ]);
     }
